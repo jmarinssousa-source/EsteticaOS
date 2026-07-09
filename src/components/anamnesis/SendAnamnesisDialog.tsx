@@ -109,7 +109,7 @@ export function SendAnamnesisDialog({
                 </Button>
               </div>
             </div>
-            <Button render={<a href={link} />} className="w-full justify-center">
+            <Button nativeButton={false} render={<a href={link} />} className="w-full justify-center">
               Preencher agora neste dispositivo
             </Button>
           </div>

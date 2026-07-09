@@ -52,13 +52,28 @@ export function AgendaNav({
   return (
     <div className="flex flex-col gap-3 sm:flex-row sm:items-center sm:justify-between">
       <div className="flex items-center gap-2">
-        <Button variant="outline" size="icon" render={<Link href={buildHref(view, toISODate(prev), prof)} />}>
+        <Button
+          variant="outline"
+          size="icon"
+          nativeButton={false}
+          render={<Link href={buildHref(view, toISODate(prev), prof)} />}
+        >
           <ChevronLeft className="size-4" />
         </Button>
-        <Button variant="outline" size="sm" render={<Link href={buildHref(view, toISODate(today), prof)} />}>
+        <Button
+          variant="outline"
+          size="sm"
+          nativeButton={false}
+          render={<Link href={buildHref(view, toISODate(today), prof)} />}
+        >
           Hoje
         </Button>
-        <Button variant="outline" size="icon" render={<Link href={buildHref(view, toISODate(next), prof)} />}>
+        <Button
+          variant="outline"
+          size="icon"
+          nativeButton={false}
+          render={<Link href={buildHref(view, toISODate(next), prof)} />}
+        >
           <ChevronRight className="size-4" />
         </Button>
         <h2 className="text-sm font-semibold capitalize sm:text-base">{getTitle(view, date)}</h2>

@@ -54,6 +54,7 @@ export function ConsentTab({
               <Button
                 variant="outline"
                 size="sm"
+                nativeButton={false}
                 render={<Link href={`/pacientes/${patientId}/consentimento`} target="_blank" />}
               >
                 Visualizar / baixar

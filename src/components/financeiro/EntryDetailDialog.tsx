@@ -173,6 +173,7 @@ export function EntryDetailDialog({
           {entry.type === "revenue" && form.status === "paid" && (
             <Button
               variant="outline"
+              nativeButton={false}
               render={<Link href={`/financeiro/${entry.id}/recibo`} target="_blank" />}
             >
               Gerar recibo

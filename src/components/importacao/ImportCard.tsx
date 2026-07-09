@@ -31,7 +31,12 @@ export function ImportCard({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button variant="outline" size="sm" render={<a href={`/configuracoes/importacao/modelo/${type}`} />}>
+        <Button
+          variant="outline"
+          size="sm"
+          nativeButton={false}
+          render={<a href={`/configuracoes/importacao/modelo/${type}`} />}
+        >
           <Download className="size-4" />
           Baixar modelo
         </Button>
