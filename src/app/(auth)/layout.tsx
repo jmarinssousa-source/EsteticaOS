@@ -1,3 +1,5 @@
+import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
+
 export default function AuthLayout({
   children,
 }: {
@@ -9,6 +11,9 @@ export default function AuthLayout({
         <span className="text-2xl font-bold tracking-tight">EstéticaOS</span>
       </div>
       <div className="w-full max-w-md">{children}</div>
+      <div className="mt-8">
+        <OrbyniqBadge className="items-center text-center" />
+      </div>
     </div>
   );
 }

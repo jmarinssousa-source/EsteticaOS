@@ -13,10 +13,12 @@ import { SignatureDisplay } from "@/components/signature/SignatureDisplay";
 export function ConsentTab({
   patientId,
   latestConsent,
+  templateContent,
   canEdit,
 }: {
   patientId: string;
   latestConsent: { signature: string; signedAt: string } | null;
+  templateContent: string;
   canEdit: boolean;
 }) {
   const [isPending, startTransition] = useTransition();
@@ -69,7 +71,12 @@ export function ConsentTab({
         )}
 
         {(!latestConsent || resigning) && canEdit && (
-          <SignaturePad saving={isPending} onSave={handleSign} />
+          <>
+            <p className="max-h-48 overflow-y-auto whitespace-pre-line rounded-md border bg-muted/30 p-3 text-xs leading-relaxed text-muted-foreground">
+              {templateContent}
+            </p>
+            <SignaturePad saving={isPending} onSave={handleSign} />
+          </>
         )}
 
         {!latestConsent && !canEdit && (

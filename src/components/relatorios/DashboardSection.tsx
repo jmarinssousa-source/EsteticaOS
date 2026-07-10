@@ -17,6 +17,8 @@ import { formatCurrency } from "@/lib/format";
 import { computeCommissionsByProfessional } from "@/lib/financeiro/queries";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { GoalCard } from "@/components/dashboard/GoalCard";
+import { RevenueByProfessionalChart } from "@/components/relatorios/RevenueByProfessionalChart";
+import { RevenueShareChart } from "@/components/relatorios/RevenueShareChart";
 
 export async function DashboardSection({
   member,
@@ -34,7 +36,7 @@ export async function DashboardSection({
   const canViewRevenue = hasPermission(member, "finance_revenue_view");
   const canViewExpense = hasPermission(member, "finance_expense_view");
   const canViewCommissions = hasPermission(member, "finance_commissions_view");
-  const canEditGoal = member.role === "owner" || member.role === "manager";
+  const canEditGoal = member.role === "owner";
 
   const supabase = await createClient();
   const yearMonth = from.slice(0, 7);
@@ -227,14 +229,15 @@ export async function DashboardSection({
 
       {canViewBudgets && revenueByProfessional.length > 0 && (
         <div className="rounded-lg border p-4">
-          <h3 className="mb-2 text-sm font-semibold">Receita por profissional</h3>
-          <div className="space-y-1.5">
-            {revenueByProfessional.map((row) => (
-              <div key={row.professionalId} className="flex items-center justify-between text-sm">
-                <span>{row.name}</span>
-                <span className="font-medium">{formatCurrency(row.amount)}</span>
-              </div>
-            ))}
+          <h3 className="mb-3 text-sm font-semibold">Receita por profissional</h3>
+          <div className="grid grid-cols-1 gap-6 lg:grid-cols-5">
+            <div className="lg:col-span-3">
+              <RevenueByProfessionalChart data={revenueByProfessional} />
+            </div>
+            <div className="border-t pt-4 lg:col-span-2 lg:border-l lg:border-t-0 lg:pl-6 lg:pt-0">
+              <p className="mb-2 text-xs font-medium text-muted-foreground">Participação no faturamento</p>
+              <RevenueShareChart data={revenueByProfessional} />
+            </div>
           </div>
         </div>
       )}

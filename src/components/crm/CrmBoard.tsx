@@ -2,8 +2,9 @@
 
 import { useTransition } from "react";
 import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { toast } from "sonner";
-import { moveLeadToStage } from "@/actions/crm";
+import { moveLeadToStage, reorderStages } from "@/actions/crm";
 import { cn } from "@/lib/utils";
 import type { ClinicMemberOption, Lead, Stage } from "@/lib/crm/types";
 import { StageColumn } from "@/components/crm/StageColumn";
@@ -29,12 +30,34 @@ export function CrmBoard({
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   );
 
+  const stageIds = stages.map((s) => s.id);
+
   function handleDragEnd(event: DragEndEvent) {
     const { active, over } = event;
     if (!over) return;
 
-    const leadId = String(active.id);
-    const stageId = String(over.id);
+    const activeId = String(active.id);
+    const overId = String(over.id);
+    if (activeId === overId) return;
+
+    const isColumnDrag = stageIds.includes(activeId);
+    if (isColumnDrag) {
+      if (!stageIds.includes(overId)) return;
+      const fromIndex = stageIds.indexOf(activeId);
+      const toIndex = stageIds.indexOf(overId);
+      const reordered = [...stageIds];
+      reordered.splice(fromIndex, 1);
+      reordered.splice(toIndex, 0, activeId);
+
+      startTransition(async () => {
+        const result = await reorderStages(reordered);
+        if (result && "error" in result) toast.error(result.error);
+      });
+      return;
+    }
+
+    const leadId = activeId;
+    const stageId = overId;
     const lead = leads.find((l) => l.id === leadId);
     if (!lead || lead.stage_id === stageId) return;
 
@@ -47,19 +70,19 @@ export function CrmBoard({
   return (
     <DndContext sensors={sensors} onDragEnd={handleDragEnd}>
       <div className={cn("flex items-start gap-4 overflow-x-auto pb-4", isPending && "opacity-70")}>
-        {stages.map((stage, index) => (
-          <StageColumn
-            key={stage.id}
-            stage={stage}
-            stages={stages}
-            leads={leads.filter((lead) => lead.stage_id === stage.id)}
-            members={members}
-            staleLeadDays={staleLeadDays}
-            canEdit={canEdit}
-            isFirst={index === 0}
-            isLast={index === stages.length - 1}
-          />
-        ))}
+        <SortableContext items={stageIds} strategy={horizontalListSortingStrategy}>
+          {stages.map((stage) => (
+            <StageColumn
+              key={stage.id}
+              stage={stage}
+              stages={stages}
+              leads={leads.filter((lead) => lead.stage_id === stage.id)}
+              members={members}
+              staleLeadDays={staleLeadDays}
+              canEdit={canEdit}
+            />
+          ))}
+        </SortableContext>
         {canEdit && <NewStageButton />}
       </div>
     </DndContext>

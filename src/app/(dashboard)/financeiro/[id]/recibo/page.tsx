@@ -4,6 +4,7 @@ import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/format";
 import { PAYMENT_METHOD_LABELS, type PaymentMethod } from "@/lib/financeiro/constants";
 import { PrintButton } from "@/components/consent/PrintButton";
+import { WhatsAppReceiptButton } from "@/components/financeiro/WhatsAppReceiptButton";
 
 export const metadata = { title: "Recibo — EstéticaOS" };
 
@@ -26,7 +27,7 @@ export default async function ReciboPage({
   if (!entry || entry.type !== "revenue" || entry.status !== "paid") notFound();
 
   const { data: patient } = entry.patient_id
-    ? await supabase.from("patients").select("name, cpf").eq("id", entry.patient_id).maybeSingle()
+    ? await supabase.from("patients").select("name, cpf, phone").eq("id", entry.patient_id).maybeSingle()
     : { data: null };
 
   const { data: clinic } = await supabase
@@ -37,17 +38,29 @@ export default async function ReciboPage({
 
   return (
     <div className="mx-auto max-w-xl space-y-6 p-6 print:p-10">
-      <div className="flex items-start justify-between">
+      <div className="flex items-start justify-between gap-4 border-b-2 border-primary pb-4">
         <div>
-          <h1 className="text-xl font-bold">{clinic?.name}</h1>
-          {clinic?.cnpj && <p className="text-xs text-muted-foreground">CNPJ: {clinic.cnpj}</p>}
-          {clinic?.address && <p className="text-xs text-muted-foreground">{clinic.address}</p>}
-          {clinic?.phone && <p className="text-xs text-muted-foreground">{clinic.phone}</p>}
+          <h1 className="text-2xl font-extrabold tracking-tight">{clinic?.name}</h1>
+          <div className="mt-1 space-y-0.5">
+            {clinic?.address && <p className="text-xs text-muted-foreground">{clinic.address}</p>}
+            <p className="text-xs text-muted-foreground">
+              {[clinic?.phone, clinic?.cnpj ? `CNPJ: ${clinic.cnpj}` : null].filter(Boolean).join(" · ")}
+            </p>
+          </div>
         </div>
-        <PrintButton />
+        <div className="flex shrink-0 flex-col gap-2 print:hidden">
+          <PrintButton label="Salvar como PDF" />
+          <WhatsAppReceiptButton
+            clinicName={clinic?.name ?? ""}
+            patientName={patient?.name ?? null}
+            amount={entry.amount}
+            paymentDate={entry.payment_date}
+            patientPhone={patient?.phone ?? null}
+          />
+        </div>
       </div>
 
-      <h2 className="text-center text-lg font-semibold">Recibo</h2>
+      <h2 className="text-center text-lg font-semibold tracking-wide">Recibo</h2>
 
       <div className="space-y-1 text-sm">
         {patient && (

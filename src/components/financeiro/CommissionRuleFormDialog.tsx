@@ -82,7 +82,17 @@ export function CommissionRuleFormDialog({
 
           <div className="space-y-2">
             <Label>Profissional</Label>
-            <Select value={professionalId || "all"} onValueChange={(v) => setProfessionalId(v === "all" ? "" : (v ?? ""))}>
+            <Select
+              items={[
+                { value: "all", label: "Todos os profissionais" },
+                ...professionals.map((professional) => ({
+                  value: professional.user_id,
+                  label: professional.full_name,
+                })),
+              ]}
+              value={professionalId || "all"}
+              onValueChange={(v) => setProfessionalId(v === "all" ? "" : (v ?? ""))}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -99,7 +109,14 @@ export function CommissionRuleFormDialog({
 
           <div className="space-y-2">
             <Label>Procedimento</Label>
-            <Select value={procedureId || "all"} onValueChange={(v) => setProcedureId(v === "all" ? "" : (v ?? ""))}>
+            <Select
+              items={[
+                { value: "all", label: "Todos os procedimentos" },
+                ...procedures.map((procedure) => ({ value: procedure.id, label: procedure.name })),
+              ]}
+              value={procedureId || "all"}
+              onValueChange={(v) => setProcedureId(v === "all" ? "" : (v ?? ""))}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -117,7 +134,11 @@ export function CommissionRuleFormDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Base de cálculo</Label>
-              <Select value={basis} onValueChange={(v) => v && setBasis(v as CommissionBasis)}>
+              <Select
+                items={COMMISSION_BASIS.map((b) => ({ value: b, label: COMMISSION_BASIS_LABELS[b] }))}
+                value={basis}
+                onValueChange={(v) => v && setBasis(v as CommissionBasis)}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>

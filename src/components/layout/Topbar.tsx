@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { MobileNav } from "@/components/layout/MobileNav";
 import { HelpButton } from "@/components/help/HelpButton";
+import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
 import { ROLE_LABELS, type ClinicRole, type Permissions } from "@/lib/auth/permissions";
 
 function initials(name: string) {
@@ -38,8 +39,11 @@ export function Topbar({
     <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
       <div className="flex items-center gap-2">
         <MobileNav role={role} permissions={permissions} />
-        <span className="font-semibold md:hidden">EstéticaOS</span>
-        <span className="hidden text-sm text-muted-foreground md:inline">{clinicName}</span>
+        <div className="flex flex-col md:hidden">
+          <span className="text-sm font-semibold leading-tight">{clinicName}</span>
+          <span className="text-[10px] leading-tight text-muted-foreground">EstéticaOS</span>
+        </div>
+        <span className="hidden text-sm font-medium text-foreground md:inline">{clinicName}</span>
       </div>
 
       <div className="flex items-center gap-1">
@@ -60,6 +64,10 @@ export function Topbar({
                 </span>
               </div>
             </DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <div className="px-2 py-1.5">
+              <OrbyniqBadge />
+            </div>
             <DropdownMenuSeparator />
             <form action={logout}>
               <DropdownMenuItem

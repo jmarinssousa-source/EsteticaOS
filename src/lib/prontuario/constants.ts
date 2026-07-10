@@ -6,6 +6,23 @@ export const MAP_TYPE_LABELS: Record<MapType, string> = {
   body: "Mapa corporal",
 };
 
+// Only relevant when mapType === "body" — the facial map has a single view.
+export const BODY_VIEWS = ["front", "back"] as const;
+export type BodyView = (typeof BODY_VIEWS)[number];
+
+export const BODY_VIEW_LABELS: Record<BodyView, string> = {
+  front: "Frente",
+  back: "Costas",
+};
+
+export const GENDERS = ["female", "male"] as const;
+export type Gender = (typeof GENDERS)[number];
+
+export const GENDER_LABELS: Record<Gender, string> = {
+  female: "Mulher",
+  male: "Homem",
+};
+
 export const PHOTO_TYPES = ["before", "after", "general"] as const;
 export type PhotoType = (typeof PHOTO_TYPES)[number];
 

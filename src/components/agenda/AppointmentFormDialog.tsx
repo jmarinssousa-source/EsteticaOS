@@ -94,7 +94,10 @@ export function AppointmentFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="patientId">Paciente</Label>
-            <Select name="patientId">
+            <Select
+              name="patientId"
+              items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
+            >
               <SelectTrigger id="patientId" className="w-full">
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>
@@ -113,7 +116,14 @@ export function AppointmentFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="professionalId">Profissional</Label>
-            <Select name="professionalId" defaultValue="">
+            <Select
+              name="professionalId"
+              defaultValue=""
+              items={professionals.map((professional) => ({
+                value: professional.user_id,
+                label: professional.full_name,
+              }))}
+            >
               <SelectTrigger id="professionalId" className="w-full">
                 <SelectValue placeholder="Sem profissional definido" />
               </SelectTrigger>
@@ -149,7 +159,11 @@ export function AppointmentFormDialog({
               </div>
             ) : (
               <div className="flex items-center gap-2">
-                <Select value={procedureId} onValueChange={(v) => setProcedureId(v ?? "")}>
+                <Select
+                  items={procedureList.map((procedure) => ({ value: procedure.id, label: procedure.name }))}
+                  value={procedureId}
+                  onValueChange={(v) => setProcedureId(v ?? "")}
+                >
                   <SelectTrigger className="w-full">
                     <SelectValue placeholder="Sem procedimento definido" />
                   </SelectTrigger>

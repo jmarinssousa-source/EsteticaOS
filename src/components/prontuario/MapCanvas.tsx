@@ -3,10 +3,24 @@
 import { useEffect, useRef, useState } from "react";
 import { Eraser } from "lucide-react";
 import { Button } from "@/components/ui/button";
-import { BODY_MAP_SVG, FACIAL_MAP_SVG } from "@/lib/prontuario/svg-maps";
-import type { MapType } from "@/lib/prontuario/constants";
+import {
+  BODY_BACK_FEMALE_SVG,
+  BODY_BACK_MALE_SVG,
+  BODY_FRONT_FEMALE_SVG,
+  BODY_FRONT_MALE_SVG,
+  FACIAL_MAP_SVG,
+} from "@/lib/prontuario/svg-maps";
+import type { BodyView, Gender, MapType } from "@/lib/prontuario/constants";
 
-const MAP_SVG: Record<MapType, string> = { facial: FACIAL_MAP_SVG, body: BODY_MAP_SVG };
+const BODY_MAP_SVG_BY_VARIANT: Record<Gender, Record<BodyView, string>> = {
+  female: { front: BODY_FRONT_FEMALE_SVG, back: BODY_BACK_FEMALE_SVG },
+  male: { front: BODY_FRONT_MALE_SVG, back: BODY_BACK_MALE_SVG },
+};
+
+function resolveMapSvg(mapType: MapType, view: BodyView, gender: Gender) {
+  if (mapType === "facial") return FACIAL_MAP_SVG;
+  return BODY_MAP_SVG_BY_VARIANT[gender][view];
+}
 
 function svgToDataUri(svg: string) {
   return `data:image/svg+xml;charset=utf-8,${encodeURIComponent(svg)}`;
@@ -14,13 +28,18 @@ function svgToDataUri(svg: string) {
 
 export function MapCanvas({
   mapType,
+  view = "front",
+  gender = "female",
   onSave,
   saving = false,
 }: {
   mapType: MapType;
+  view?: BodyView;
+  gender?: Gender;
   onSave: (dataUrl: string) => void;
   saving?: boolean;
 }) {
+  const mapSvg = resolveMapSvg(mapType, view, gender);
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
@@ -50,7 +69,7 @@ export function MapCanvas({
     setHasDrawn(false);
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
-  }, [mapType]);
+  }, [mapType, view, gender]);
 
   function getPoint(event: React.PointerEvent<HTMLCanvasElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -108,7 +127,7 @@ export function MapCanvas({
     await new Promise<void>((resolve, reject) => {
       outline.onload = () => resolve();
       outline.onerror = () => reject(new Error("Falha ao carregar o mapa base."));
-      outline.src = svgToDataUri(MAP_SVG[mapType]);
+      outline.src = svgToDataUri(mapSvg);
     });
     ctx.drawImage(outline, 0, 0, composite.width, composite.height);
     ctx.drawImage(canvas, 0, 0);
@@ -121,7 +140,7 @@ export function MapCanvas({
       <div className="relative h-80 w-full overflow-hidden rounded-md border bg-white">
         <div
           className="pointer-events-none absolute inset-0"
-          dangerouslySetInnerHTML={{ __html: MAP_SVG[mapType] }}
+          dangerouslySetInnerHTML={{ __html: mapSvg }}
         />
         <canvas
           ref={canvasRef}

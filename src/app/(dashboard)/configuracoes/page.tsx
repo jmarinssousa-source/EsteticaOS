@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, ClipboardList, FileUp, Package, Percent, Users } from "lucide-react";
+import { Building2, ClipboardList, FileSignature, FileUp, Package, Percent, Users } from "lucide-react";
 
 export const metadata = { title: "Configurações — EstéticaOS" };
 
@@ -41,9 +41,15 @@ export default async function ConfiguracoesPage() {
     },
     {
       href: "/configuracoes/importacao",
-      title: "Importação",
-      description: "Migre pacientes, procedimentos, agenda e financeiro por planilha.",
+      title: "Importação/Exportação",
+      description: "Migre ou exporte pacientes, procedimentos, agenda e financeiro por planilha.",
       icon: FileUp,
+    },
+    {
+      href: "/configuracoes/consentimento",
+      title: "Termo de consentimento",
+      description: "Personalize o texto de consentimento e autorização de imagem.",
+      icon: FileSignature,
     },
   ];
 

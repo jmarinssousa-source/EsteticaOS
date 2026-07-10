@@ -4,12 +4,40 @@ import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
+import { DEFAULT_ANAMNESIS_TEMPLATES } from "@/lib/anamnesis/default-templates";
 import {
   forgotPasswordSchema,
   loginSchema,
   resetPasswordSchema,
   signUpSchema,
 } from "@/lib/validations/auth";
+
+async function seedDefaultAnamnesisTemplates(
+  admin: ReturnType<typeof createAdminClient>,
+  clinicId: string,
+) {
+  for (const template of DEFAULT_ANAMNESIS_TEMPLATES) {
+    const { data: inserted, error } = await admin
+      .from("anamnesis_templates")
+      .insert({ clinic_id: clinicId, name: template.name })
+      .select("id")
+      .single();
+
+    if (error || !inserted) continue;
+
+    await admin.from("anamnesis_questions").insert(
+      template.questions.map((question, index) => ({
+        template_id: inserted.id,
+        clinic_id: clinicId,
+        label: question.label,
+        type: question.type,
+        required: question.required,
+        options: question.options,
+        position: index,
+      })),
+    );
+  }
+}
 
 export type ActionState = {
   error?: string;
@@ -95,6 +123,8 @@ export async function signUp(
   if (memberError) {
     return { error: "Não foi possível concluir seu cadastro. Tente novamente." };
   }
+
+  await seedDefaultAnamnesisTemplates(admin, clinic.id);
 
   redirect(`/verificar-email?email=${encodeURIComponent(email)}`);
 }

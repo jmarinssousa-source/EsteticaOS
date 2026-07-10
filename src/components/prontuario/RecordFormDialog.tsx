@@ -4,7 +4,18 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { createPatientRecord } from "@/actions/prontuario";
-import { MAP_TYPES, MAP_TYPE_LABELS, type MapType } from "@/lib/prontuario/constants";
+import {
+  BODY_VIEWS,
+  BODY_VIEW_LABELS,
+  GENDERS,
+  GENDER_LABELS,
+  MAP_TYPES,
+  MAP_TYPE_LABELS,
+  type BodyView,
+  type Gender,
+  type MapType,
+} from "@/lib/prontuario/constants";
+import { cn } from "@/lib/utils";
 import type { ProcedureOption } from "@/lib/procedures/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -44,6 +55,8 @@ export function RecordFormDialog({
   const [notes, setNotes] = useState("");
   const [complication, setComplication] = useState("");
   const [mapType, setMapType] = useState<MapType | "">("");
+  const [bodyView, setBodyView] = useState<BodyView>("front");
+  const [gender, setGender] = useState<Gender>("female");
   const [mapImageDataUrl, setMapImageDataUrl] = useState<string | null>(null);
 
   const [syncedWith, setSyncedWith] = useState(open);
@@ -55,6 +68,8 @@ export function RecordFormDialog({
       setNotes("");
       setComplication("");
       setMapType("");
+      setBodyView("front");
+      setGender("female");
       setMapImageDataUrl(null);
       setError(null);
     }
@@ -111,7 +126,14 @@ export function RecordFormDialog({
             </div>
             <div className="space-y-2">
               <Label>Procedimento</Label>
-              <Select value={procedureId || "none"} onValueChange={(v) => setProcedureId(v === "none" ? "" : (v ?? ""))}>
+              <Select
+                items={[
+                  { value: "none", label: "Sem procedimento" },
+                  ...procedures.map((procedure) => ({ value: procedure.id, label: procedure.name })),
+                ]}
+                value={procedureId || "none"}
+                onValueChange={(v) => setProcedureId(v === "none" ? "" : (v ?? ""))}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -140,6 +162,10 @@ export function RecordFormDialog({
           <div className="space-y-2">
             <Label>Mapa</Label>
             <Select
+              items={[
+                { value: "none", label: "Sem mapa" },
+                ...MAP_TYPES.map((type) => ({ value: type, label: MAP_TYPE_LABELS[type] })),
+              ]}
               value={mapType || "none"}
               onValueChange={(v) => {
                 const next = v === "none" ? "" : (v as MapType);
@@ -161,10 +187,51 @@ export function RecordFormDialog({
             </Select>
           </div>
 
+          {mapType === "body" && (
+            <div className="flex flex-wrap items-center gap-4">
+              <div className="flex items-center gap-1 rounded-lg border p-0.5">
+                {BODY_VIEWS.map((v) => (
+                  <button
+                    key={v}
+                    type="button"
+                    onClick={() => setBodyView(v)}
+                    className={cn(
+                      "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+                      bodyView === v
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted",
+                    )}
+                  >
+                    {BODY_VIEW_LABELS[v]}
+                  </button>
+                ))}
+              </div>
+              <div className="flex items-center gap-1 rounded-lg border p-0.5">
+                {GENDERS.map((g) => (
+                  <button
+                    key={g}
+                    type="button"
+                    onClick={() => setGender(g)}
+                    className={cn(
+                      "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+                      gender === g
+                        ? "bg-primary text-primary-foreground"
+                        : "text-muted-foreground hover:bg-muted",
+                    )}
+                  >
+                    {GENDER_LABELS[g]}
+                  </button>
+                ))}
+              </div>
+            </div>
+          )}
+
           {mapType && (
             <MapCanvas
-              key={mapType}
+              key={`${mapType}-${mapType === "body" ? `${bodyView}-${gender}` : ""}`}
               mapType={mapType}
+              view={bodyView}
+              gender={gender}
               onSave={(dataUrl) => {
                 setMapImageDataUrl(dataUrl);
                 setError(null);

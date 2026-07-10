@@ -89,6 +89,7 @@ export function SessionFormDialog({
               <Label htmlFor="patientId">Paciente</Label>
               <Select
                 name="patientId"
+                items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
                 value={patientId}
                 onValueChange={(v) => {
                   setPatientId(v ?? "");
@@ -115,7 +116,11 @@ export function SessionFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="procedureId">Procedimento</Label>
-            <Select name="procedureId" defaultValue="">
+            <Select
+              name="procedureId"
+              defaultValue=""
+              items={procedures.map((procedure) => ({ value: procedure.id, label: procedure.name }))}
+            >
               <SelectTrigger id="procedureId" className="w-full">
                 <SelectValue placeholder="Sem procedimento definido" />
               </SelectTrigger>
@@ -132,6 +137,13 @@ export function SessionFormDialog({
           <div className="space-y-2">
             <Label>Pacote</Label>
             <Select
+              items={[
+                { value: "none", label: "Sessão avulsa (sem pacote)" },
+                ...availableBalances.map((balance) => ({
+                  value: balance.id,
+                  label: `${balance.package_name} (${balance.total_sessions - balance.used_sessions} restantes)`,
+                })),
+              ]}
               value={packageBalanceId || "none"}
               onValueChange={(v) => setPackageBalanceId(v === "none" ? "" : (v ?? ""))}
               disabled={!patientId}
@@ -157,7 +169,14 @@ export function SessionFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="professionalId">Profissional</Label>
-            <Select name="professionalId" defaultValue="">
+            <Select
+              name="professionalId"
+              defaultValue=""
+              items={professionals.map((professional) => ({
+                value: professional.user_id,
+                label: professional.full_name,
+              }))}
+            >
               <SelectTrigger id="professionalId" className="w-full">
                 <SelectValue placeholder="Sem profissional definido" />
               </SelectTrigger>

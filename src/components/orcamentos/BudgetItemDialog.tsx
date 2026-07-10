@@ -196,7 +196,11 @@ export function BudgetItemDialog({
                 </div>
               ) : (
                 <div className="flex items-center gap-2">
-                  <Select value={form.procedureId} onValueChange={(v) => v && handleProcedureChange(v)}>
+                  <Select
+                    items={procedureList.map((procedure) => ({ value: procedure.id, label: procedure.name }))}
+                    value={form.procedureId}
+                    onValueChange={(v) => v && handleProcedureChange(v)}
+                  >
                     <SelectTrigger className="w-full">
                       <SelectValue placeholder="Selecione" />
                     </SelectTrigger>
@@ -217,7 +221,11 @@ export function BudgetItemDialog({
           ) : (
             <div className="space-y-2">
               <Label>Pacote</Label>
-              <Select value={form.packageId} onValueChange={(v) => v && handlePackageChange(v)}>
+              <Select
+                items={packages.map((pkg) => ({ value: pkg.id, label: `${pkg.name} (${pkg.total_sessions} sessões)` }))}
+                value={form.packageId}
+                onValueChange={(v) => v && handlePackageChange(v)}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue placeholder="Selecione" />
                 </SelectTrigger>
@@ -285,6 +293,13 @@ export function BudgetItemDialog({
           <div className="space-y-2">
             <Label>Profissional</Label>
             <Select
+              items={[
+                { value: "none", label: "Sem profissional" },
+                ...professionals.map((professional) => ({
+                  value: professional.user_id,
+                  label: professional.full_name,
+                })),
+              ]}
               value={form.professionalId || "none"}
               onValueChange={(v) => setForm((f) => ({ ...f, professionalId: v === "none" ? "" : (v ?? "") }))}
             >

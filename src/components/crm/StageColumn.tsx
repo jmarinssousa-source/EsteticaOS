@@ -2,9 +2,11 @@
 
 import { useState, useTransition } from "react";
 import { useDroppable } from "@dnd-kit/core";
+import { useSortable } from "@dnd-kit/sortable";
+import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
-import { ChevronLeft, ChevronRight, Trash2 } from "lucide-react";
-import { deleteStage, reorderStage, renameStage } from "@/actions/crm";
+import { GripVertical, Trash2 } from "lucide-react";
+import { deleteStage, renameStage } from "@/actions/crm";
 import { cn } from "@/lib/utils";
 import type { ClinicMemberOption, Lead, Stage } from "@/lib/crm/types";
 import { Button } from "@/components/ui/button";
@@ -29,8 +31,6 @@ export function StageColumn({
   members,
   staleLeadDays,
   canEdit,
-  isFirst,
-  isLast,
 }: {
   stage: Stage;
   stages: Stage[];
@@ -38,13 +38,24 @@ export function StageColumn({
   members: ClinicMemberOption[];
   staleLeadDays: number;
   canEdit: boolean;
-  isFirst: boolean;
-  isLast: boolean;
 }) {
-  const { setNodeRef, isOver } = useDroppable({ id: stage.id });
+  const { setNodeRef: setDroppableRef, isOver } = useDroppable({ id: stage.id });
+  const {
+    setNodeRef: setSortableRef,
+    attributes,
+    listeners,
+    transform,
+    transition,
+    isDragging,
+  } = useSortable({ id: stage.id, disabled: !canEdit });
   const [editing, setEditing] = useState(false);
   const [name, setName] = useState(stage.name);
-  const [isPending, startTransition] = useTransition();
+  const [, startTransition] = useTransition();
+
+  const sortableStyle = {
+    transform: CSS.Transform.toString(transform),
+    transition,
+  };
 
   function handleRename() {
     setEditing(false);
@@ -69,16 +80,27 @@ export function StageColumn({
     });
   }
 
-  function handleReorder(direction: "left" | "right") {
-    startTransition(async () => {
-      const result = await reorderStage(stage.id, direction);
-      if (result && "error" in result) toast.error(result.error);
-    });
-  }
-
   return (
-    <div className="flex w-72 shrink-0 flex-col rounded-lg border bg-muted/30">
+    <div
+      ref={setSortableRef}
+      style={sortableStyle}
+      className={cn(
+        "flex w-72 shrink-0 flex-col rounded-lg border bg-muted/30",
+        isDragging && "z-10 opacity-60",
+      )}
+    >
       <div className="flex items-center gap-1 border-b p-2">
+        {canEdit && !editing && (
+          <button
+            type="button"
+            className="touch-none text-muted-foreground hover:text-foreground"
+            aria-label="Arrastar para reordenar coluna"
+            {...listeners}
+            {...attributes}
+          >
+            <GripVertical className="size-4" />
+          </button>
+        )}
         {editing ? (
           <Input
             autoFocus
@@ -100,24 +122,6 @@ export function StageColumn({
         <span className="text-xs text-muted-foreground">{leads.length}</span>
         {canEdit && !editing && (
           <div className="flex items-center">
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-6"
-              disabled={isFirst || isPending}
-              onClick={() => handleReorder("left")}
-            >
-              <ChevronLeft className="size-3.5" />
-            </Button>
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-6"
-              disabled={isLast || isPending}
-              onClick={() => handleReorder("right")}
-            >
-              <ChevronRight className="size-3.5" />
-            </Button>
             <AlertDialog>
               <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="size-6" />}>
                 <Trash2 className="size-3.5" />
@@ -143,7 +147,7 @@ export function StageColumn({
         )}
       </div>
       <div
-        ref={setNodeRef}
+        ref={setDroppableRef}
         className={cn(
           "flex min-h-24 flex-1 flex-col gap-2 p-2 transition-colors",
           isOver && "bg-accent/60",

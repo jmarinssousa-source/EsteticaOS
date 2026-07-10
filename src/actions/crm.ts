@@ -96,41 +96,40 @@ export async function deleteStage(stageId: string): Promise<ActionResult> {
   return { success: true };
 }
 
-export async function reorderStage(
-  stageId: string,
-  direction: "left" | "right",
-): Promise<ActionResult> {
+export async function reorderStages(orderedStageIds: string[]): Promise<ActionResult> {
   const member = await requirePermission("crm_edit");
   const supabase = await createClient();
 
-  const { data: stages } = await supabase
-    .from("crm_stages")
-    .select("id, position")
-    .eq("clinic_id", member.clinicId)
-    .order("position", { ascending: true });
+  const { error } = await Promise.all(
+    orderedStageIds.map((id, index) =>
+      supabase
+        .from("crm_stages")
+        .update({ position: index })
+        .eq("id", id)
+        .eq("clinic_id", member.clinicId),
+    ),
+  ).then((results) => {
+    const failed = results.find((r) => r.error);
+    return { error: failed?.error ?? null };
+  });
 
-  if (!stages) return { error: "Não foi possível reordenar." };
+  if (error) return { error: "Não foi possível reordenar as colunas." };
 
-  const index = stages.findIndex((s) => s.id === stageId);
-  const swapIndex = direction === "left" ? index - 1 : index + 1;
-  if (index === -1 || swapIndex < 0 || swapIndex >= stages.length) return { success: true };
+  revalidateCrm();
+  return { success: true };
+}
 
-  const current = stages[index];
-  const swap = stages[swapIndex];
+export async function deleteLead(leadId: string): Promise<ActionResult> {
+  const member = await requirePermission("crm_edit");
+  const supabase = await createClient();
 
-  await Promise.all([
-    supabase
-      .from("crm_stages")
-      .update({ position: swap.position })
-      .eq("id", current.id)
-      .eq("clinic_id", member.clinicId),
-    supabase
-      .from("crm_stages")
-      .update({ position: current.position })
-      .eq("id", swap.id)
-      .eq("clinic_id", member.clinicId),
-  ]);
+  const { error } = await supabase
+    .from("leads")
+    .delete()
+    .eq("id", leadId)
+    .eq("clinic_id", member.clinicId);
 
+  if (error) return { error: "Não foi possível excluir o lead." };
   revalidateCrm();
   return { success: true };
 }

@@ -89,6 +89,7 @@ export function AppointmentDetailDialog({
           <div className="space-y-2">
             <Label>Paciente</Label>
             <Select
+              items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
               value={form.patientId}
               onValueChange={(v) => v && setForm((f) => ({ ...f, patientId: v }))}
               disabled={!canEdit}
@@ -110,6 +111,13 @@ export function AppointmentDetailDialog({
             <div className="space-y-2">
               <Label>Profissional</Label>
               <Select
+                items={[
+                  { value: "none", label: "Sem profissional" },
+                  ...professionals.map((professional) => ({
+                    value: professional.user_id,
+                    label: professional.full_name,
+                  })),
+                ]}
                 value={form.professionalId || "none"}
                 onValueChange={(v) => setForm((f) => ({ ...f, professionalId: v === "none" ? "" : (v ?? "") }))}
                 disabled={!canEdit}
@@ -130,6 +138,10 @@ export function AppointmentDetailDialog({
             <div className="space-y-2">
               <Label>Procedimento</Label>
               <Select
+                items={[
+                  { value: "none", label: "Sem procedimento" },
+                  ...procedures.map((procedure) => ({ value: procedure.id, label: procedure.name })),
+                ]}
                 value={form.procedureId || "none"}
                 onValueChange={(v) => setForm((f) => ({ ...f, procedureId: v === "none" ? "" : (v ?? "") }))}
                 disabled={!canEdit}
@@ -182,6 +194,10 @@ export function AppointmentDetailDialog({
           <div className="space-y-2">
             <Label>Status</Label>
             <Select
+              items={APPOINTMENT_STATUSES.map((status) => ({
+                value: status,
+                label: APPOINTMENT_STATUS_LABELS[status],
+              }))}
               value={form.status}
               onValueChange={(v) => v && setForm((f) => ({ ...f, status: v as typeof form.status }))}
               disabled={!canEdit}

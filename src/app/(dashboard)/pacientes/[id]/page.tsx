@@ -22,6 +22,7 @@ import { AnamnesisTab } from "@/components/anamnesis/AnamnesisTab";
 import { SessionFormDialog } from "@/components/sessions/SessionFormDialog";
 import { SessionRow } from "@/components/sessions/SessionRow";
 import { ConsentTab } from "@/components/consent/ConsentTab";
+import { getConsentTemplate } from "@/actions/consent";
 import { RecordFormDialog } from "@/components/prontuario/RecordFormDialog";
 import { RecordHistory } from "@/components/prontuario/RecordHistory";
 import { PhotoUploadDialog } from "@/components/prontuario/PhotoUploadDialog";
@@ -162,6 +163,8 @@ export default async function PatientDetailPage({
           .order("created_at", { ascending: false })
       : Promise.resolve({ data: null }),
   ]);
+
+  const consentTemplate = await getConsentTemplate();
 
   const signedMediaUrls = canViewRecords
     ? await getSignedMediaUrls(supabase, [
@@ -455,6 +458,7 @@ export default async function PatientDetailPage({
             latestConsent={
               consent ? { signature: consent.patient_signature, signedAt: consent.signed_at } : null
             }
+            templateContent={consentTemplate}
             canEdit={canEditPatient}
           />
         </TabsContent>

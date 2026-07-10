@@ -38,7 +38,7 @@ export default async function HojePage() {
   const canViewRevenue = hasPermission(member, "finance_revenue_view");
   const canViewExpense = hasPermission(member, "finance_expense_view");
   const canViewInventory = hasPermission(member, "inventory_view");
-  const canEditGoal = member.role === "owner" || member.role === "manager";
+  const canEditGoal = member.role === "owner";
 
   const yearMonth = currentYearMonth();
   const monthStart = `${yearMonth}-01`;

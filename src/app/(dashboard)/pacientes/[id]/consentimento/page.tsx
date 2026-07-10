@@ -26,7 +26,7 @@ export default async function ConsentimentoPage({
 
   const { data: consent } = await supabase
     .from("consent_forms")
-    .select("patient_signature, signed_at")
+    .select("patient_signature, signed_at, content")
     .eq("patient_id", id)
     .eq("clinic_id", member.clinicId)
     .order("signed_at", { ascending: false })
@@ -50,7 +50,7 @@ export default async function ConsentimentoPage({
       </p>
 
       <p className="whitespace-pre-line text-sm leading-relaxed text-muted-foreground">
-        {CONSENT_FORM_TEXT}
+        {consent.content ?? CONSENT_FORM_TEXT}
       </p>
 
       <div className="space-y-2 pt-4">
