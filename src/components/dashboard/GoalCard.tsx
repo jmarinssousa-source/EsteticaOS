@@ -22,18 +22,22 @@ import {
 
 const initialState: ActionState = {};
 
-// Status palette (fixed, not themed): good/warning/critical map to how close
-// the clinic is to hitting the monthly goal.
+// Status palette (fixed, not themed): red/orange track how far behind the
+// goal the clinic is; green marks hitting it; blue kicks in once it's been
+// clearly surpassed — a visibly different, more celebratory tier.
 function progressColor(progress: number) {
-  if (progress >= 70) return "#0ca30c";
-  if (progress >= 40) return "#fab219";
+  if (progress >= 120) return "#1d6fd8";
+  if (progress >= 100) return "#0ca30c";
+  if (progress >= 40) return "#e8720c";
   return "#d03b3b";
 }
 
 function progressStatusLabel(progress: number) {
-  if (progress >= 70) return "No caminho da meta";
-  if (progress >= 40) return "Atenção: ritmo abaixo do ideal";
-  return "Crítico: bem atrás da meta";
+  if (progress >= 120) return "Meta ultrapassada! Resultado excepcional.";
+  if (progress >= 100) return "Meta batida! Parabéns pelo resultado.";
+  if (progress >= 70) return "Quase lá! Falta pouco para bater a meta.";
+  if (progress >= 40) return "Atenção: ritmo abaixo do ideal.";
+  return "Crítico: bem atrás da meta.";
 }
 
 // Hand-drawn semicircle gauge instead of Recharts' RadialBarChart: full
@@ -44,7 +48,8 @@ function GoalGauge({ progress, color }: { progress: number; color: string }) {
   const cx = 100;
   const cy = 104;
   const arcLength = Math.PI * r;
-  const dashOffset = arcLength * (1 - progress / 100);
+  const arcProgress = Math.min(progress, 100);
+  const dashOffset = arcLength * (1 - arcProgress / 100);
   const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
 
   return (
@@ -90,11 +95,16 @@ export function GoalCard({
   }
 
   const remaining = Math.max(goalAmount - soldAmount, 0);
-  const progress = goalAmount > 0 ? Math.min((soldAmount / goalAmount) * 100, 100) : 0;
+  const overage = Math.max(soldAmount - goalAmount, 0);
+  const goalMet = goalAmount > 0 && soldAmount >= goalAmount;
+  const progress = goalAmount > 0 ? (soldAmount / goalAmount) * 100 : 0;
   const color = progressColor(progress);
 
   return (
-    <Card className="sm:col-span-2 lg:col-span-3">
+    <Card
+      className="sm:col-span-2 lg:col-span-3"
+      style={goalMet ? { borderLeft: `4px solid ${color}` } : undefined}
+    >
       <CardHeader className="flex flex-row items-center justify-between space-y-0">
         <CardTitle className="flex items-center gap-2 text-base">
           <Target className="size-4 text-muted-foreground" />
@@ -165,10 +175,14 @@ export function GoalCard({
               </div>
             </div>
             <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
-              <Flag className="size-5 shrink-0 text-muted-foreground" />
+              <Flag className="size-5 shrink-0" style={{ color: goalMet ? color : "var(--muted-foreground)" }} />
               <div className="min-w-0">
-                <p className="text-xs text-muted-foreground">Falta para a meta</p>
-                <p className="truncate text-lg font-bold">{formatCurrency(remaining)}</p>
+                <p className="text-xs text-muted-foreground">
+                  {goalMet ? "Superou a meta em" : "Falta para a meta"}
+                </p>
+                <p className="truncate text-lg font-bold" style={goalMet ? { color } : undefined}>
+                  {formatCurrency(goalMet ? overage : remaining)}
+                </p>
               </div>
             </div>
           </div>

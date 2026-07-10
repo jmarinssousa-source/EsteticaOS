@@ -38,11 +38,11 @@ export default async function AnamneseTemplateBuilderPage({
   return (
     <div className="space-y-4">
       <Link
-        href="/configuracoes/anamnese"
+        href="/configuracoes/formularios"
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
       >
         <ArrowLeft className="size-3.5" />
-        Modelos de anamnese
+        Anamnese e consentimento
       </Link>
 
       <div className="flex flex-wrap items-center justify-between gap-2">

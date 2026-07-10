@@ -291,6 +291,9 @@ export default async function PatientDetailPage({
         <TabsContent value="anamnese" className="pt-4">
           <AnamnesisTab
             patientId={patient.id}
+            patientName={patient.name}
+            patientPhone={patient.phone}
+            clinicName={member.clinicName}
             templates={templates ?? []}
             responses={formattedResponses}
             canEdit={canEditPatient}

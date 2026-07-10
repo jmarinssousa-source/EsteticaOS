@@ -2,8 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { Copy, Send } from "lucide-react";
+import { Copy, MessageCircle, Send } from "lucide-react";
 import { sendAnamnesis } from "@/actions/anamnesis";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import {
@@ -25,9 +26,15 @@ import {
 
 export function SendAnamnesisDialog({
   patientId,
+  patientName,
+  patientPhone,
+  clinicName,
   templates,
 }: {
   patientId: string;
+  patientName: string;
+  patientPhone: string | null;
+  clinicName: string;
   templates: { id: string; name: string }[];
 }) {
   const [open, setOpen] = useState(false);
@@ -58,6 +65,12 @@ export function SendAnamnesisDialog({
     toast.success("Link copiado.");
   }
 
+  function handleSendWhatsApp() {
+    if (!link) return;
+    const message = `Olá, ${patientName}! Para agilizar seu atendimento na ${clinicName}, preencha sua anamnese pelo link: ${link}`;
+    window.open(buildWhatsAppUrl(patientPhone, message), "_blank");
+  }
+
   return (
     <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button size="sm" disabled={templates.length === 0} />}>
@@ -69,7 +82,7 @@ export function SendAnamnesisDialog({
           <DialogTitle>Enviar anamnese</DialogTitle>
           <DialogDescription>
             Escolha um modelo. Depois é só entregar o dispositivo da clínica para o paciente
-            preencher, ou copiar o link e enviar pelo WhatsApp.
+            preencher, ou enviar o link pelo WhatsApp.
           </DialogDescription>
         </DialogHeader>
 
@@ -98,8 +111,12 @@ export function SendAnamnesisDialog({
           </>
         ) : (
           <div className="space-y-4">
+            <Button type="button" className="w-full justify-center" onClick={handleSendWhatsApp}>
+              <MessageCircle className="size-4" />
+              Enviar para WhatsApp
+            </Button>
             <div className="space-y-2">
-              <Label>Link para o paciente preencher</Label>
+              <Label>Ou copie o link</Label>
               <div className="flex items-center gap-2">
                 <code className="flex-1 truncate rounded-md border bg-muted px-2 py-1.5 text-xs">
                   {link}
@@ -109,7 +126,12 @@ export function SendAnamnesisDialog({
                 </Button>
               </div>
             </div>
-            <Button nativeButton={false} render={<a href={link} />} className="w-full justify-center">
+            <Button
+              nativeButton={false}
+              render={<a href={link} />}
+              variant="outline"
+              className="w-full justify-center"
+            >
               Preencher agora neste dispositivo
             </Button>
           </div>

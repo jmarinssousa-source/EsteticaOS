@@ -33,7 +33,7 @@ export async function updateConsentTemplate(content: string): Promise<ActionResu
 
   if (error) return { error: "Não foi possível salvar o termo." };
 
-  revalidatePath("/configuracoes/consentimento");
+  revalidatePath("/configuracoes/formularios");
   return { success: true };
 }
 

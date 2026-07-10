@@ -3,10 +3,7 @@
 import { MessageCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { formatCurrency } from "@/lib/format";
-
-function onlyDigits(value: string) {
-  return value.replace(/\D/g, "");
-}
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 
 export function WhatsAppReceiptButton({
   clinicName,
@@ -31,10 +28,7 @@ export function WhatsAppReceiptButton({
       .filter(Boolean)
       .join("\n");
 
-    const digits = patientPhone ? onlyDigits(patientPhone) : "";
-    const phone = digits ? `55${digits.replace(/^55/, "")}` : "";
-    const url = `https://wa.me/${phone}?text=${encodeURIComponent(message)}`;
-    window.open(url, "_blank");
+    window.open(buildWhatsAppUrl(patientPhone, message), "_blank");
   }
 
   return (

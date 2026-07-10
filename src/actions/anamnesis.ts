@@ -11,7 +11,7 @@ import { QUESTION_TYPES, CHOICE_QUESTION_TYPES } from "@/lib/anamnesis/constants
 type ActionResult = { error?: string } | { success: true };
 
 function revalidateAnamnesis(patientId?: string) {
-  revalidatePath("/configuracoes/anamnese");
+  revalidatePath("/configuracoes/formularios");
   if (patientId) revalidatePath(`/pacientes/${patientId}`);
 }
 

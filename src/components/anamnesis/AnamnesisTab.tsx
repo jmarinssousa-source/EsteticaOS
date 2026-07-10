@@ -16,11 +16,17 @@ function formatDate(iso: string) {
 
 export function AnamnesisTab({
   patientId,
+  patientName,
+  patientPhone,
+  clinicName,
   templates,
   responses,
   canEdit,
 }: {
   patientId: string;
+  patientName: string;
+  patientPhone: string | null;
+  clinicName: string;
   templates: { id: string; name: string }[];
   responses: { id: string; template_name: string; status: ResponseStatus; created_at: string }[];
   canEdit: boolean;
@@ -39,13 +45,19 @@ export function AnamnesisTab({
     <div className="space-y-4">
       {canEdit && (
         <div className="flex justify-end">
-          <SendAnamnesisDialog patientId={patientId} templates={templates} />
+          <SendAnamnesisDialog
+            patientId={patientId}
+            patientName={patientName}
+            patientPhone={patientPhone}
+            clinicName={clinicName}
+            templates={templates}
+          />
         </div>
       )}
 
       {templates.length === 0 && (
         <p className="text-sm text-muted-foreground">
-          Nenhum modelo de anamnese ativo. Crie um em Configurações &gt; Modelos de anamnese.
+          Nenhum modelo de anamnese ativo. Crie um em Configurações &gt; Anamnese e consentimento.
         </p>
       )}
 

@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, ClipboardList, FileSignature, FileUp, Package, Percent, Users } from "lucide-react";
+import { Building2, ClipboardList, FileUp, Package, Percent, Users } from "lucide-react";
 
 export const metadata = { title: "Configurações — EstéticaOS" };
 
@@ -22,9 +22,9 @@ export default async function ConfiguracoesPage() {
       icon: Users,
     },
     {
-      href: "/configuracoes/anamnese",
-      title: "Modelos de anamnese",
-      description: "Crie e edite os formulários que os pacientes preenchem.",
+      href: "/configuracoes/formularios",
+      title: "Anamnese e consentimento",
+      description: "Modelos de anamnese e o termo de consentimento/autorização de imagem.",
       icon: ClipboardList,
     },
     {
@@ -44,12 +44,6 @@ export default async function ConfiguracoesPage() {
       title: "Importação/Exportação",
       description: "Migre ou exporte pacientes, procedimentos, agenda e financeiro por planilha.",
       icon: FileUp,
-    },
-    {
-      href: "/configuracoes/consentimento",
-      title: "Termo de consentimento",
-      description: "Personalize o texto de consentimento e autorização de imagem.",
-      icon: FileSignature,
     },
   ];
 
