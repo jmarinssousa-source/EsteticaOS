@@ -1,10 +1,11 @@
-// Illustrated base figures to draw over. Flat, colored, front/back ×
-// female/male body silhouettes plus a generic (unisex) facial bust — not
+// Illustrated base figures to draw over. Shaded vector illustrations (not
+// flat single-tone shapes) — gradients simulate roundness/volume since this
+// is hand-authored SVG, not a photo or licensed medical illustration. Not
 // anatomically precise by design (PRD 15.3 explicitly allows starting
-// simple: base image, free drawing, save marking), but colored and defined
-// enough to look professional in a clinic tool. Used both for on-screen
-// rendering and, as a plain string, to composite into the final saved PNG —
-// single source of truth so the two never drift apart.
+// simple: base image, free drawing, save marking), but detailed enough to
+// look intentional in a clinic tool. Used both for on-screen rendering and,
+// as a plain string, to composite into the final saved PNG — single source
+// of truth so the two never drift apart.
 //
 // Body maps come in four variants (front/back × female/male) so a
 // professional can mark a procedure on the correct side of the body —
@@ -14,15 +15,48 @@
 
 const SKIN = "#f2c9a0";
 const SKIN_SHADE = "#e6b078";
+const SKIN_HIGHLIGHT = "#ffe6c4";
 const OUTLINE = "#a9713f";
 const LANDMARK = "#8a5a34";
 const HAIR_FEMALE = "#4a3323";
+const HAIR_LIGHT = "#6b4c37";
+const HAIR_DARK = "#2e1f16";
 const GARMENT = "#d98a8f";
 const GARMENT_STROKE = "#b5636b";
 const LIPS = "#c4726c";
 const EYE_IRIS = "#3d2b1f";
 
-const SKIN_FILL = `fill="${SKIN}" stroke="${OUTLINE}" stroke-width="2" stroke-linejoin="round"`;
+// Gradients use the default objectBoundingBox units, so the same `url(#..)`
+// applied to the head, torso, an arm or a leg each computes its own
+// highlight relative to that shape's own box — one definition, a rounded
+// look on every part without repeating per-shape math.
+const GRADIENT_DEFS = `
+<defs>
+  <radialGradient id="skinGrad" cx="42%" cy="30%" r="75%">
+    <stop offset="0%" stop-color="${SKIN_HIGHLIGHT}" />
+    <stop offset="55%" stop-color="${SKIN}" />
+    <stop offset="100%" stop-color="${SKIN_SHADE}" />
+  </radialGradient>
+  <linearGradient id="hairGrad" x1="0" y1="0" x2="0" y2="1">
+    <stop offset="0%" stop-color="${HAIR_LIGHT}" />
+    <stop offset="55%" stop-color="${HAIR_FEMALE}" />
+    <stop offset="100%" stop-color="${HAIR_DARK}" />
+  </linearGradient>
+  <radialGradient id="cheekGrad" cx="50%" cy="50%" r="50%">
+    <stop offset="0%" stop-color="#e8837a" stop-opacity="0.4" />
+    <stop offset="100%" stop-color="#e8837a" stop-opacity="0" />
+  </radialGradient>
+  <radialGradient id="irisGrad" cx="38%" cy="34%" r="68%">
+    <stop offset="0%" stop-color="#9c7150" />
+    <stop offset="100%" stop-color="${EYE_IRIS}" />
+  </radialGradient>
+  <radialGradient id="lipGrad" cx="50%" cy="25%" r="85%">
+    <stop offset="0%" stop-color="#e0a199" />
+    <stop offset="100%" stop-color="${LIPS}" />
+  </radialGradient>
+</defs>`;
+
+const SKIN_FILL = `fill="url(#skinGrad)" stroke="${OUTLINE}" stroke-width="2" stroke-linejoin="round"`;
 const LANDMARK_LINE = `fill="none" stroke="${LANDMARK}" stroke-width="1.5" opacity="0.55" stroke-linecap="round"`;
 const GARMENT_FILL = `fill="${GARMENT}" stroke="${GARMENT_STROKE}" stroke-width="1.5" stroke-linejoin="round"`;
 
@@ -37,19 +71,38 @@ const FACE_OUTLINE =
 
 export const FACIAL_MAP_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="${FACIAL_MAP_VIEWBOX}" width="100%" height="100%">
+  ${GRADIENT_DEFS}
   <ellipse cx="58" cy="192" rx="13" ry="23" ${SKIN_FILL} />
   <ellipse cx="242" cy="192" rx="13" ry="23" ${SKIN_FILL} />
   <path d="${FACE_OUTLINE}" ${SKIN_FILL} />
-  <path d="M55,155 Q60,58 150,48 Q240,58 245,155 Q225,92 150,82 Q75,92 55,155 Z" fill="${HAIR_FEMALE}" opacity="0.8" />
-  <path d="M78,205 Q112,222 150,222 Q188,222 222,205" fill="none" stroke="${SKIN_SHADE}" stroke-width="10" opacity="0.4" stroke-linecap="round" />
-  <path d="M95 140 Q115 128 135 140" fill="none" stroke="${HAIR_FEMALE}" stroke-width="4" stroke-linecap="round" />
-  <path d="M165 140 Q185 128 205 140" fill="none" stroke="${HAIR_FEMALE}" stroke-width="4" stroke-linecap="round" />
+
+  <ellipse cx="95" cy="215" rx="26" ry="20" fill="url(#cheekGrad)" />
+  <ellipse cx="205" cy="215" rx="26" ry="20" fill="url(#cheekGrad)" />
+
+  <path d="M55,155 Q60,58 150,48 Q240,58 245,155 Q225,92 150,82 Q75,92 55,155 Z" fill="url(#hairGrad)" />
+  <path d="M62,120 Q90,72 150,60" fill="none" stroke="${HAIR_LIGHT}" stroke-width="3" opacity="0.5" stroke-linecap="round" />
+  <path d="M238,120 Q210,72 150,60" fill="none" stroke="${HAIR_DARK}" stroke-width="3" opacity="0.4" stroke-linecap="round" />
+
+  <path d="M92,142 Q113,127 136,138" fill="none" stroke="${HAIR_FEMALE}" stroke-width="4" stroke-linecap="round" />
+  <path d="M96,138 Q113,130 132,136" fill="none" stroke="${HAIR_DARK}" stroke-width="1.5" opacity="0.5" stroke-linecap="round" />
+  <path d="M164,138 Q187,127 208,142" fill="none" stroke="${HAIR_FEMALE}" stroke-width="4" stroke-linecap="round" />
+  <path d="M168,136 Q187,130 204,138" fill="none" stroke="${HAIR_DARK}" stroke-width="1.5" opacity="0.5" stroke-linecap="round" />
+
   <ellipse cx="112" cy="168" rx="19" ry="11" fill="#ffffff" stroke="${OUTLINE}" stroke-width="1.5" />
   <ellipse cx="188" cy="168" rx="19" ry="11" fill="#ffffff" stroke="${OUTLINE}" stroke-width="1.5" />
-  <circle cx="114" cy="169" r="6" fill="${EYE_IRIS}" />
-  <circle cx="186" cy="169" r="6" fill="${EYE_IRIS}" />
+  <circle cx="114" cy="169" r="7" fill="url(#irisGrad)" />
+  <circle cx="186" cy="169" r="7" fill="url(#irisGrad)" />
+  <circle cx="114" cy="169" r="3.2" fill="#1a1006" />
+  <circle cx="186" cy="169" r="3.2" fill="#1a1006" />
+  <circle cx="111.5" cy="166.5" r="1.6" fill="#ffffff" opacity="0.9" />
+  <circle cx="183.5" cy="166.5" r="1.6" fill="#ffffff" opacity="0.9" />
+
   <path d="M150 172 Q140 205 138 222 Q138 232 150 234 Q162 232 162 222" fill="none" stroke="${OUTLINE}" stroke-width="2" opacity="0.6" stroke-linecap="round" />
-  <path d="M120,258 Q150,268 180,258 Q150,290 120,258 Z" fill="${LIPS}" stroke="${OUTLINE}" stroke-width="1" />
+  <ellipse cx="140" cy="224" rx="4" ry="2.5" fill="${SKIN_SHADE}" opacity="0.5" />
+  <ellipse cx="160" cy="224" rx="4" ry="2.5" fill="${SKIN_SHADE}" opacity="0.5" />
+
+  <path d="M120,258 Q150,268 180,258 Q150,290 120,258 Z" fill="url(#lipGrad)" stroke="${OUTLINE}" stroke-width="1" />
+  <path d="M133,264 Q150,270 167,264" fill="none" stroke="#fff" stroke-width="1.5" opacity="0.35" stroke-linecap="round" />
   <path d="M150,296 Q140,304 150,310 Q160,304 150,296" fill="none" stroke="${OUTLINE}" stroke-width="1.5" opacity="0.4" />
 </svg>
 `.trim();
@@ -59,15 +112,16 @@ export const BODY_MAP_VIEWBOX = "0 0 300 560";
 function bodySvg(inner: string) {
   return `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="${BODY_MAP_VIEWBOX}" width="100%" height="100%">
+${GRADIENT_DEFS}
 ${inner}
 </svg>
 `.trim();
 }
 
 const FEMALE_HAIR = `
-  <path d="M118,28 C98,42 92,78 100,118 C104,100 110,88 116,80 C110,58 114,36 130,20 Z" fill="${HAIR_FEMALE}" />
-  <path d="M182,28 C202,42 208,78 200,118 C196,100 190,88 184,80 C190,58 186,36 170,20 Z" fill="${HAIR_FEMALE}" />
-  <path d="M118,28 Q150,2 182,28 Q150,18 118,28 Z" fill="${HAIR_FEMALE}" />`;
+  <path d="M118,28 C98,42 92,78 100,118 C104,100 110,88 116,80 C110,58 114,36 130,20 Z" fill="url(#hairGrad)" />
+  <path d="M182,28 C202,42 208,78 200,118 C196,100 190,88 184,80 C190,58 186,36 170,20 Z" fill="url(#hairGrad)" />
+  <path d="M118,28 Q150,2 182,28 Q150,18 118,28 Z" fill="url(#hairGrad)" />`;
 
 const FEMALE_BODY = `
   <ellipse cx="150" cy="50" rx="30" ry="36" ${SKIN_FILL} />
@@ -85,6 +139,8 @@ const FEMALE_BODY = `
 const FEMALE_FRONT_EXTRA = `
   <ellipse cx="124" cy="142" rx="26" ry="22" fill="${SKIN_SHADE}" opacity="0.4" />
   <ellipse cx="176" cy="142" rx="26" ry="22" fill="${SKIN_SHADE}" opacity="0.4" />
+  <ellipse cx="118" cy="132" rx="9" ry="6" fill="${SKIN_HIGHLIGHT}" opacity="0.5" />
+  <ellipse cx="170" cy="132" rx="9" ry="6" fill="${SKIN_HIGHLIGHT}" opacity="0.5" />
   <path d="M100,148 Q124,168 149,152" ${LANDMARK_LINE} />
   <path d="M151,152 Q176,168 200,148" ${LANDMARK_LINE} />
   <path d="M150,166 L150,200" ${LANDMARK_LINE} />
@@ -116,6 +172,8 @@ const MALE_BODY = `
 const MALE_FRONT_EXTRA = `
   <path d="M150,110 L150,205" ${LANDMARK_LINE} />
   <path d="M118,155 Q150,172 182,155" ${LANDMARK_LINE} />
+  <path d="M112,168 Q112,200 122,220" ${LANDMARK_LINE} />
+  <path d="M188,168 Q188,200 178,220" ${LANDMARK_LINE} />
   <circle cx="150" cy="238" r="3" fill="${OUTLINE}" />
   <path d="M98,258 Q150,244 202,258 Q210,282 194,298 Q150,310 106,298 Q90,282 98,258 Z" ${GARMENT_FILL} />`;
 
