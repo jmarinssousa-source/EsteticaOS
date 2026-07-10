@@ -13,6 +13,7 @@
 // facial procedures aren't marked differently by sex.
 
 const SKIN = "#f2c9a0";
+const SKIN_SHADE = "#e6b078";
 const OUTLINE = "#a9713f";
 const LANDMARK = "#8a5a34";
 const HAIR_FEMALE = "#4a3323";
@@ -27,20 +28,29 @@ const GARMENT_FILL = `fill="${GARMENT}" stroke="${GARMENT_STROKE}" stroke-width=
 
 export const FACIAL_MAP_VIEWBOX = "0 0 300 380";
 
+// Head outline: temples narrower than cheekbones, tapering to a defined
+// chin — a face-shaped path instead of a plain oval, for a more human read.
+const FACE_OUTLINE =
+  "M150,58 C192,58 226,94 226,135 C234,160 238,178 238,196 C238,230 227,258 207,274 " +
+  "C187,296 169,317 150,317 C131,317 113,296 93,274 C73,258 62,230 62,196 " +
+  "C62,178 66,160 74,135 C74,94 108,58 150,58 Z";
+
 export const FACIAL_MAP_SVG = `
 <svg xmlns="http://www.w3.org/2000/svg" viewBox="${FACIAL_MAP_VIEWBOX}" width="100%" height="100%">
-  <ellipse cx="150" cy="190" rx="95" ry="130" ${SKIN_FILL} />
-  <ellipse cx="52" cy="190" rx="14" ry="26" ${SKIN_FILL} />
-  <ellipse cx="248" cy="190" rx="14" ry="26" ${SKIN_FILL} />
-  <path d="M55,155 Q60,60 150,50 Q240,60 245,155 Q225,95 150,85 Q75,95 55,155 Z" fill="${HAIR_FEMALE}" opacity="0.8" />
+  <ellipse cx="58" cy="192" rx="13" ry="23" ${SKIN_FILL} />
+  <ellipse cx="242" cy="192" rx="13" ry="23" ${SKIN_FILL} />
+  <path d="${FACE_OUTLINE}" ${SKIN_FILL} />
+  <path d="M55,155 Q60,58 150,48 Q240,58 245,155 Q225,92 150,82 Q75,92 55,155 Z" fill="${HAIR_FEMALE}" opacity="0.8" />
+  <path d="M78,205 Q112,222 150,222 Q188,222 222,205" fill="none" stroke="${SKIN_SHADE}" stroke-width="10" opacity="0.4" stroke-linecap="round" />
   <path d="M95 140 Q115 128 135 140" fill="none" stroke="${HAIR_FEMALE}" stroke-width="4" stroke-linecap="round" />
   <path d="M165 140 Q185 128 205 140" fill="none" stroke="${HAIR_FEMALE}" stroke-width="4" stroke-linecap="round" />
-  <ellipse cx="112" cy="165" rx="20" ry="12" fill="#ffffff" stroke="${OUTLINE}" stroke-width="1.5" />
-  <ellipse cx="188" cy="165" rx="20" ry="12" fill="#ffffff" stroke="${OUTLINE}" stroke-width="1.5" />
-  <circle cx="112" cy="166" r="6" fill="${EYE_IRIS}" />
-  <circle cx="188" cy="166" r="6" fill="${EYE_IRIS}" />
-  <path d="M150 170 L142 225 Q150 234 158 225" fill="none" stroke="${OUTLINE}" stroke-width="2" opacity="0.7" />
-  <path d="M118,258 Q150,270 182,258 Q150,286 118,258 Z" fill="${LIPS}" stroke="${OUTLINE}" stroke-width="1" />
+  <ellipse cx="112" cy="168" rx="19" ry="11" fill="#ffffff" stroke="${OUTLINE}" stroke-width="1.5" />
+  <ellipse cx="188" cy="168" rx="19" ry="11" fill="#ffffff" stroke="${OUTLINE}" stroke-width="1.5" />
+  <circle cx="114" cy="169" r="6" fill="${EYE_IRIS}" />
+  <circle cx="186" cy="169" r="6" fill="${EYE_IRIS}" />
+  <path d="M150 172 Q140 205 138 222 Q138 232 150 234 Q162 232 162 222" fill="none" stroke="${OUTLINE}" stroke-width="2" opacity="0.6" stroke-linecap="round" />
+  <path d="M120,258 Q150,268 180,258 Q150,290 120,258 Z" fill="${LIPS}" stroke="${OUTLINE}" stroke-width="1" />
+  <path d="M150,296 Q140,304 150,310 Q160,304 150,296" fill="none" stroke="${OUTLINE}" stroke-width="1.5" opacity="0.4" />
 </svg>
 `.trim();
 
@@ -73,9 +83,12 @@ const FEMALE_BODY = `
   <ellipse cx="120" cy="528" rx="18" ry="9" ${SKIN_FILL} />`;
 
 const FEMALE_FRONT_EXTRA = `
-  <path d="M150,108 L150,200" ${LANDMARK_LINE} />
+  <ellipse cx="124" cy="142" rx="26" ry="22" fill="${SKIN_SHADE}" opacity="0.4" />
+  <ellipse cx="176" cy="142" rx="26" ry="22" fill="${SKIN_SHADE}" opacity="0.4" />
+  <path d="M100,148 Q124,168 149,152" ${LANDMARK_LINE} />
+  <path d="M151,152 Q176,168 200,148" ${LANDMARK_LINE} />
+  <path d="M150,166 L150,200" ${LANDMARK_LINE} />
   <circle cx="150" cy="235" r="3" fill="${OUTLINE}" />
-  <path d="M105,115 Q150,98 195,115 Q205,145 185,162 Q150,174 115,162 Q95,145 105,115 Z" ${GARMENT_FILL} />
   <path d="M95,255 Q150,240 205,255 Q214,282 196,300 Q150,312 104,300 Q86,282 95,255 Z" ${GARMENT_FILL} />`;
 
 const FEMALE_BACK_EXTRA = `

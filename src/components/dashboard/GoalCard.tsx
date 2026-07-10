@@ -53,7 +53,7 @@ function GoalGauge({ progress, color }: { progress: number; color: string }) {
   const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
 
   return (
-    <svg viewBox="0 0 200 138" className="w-full max-w-[240px]" role="img" aria-label={`${Math.round(progress)}% da meta atingida`}>
+    <svg viewBox="0 0 200 138" width={220} className="h-auto w-[220px] max-w-full" role="img" aria-label={`${Math.round(progress)}% da meta atingida`}>
       <path d={arcPath} fill="none" stroke="var(--muted)" strokeWidth={18} strokeLinecap="round" />
       <path
         d={arcPath}
@@ -156,7 +156,7 @@ export function GoalCard({
       </CardHeader>
       <CardContent className="space-y-4">
         <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
-          <div className="flex w-full shrink-0 justify-center sm:w-auto">
+          <div className="flex shrink-0 justify-center">
             <GoalGauge progress={progress} color={color} />
           </div>
           <div className="grid w-full flex-1 grid-cols-1 gap-3 sm:grid-cols-3">

@@ -75,28 +75,33 @@ export function Sidebar({
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
         {items.map((item) => {
           const active = pathname === item.href || pathname.startsWith(`${item.href}/`);
-          const link = (
-            <Link
-              key={item.href}
-              href={item.href}
-              className={cn(
-                "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
-                collapsed && "justify-center px-2",
-                active
-                  ? "bg-sidebar-primary text-sidebar-primary-foreground"
-                  : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
-              )}
-            >
-              <item.icon className="size-4 shrink-0" />
-              {!collapsed && item.label}
-            </Link>
+          const linkClassName = cn(
+            "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
+            collapsed && "justify-center px-2",
+            active
+              ? "bg-sidebar-primary text-sidebar-primary-foreground"
+              : "text-sidebar-foreground hover:bg-sidebar-accent hover:text-sidebar-accent-foreground",
           );
 
-          if (!collapsed) return link;
+          if (!collapsed) {
+            return (
+              <Link key={item.href} href={item.href} className={linkClassName}>
+                <item.icon className="size-4 shrink-0" />
+                {item.label}
+              </Link>
+            );
+          }
 
+          // The <Link> stays the real anchor here — the tooltip only wraps an
+          // inert <span> inside it, so navigation never depends on Base UI's
+          // render-prop merge preserving href/onClick on a cloned element.
           return (
             <Tooltip key={item.href}>
-              <TooltipTrigger render={link} />
+              <Link href={item.href} className={linkClassName}>
+                <TooltipTrigger render={<span className="inline-flex" />}>
+                  <item.icon className="size-4 shrink-0" />
+                </TooltipTrigger>
+              </Link>
               <TooltipContent side="right">{item.label}</TooltipContent>
             </Tooltip>
           );

@@ -51,10 +51,10 @@ export default async function ReciboPage({
         <div className="flex shrink-0 flex-col gap-2 print:hidden">
           <PrintButton label="Salvar como PDF" />
           <WhatsAppReceiptButton
+            entryId={entry.id}
             clinicName={clinic?.name ?? ""}
             patientName={patient?.name ?? null}
             amount={entry.amount}
-            paymentDate={entry.payment_date}
             patientPhone={patient?.phone ?? null}
           />
         </div>

@@ -1,40 +1,60 @@
 "use client";
 
+import { useTransition } from "react";
+import { toast } from "sonner";
 import { MessageCircle } from "lucide-react";
-import { Button } from "@/components/ui/button";
-import { formatCurrency } from "@/lib/format";
+import { getReceiptPdfUrl } from "@/actions/receipts";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
+import { formatCurrency } from "@/lib/format";
+import { Button } from "@/components/ui/button";
 
 export function WhatsAppReceiptButton({
+  entryId,
   clinicName,
   patientName,
   amount,
-  paymentDate,
   patientPhone,
 }: {
+  entryId: string;
   clinicName: string;
   patientName: string | null;
   amount: number;
-  paymentDate: string | null;
   patientPhone: string | null;
 }) {
-  function handleSend() {
-    const message = [
-      `Recibo — ${clinicName}`,
-      patientName ? `Paciente: ${patientName}` : null,
-      `Valor: ${formatCurrency(amount)}`,
-      paymentDate ? `Data: ${new Date(paymentDate).toLocaleDateString("pt-BR")}` : null,
-    ]
-      .filter(Boolean)
-      .join("\n");
+  const [isPending, startTransition] = useTransition();
 
-    window.open(buildWhatsAppUrl(patientPhone, message), "_blank");
+  function handleSend() {
+    // Open the tab synchronously (before the await) so browsers still treat
+    // it as a direct result of the click, not a blocked popup.
+    const tab = window.open("", "_blank");
+
+    startTransition(async () => {
+      const result = await getReceiptPdfUrl(entryId);
+      if ("error" in result) {
+        toast.error(result.error);
+        tab?.close();
+        return;
+      }
+
+      const message = [
+        `Recibo — ${clinicName}`,
+        patientName ? `Paciente: ${patientName}` : null,
+        `Valor: ${formatCurrency(amount)}`,
+        `PDF do recibo: ${result.url}`,
+      ]
+        .filter(Boolean)
+        .join("\n");
+
+      const url = buildWhatsAppUrl(patientPhone, message);
+      if (tab) tab.location.href = url;
+      else window.open(url, "_blank");
+    });
   }
 
   return (
-    <Button variant="outline" className="print:hidden" onClick={handleSend}>
+    <Button variant="outline" className="print:hidden" onClick={handleSend} disabled={isPending}>
       <MessageCircle className="size-4" />
-      Enviar para WhatsApp
+      {isPending ? "Gerando PDF..." : "Enviar para WhatsApp"}
     </Button>
   );
 }
