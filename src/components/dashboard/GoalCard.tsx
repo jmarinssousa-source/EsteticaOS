@@ -40,35 +40,44 @@ function progressStatusLabel(progress: number) {
   return "Crítico: bem atrás da meta.";
 }
 
-// Hand-drawn semicircle gauge instead of Recharts' RadialBarChart: full
-// control over the arc geometry means the percentage label can never
-// overlap the stroke, at any container size.
+// A full ring instead of a semicircle: the background track is always a
+// complete circle, so there's never a mostly-empty arc at low percentages
+// and no asymmetric viewBox to get the aspect ratio wrong. Fixed square
+// pixel size (no %, no aspect-ratio auto-computation) so it can't collapse
+// depending on the parent's flex sizing.
 function GoalGauge({ progress, color }: { progress: number; color: string }) {
-  const r = 80;
-  const cx = 100;
-  const cy = 104;
-  const arcLength = Math.PI * r;
+  const size = 176;
+  const r = 76;
+  const cx = 88;
+  const cy = 88;
+  const circumference = 2 * Math.PI * r;
   const arcProgress = Math.min(progress, 100);
-  const dashOffset = arcLength * (1 - arcProgress / 100);
-  const arcPath = `M ${cx - r} ${cy} A ${r} ${r} 0 0 1 ${cx + r} ${cy}`;
+  const dashOffset = circumference * (1 - arcProgress / 100);
 
   return (
-    <svg viewBox="0 0 200 138" width={220} className="h-auto w-[220px] max-w-full" role="img" aria-label={`${Math.round(progress)}% da meta atingida`}>
-      <path d={arcPath} fill="none" stroke="var(--muted)" strokeWidth={18} strokeLinecap="round" />
-      <path
-        d={arcPath}
+    <svg
+      viewBox="0 0 176 176"
+      width={size}
+      height={size}
+      className="shrink-0"
+      role="img"
+      aria-label={`${Math.round(progress)}% da meta atingida`}
+    >
+      <circle cx={cx} cy={cy} r={r} fill="none" stroke="var(--muted)" strokeWidth={16} />
+      <circle
+        cx={cx}
+        cy={cy}
+        r={r}
         fill="none"
         stroke={color}
-        strokeWidth={18}
+        strokeWidth={16}
         strokeLinecap="round"
-        strokeDasharray={arcLength}
+        strokeDasharray={circumference}
         strokeDashoffset={dashOffset}
+        transform={`rotate(-90 ${cx} ${cy})`}
       />
-      <text x={cx} y={cy - 18} textAnchor="middle" fontSize={36} fontWeight={800} fill={color}>
+      <text x={cx} y={cy + 11} textAnchor="middle" fontSize={32} fontWeight={800} fill={color}>
         {Math.round(progress)}%
-      </text>
-      <text x={cx} y={cy + 8} textAnchor="middle" fontSize={12} fill="var(--muted-foreground)">
-        {progressStatusLabel(progress)}
       </text>
     </svg>
   );
@@ -155,9 +164,12 @@ export function GoalCard({
         )}
       </CardHeader>
       <CardContent className="space-y-4">
-        <div className="flex flex-col items-center gap-6 sm:flex-row sm:items-center">
-          <div className="flex shrink-0 justify-center">
+        <div className="flex flex-col items-center gap-4 sm:flex-row sm:items-center sm:gap-6">
+          <div className="flex shrink-0 flex-col items-center gap-2 text-center">
             <GoalGauge progress={progress} color={color} />
+            <p className="max-w-[176px] text-xs font-medium" style={{ color }}>
+              {progressStatusLabel(progress)}
+            </p>
           </div>
           <div className="grid w-full flex-1 grid-cols-1 gap-3 sm:grid-cols-3">
             <div className="flex items-center gap-3 rounded-lg bg-muted/50 p-3">
