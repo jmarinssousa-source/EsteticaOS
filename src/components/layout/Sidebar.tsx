@@ -58,8 +58,12 @@ export function Sidebar({
       <div className="flex h-16 items-center justify-between gap-2 border-b px-3">
         {!collapsed && (
           <div className="min-w-0">
-            <p className="truncate text-base font-bold tracking-tight">{clinicName}</p>
-            <p className="text-[11px] text-muted-foreground">EstéticaOS</p>
+            <p className="truncate font-heading text-base font-semibold tracking-tight">
+              {clinicName}
+            </p>
+            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+              EstéticaOS
+            </p>
           </div>
         )}
         <Button

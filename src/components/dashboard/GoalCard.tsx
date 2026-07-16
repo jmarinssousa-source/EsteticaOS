@@ -26,10 +26,10 @@ const initialState: ActionState = {};
 // goal the clinic is; green marks hitting it; blue kicks in once it's been
 // clearly surpassed — a visibly different, more celebratory tier.
 function progressColor(progress: number) {
-  if (progress >= 120) return "#1d6fd8";
-  if (progress >= 100) return "#0ca30c";
-  if (progress >= 40) return "#e8720c";
-  return "#d03b3b";
+  if (progress >= 120) return "#3b6fc4";
+  if (progress >= 100) return "#4f9b6e";
+  if (progress >= 40) return "#d98a3d";
+  return "#c75450";
 }
 
 function progressStatusLabel(progress: number) {

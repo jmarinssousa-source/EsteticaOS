@@ -13,6 +13,7 @@ import {
 import { MobileNav } from "@/components/layout/MobileNav";
 import { HelpButton } from "@/components/help/HelpButton";
 import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
+import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { ROLE_LABELS, type ClinicRole, type Permissions } from "@/lib/auth/permissions";
 
 function initials(name: string) {
@@ -40,13 +41,18 @@ export function Topbar({
       <div className="flex items-center gap-2">
         <MobileNav role={role} permissions={permissions} />
         <div className="flex flex-col md:hidden">
-          <span className="text-sm font-semibold leading-tight">{clinicName}</span>
-          <span className="text-[10px] leading-tight text-muted-foreground">EstéticaOS</span>
+          <span className="font-heading text-sm font-semibold leading-tight">{clinicName}</span>
+          <span className="text-[9px] uppercase tracking-widest leading-tight text-muted-foreground">
+            EstéticaOS
+          </span>
         </div>
-        <span className="hidden text-sm font-medium text-foreground md:inline">{clinicName}</span>
+        <span className="hidden font-heading text-sm font-medium text-foreground md:inline">
+          {clinicName}
+        </span>
       </div>
 
       <div className="flex items-center gap-1">
+        <ThemeToggle />
         <HelpButton />
         <DropdownMenu>
           <DropdownMenuTrigger render={<Button variant="ghost" className="flex items-center gap-2 px-2" />}>
