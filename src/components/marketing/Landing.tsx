@@ -1,9 +1,22 @@
 import Link from "next/link";
-import { CalendarCheck, HandCoins, LineChart, NotebookPen, PackageSearch, Users } from "lucide-react";
+import Image from "next/image";
+import {
+  ArrowRightLeft,
+  CalendarCheck,
+  HandCoins,
+  LineChart,
+  MessageCircle,
+  NotebookPen,
+  PackageSearch,
+  Users,
+} from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
+import { CrmPreview } from "@/components/marketing/CrmPreview";
+import { AgendaPreview } from "@/components/marketing/AgendaPreview";
+import { ReceiptPreview } from "@/components/marketing/ReceiptPreview";
 
 const FEATURES = [
   {
@@ -15,8 +28,7 @@ const FEATURES = [
   {
     icon: CalendarCheck,
     title: "Menos furos na agenda",
-    description:
-      "Veja o dia inteiro da clínica de uma vez e evite conflitos de horário entre profissionais.",
+    description: "Veja o dia inteiro da clínica de uma vez e evite conflitos de horário entre profissionais.",
   },
   {
     icon: HandCoins,
@@ -26,8 +38,7 @@ const FEATURES = [
   {
     icon: NotebookPen,
     title: "Evolução documentada",
-    description:
-      "Fotos, anamnese e mapas de evolução guardados com o paciente, prontos para consultar em segundos.",
+    description: "Fotos, anamnese e mapas de evolução guardados com o paciente, prontos para consultar em segundos.",
   },
   {
     icon: PackageSearch,
@@ -39,6 +50,34 @@ const FEATURES = [
     title: "Decisões com dado, não achismo",
     description: "Receita por profissional, procedimento mais vendido, tudo num relatório.",
   },
+  {
+    icon: ArrowRightLeft,
+    title: "Migração sem dor de cabeça",
+    description: "Já usa outro sistema? Exporte seus dados e importe direto no EstéticaOS, em poucos cliques.",
+  },
+  {
+    icon: MessageCircle,
+    title: "Suporte direto com quem constrói o sistema",
+    description: "Fala com a gente pelo WhatsApp quando precisar, sem fila de atendimento nem robô.",
+  },
+];
+
+const TOUR = [
+  {
+    title: "CRM que não deixa lead esfriar",
+    description: "Cada contato tem um estágio claro, do primeiro \"oi\" até o fechamento.",
+    preview: <CrmPreview />,
+  },
+  {
+    title: "Agenda organizada por profissional",
+    description: "O dia inteiro da clínica numa lista simples, sem planilha nem caderno.",
+    preview: <AgendaPreview />,
+  },
+  {
+    title: "Recibo personalizado com a sua clínica",
+    description: "Nome, endereço e dados da sua clínica, prontos para enviar por WhatsApp ou salvar em PDF.",
+    preview: <ReceiptPreview />,
+  },
 ];
 
 const STEPS = [
@@ -48,8 +87,7 @@ const STEPS = [
   },
   {
     title: "Convide sua equipe",
-    description:
-      "Cada pessoa entra com o nível de acesso certo: recepção, financeiro, profissional.",
+    description: "Cada pessoa entra com o nível de acesso certo: recepção, financeiro, profissional.",
   },
   {
     title: "Comece a atender",
@@ -62,7 +100,10 @@ export function Landing() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
-          <span className="font-heading text-lg font-semibold tracking-tight">EstéticaOS</span>
+          <div className="flex items-center gap-2">
+            <Image src="/icon.svg" alt="" width={28} height={28} unoptimized className="rounded-lg" />
+            <span className="font-heading text-xl font-semibold tracking-tight">EstéticaOS</span>
+          </div>
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button variant="ghost" render={<Link href="/login" />}>
@@ -86,24 +127,27 @@ export function Landing() {
           <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
             <div>
               <span className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
-                Feito para clínicas de estética
+                Feito só para clínicas de estética
               </span>
               <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
-                Cada agendamento, cada procedimento, cada real — organizados num só lugar.
+                Agenda, financeiro e pacientes organizados numa única tela.
               </h1>
               <p className="mt-4 max-w-xl text-base text-muted-foreground sm:text-lg">
-                O EstéticaOS substitui a planilha, o caderno e os grupos de WhatsApp perdidos por um
-                sistema único: agenda, prontuário, financeiro e CRM de leads, pensado para o dia a
-                dia de uma clínica de verdade.
+                Chega de espalhar sua clínica entre planilha, caderno e grupo de WhatsApp. O EstéticaOS
+                junta agenda, prontuário, financeiro, estoque e CRM de leads num só sistema, pensado do
+                zero para clínica de estética, não adaptado de outro tipo de negócio.
               </p>
               <div className="mt-8 flex flex-wrap items-center gap-3">
                 <Button size="lg" render={<Link href="/cadastro" />}>
-                  Criar conta grátis
+                  Começar teste grátis de 15 dias
                 </Button>
                 <Button size="lg" variant="outline" render={<Link href="/login" />}>
                   Já tenho conta
                 </Button>
               </div>
+              <p className="mt-3 text-xs text-muted-foreground">
+                15 dias grátis, sem cartão de crédito. Cancele quando quiser.
+              </p>
             </div>
             <DashboardPreview />
           </div>
@@ -114,11 +158,11 @@ export function Landing() {
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Tudo que sua clínica precisa, sem depender de planilha
             </h2>
-            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-3">
+            <div className="mt-10 grid gap-6 sm:grid-cols-2 lg:grid-cols-4">
               {FEATURES.map((feature) => (
                 <div key={feature.title} className="rounded-2xl border border-border bg-card p-6">
                   <feature.icon className="size-5 text-primary" />
-                  <h3 className="mt-4 text-lg font-semibold">{feature.title}</h3>
+                  <h3 className="mt-4 text-base font-semibold">{feature.title}</h3>
                   <p className="mt-2 text-sm text-muted-foreground">{feature.description}</p>
                 </div>
               ))}
@@ -127,6 +171,21 @@ export function Landing() {
         </section>
 
         <section className="px-4 py-20 md:px-6">
+          <div className="mx-auto max-w-6xl">
+            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">Como fica na prática</h2>
+            <div className="mt-10 grid gap-10 lg:grid-cols-3">
+              {TOUR.map((item) => (
+                <div key={item.title}>
+                  {item.preview}
+                  <h3 className="mt-4 text-base font-semibold">{item.title}</h3>
+                  <p className="mt-1 text-sm text-muted-foreground">{item.description}</p>
+                </div>
+              ))}
+            </div>
+          </div>
+        </section>
+
+        <section className="border-t border-border/60 bg-muted/30 px-4 py-20 md:px-6">
           <div className="mx-auto max-w-4xl">
             <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
               Comece a usar em três passos
@@ -142,6 +201,10 @@ export function Landing() {
                 </li>
               ))}
             </ol>
+            <p className="mt-10 rounded-xl border border-border bg-card px-4 py-3 text-sm text-muted-foreground">
+              Já usa outro sistema de gestão? A migração é simples: exporte seus dados e importe direto
+              no EstéticaOS, em Configurações {'>'} Importação/Exportação.
+            </p>
           </div>
         </section>
 
@@ -156,10 +219,11 @@ export function Landing() {
               Pronta pra tirar sua clínica do caderno?
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
-              Crie sua conta agora e comece a organizar agenda, financeiro e pacientes ainda hoje.
+              Crie sua conta agora e comece a organizar agenda, financeiro e pacientes ainda hoje. 15
+              dias grátis, sem cartão de crédito.
             </p>
             <Button size="lg" className="mt-6" render={<Link href="/cadastro" />}>
-              Criar conta grátis
+              Começar teste grátis
             </Button>
           </div>
         </section>
@@ -167,7 +231,10 @@ export function Landing() {
 
       <footer className="border-t border-border/60 px-4 py-8 md:px-6">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 sm:flex-row sm:justify-between">
-          <span className="font-heading text-sm font-semibold">EstéticaOS</span>
+          <div className="flex items-center gap-2">
+            <Image src="/icon.svg" alt="" width={20} height={20} unoptimized className="rounded-md" />
+            <span className="font-heading text-base font-semibold">EstéticaOS</span>
+          </div>
           <OrbyniqBadge className="items-center text-center sm:items-end sm:text-right" />
         </div>
       </footer>

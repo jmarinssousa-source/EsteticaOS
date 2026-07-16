@@ -2,6 +2,7 @@ import type { PermissionKey } from "@/lib/auth/permissions";
 import {
   CalendarDays,
   ClipboardList,
+  CreditCard,
   Home,
   Kanban,
   LineChart,
@@ -29,5 +30,6 @@ export const NAV_ITEMS: NavItem[] = [
   { href: "/financeiro", label: "Financeiro", icon: Wallet, permission: "finance_view" },
   { href: "/estoque", label: "Estoque", icon: Package, permission: "inventory_view" },
   { href: "/relatorios", label: "Relatórios", icon: LineChart, permission: "reports_view" },
+  { href: "/plano", label: "Plano", icon: CreditCard, permission: "settings_access" },
   { href: "/configuracoes", label: "Configurações", icon: Settings, permission: "settings_access" },
 ];

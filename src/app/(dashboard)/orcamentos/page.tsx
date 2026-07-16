@@ -3,6 +3,7 @@ import { hasPermission } from "@/lib/auth/permissions";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { formatCurrency } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { BUDGET_STATUS_LABELS } from "@/lib/orcamentos/constants";
 import type { BudgetStatus } from "@/lib/orcamentos/constants";
 import { Badge } from "@/components/ui/badge";
@@ -12,12 +13,24 @@ import { NewBudgetDialog } from "@/components/orcamentos/NewBudgetDialog";
 
 export const metadata = { title: "Orçamentos — EstéticaOS" };
 
-export default async function OrcamentosPage() {
+const SORT_OPTIONS = [
+  { key: "name", label: "Nome" },
+  { key: "date", label: "Data" },
+] as const;
+
+export default async function OrcamentosPage({
+  searchParams,
+}: {
+  searchParams: Promise<{ sort?: string }>;
+}) {
   const member = await requirePermission("budgets_view");
   const canEdit = hasPermission(member, "budgets_edit");
+  const { sort = "name" } = await searchParams;
+  const sortByName = sort !== "date";
 
   const supabase = await createClient();
-  const [{ data: budgets }, { data: patients }] = await Promise.all([
+
+  const [{ data: rawBudgets }, { data: patients }] = await Promise.all([
     supabase
       .from("budgets")
       .select("id, status, total_value, created_at, patients(name)")
@@ -25,6 +38,17 @@ export default async function OrcamentosPage() {
       .order("created_at", { ascending: false }),
     supabase.from("patients").select("id, name").eq("clinic_id", member.clinicId).order("name"),
   ]);
+
+  // PostgREST's `referencedTable` ordering only reorders embedded child
+  // arrays, not the parent rows in a many-to-one embed like this one — so
+  // sorting by patient name has to happen in JS after the fetch.
+  const budgets = sortByName
+    ? [...(rawBudgets ?? [])].sort((a, b) => {
+        const nameA = (a.patients as unknown as { name: string } | null)?.name ?? "";
+        const nameB = (b.patients as unknown as { name: string } | null)?.name ?? "";
+        return nameA.localeCompare(nameB, "pt-BR");
+      })
+    : rawBudgets;
 
   return (
     <div className="space-y-4">
@@ -34,6 +58,26 @@ export default async function OrcamentosPage() {
           <p className="text-sm text-muted-foreground">Monte orçamentos por paciente e converta em venda.</p>
         </div>
         {canEdit && <NewBudgetDialog patients={patients ?? []} />}
+      </div>
+
+      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+        <span>Ordenar por:</span>
+        <div className="flex gap-1 rounded-lg border p-0.5">
+          {SORT_OPTIONS.map((option) => (
+            <Link
+              key={option.key}
+              href={`/orcamentos?sort=${option.key}`}
+              className={cn(
+                "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+                sort === option.key || (option.key === "name" && sort !== "date")
+                  ? "bg-primary text-primary-foreground"
+                  : "text-muted-foreground hover:bg-muted",
+              )}
+            >
+              {option.label}
+            </Link>
+          ))}
+        </div>
       </div>
 
       <Card>

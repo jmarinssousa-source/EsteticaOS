@@ -1,19 +1,26 @@
-const RADIUS = 42;
+import { BrowserFrame } from "@/components/marketing/BrowserFrame";
+
+const RADIUS = 40;
 const CIRCUMFERENCE = 2 * Math.PI * RADIUS;
 const DEMO_PROGRESS = 0.82;
 
+function StatTile({ label, value, emphasis }: { label: string; value: string; emphasis?: boolean }) {
+  return (
+    <div className="rounded-xl border border-border bg-background p-3">
+      <p className="text-[10px] text-muted-foreground">{label}</p>
+      <p className={`font-heading text-base font-semibold ${emphasis ? "text-champagne" : ""}`}>{value}</p>
+    </div>
+  );
+}
+
 export function DashboardPreview() {
   return (
-    <div className="relative mx-auto w-full max-w-md rotate-1 rounded-3xl border border-border bg-card p-5 shadow-2xl shadow-primary/10 sm:rotate-2">
-      <div className="mb-4 flex items-center gap-1.5">
-        <span className="size-2.5 rounded-full bg-[oklch(0.72_0.14_25)]" />
-        <span className="size-2.5 rounded-full bg-champagne" />
-        <span className="size-2.5 rounded-full bg-sage" />
-        <span className="ml-3 truncate text-xs text-muted-foreground">estetica-os.app/hoje</span>
-      </div>
+    <BrowserFrame path="/hoje">
+      <p className="text-xs text-muted-foreground">Olá, Camila</p>
+      <p className="font-heading text-sm font-semibold">Clínica Bella Estética</p>
 
-      <div className="flex items-center gap-4 rounded-2xl bg-muted/60 p-4">
-        <svg viewBox="0 0 100 100" className="size-20 shrink-0" role="img" aria-label="Meta do mês: 82%">
+      <div className="mt-4 flex items-center gap-4 rounded-2xl bg-muted/60 p-4">
+        <svg viewBox="0 0 100 100" className="size-16 shrink-0" role="img" aria-label="Meta do mês: 82%">
           <circle cx="50" cy="50" r={RADIUS} fill="none" stroke="var(--border)" strokeWidth="9" />
           <circle
             cx="50"
@@ -27,7 +34,7 @@ export function DashboardPreview() {
             strokeDashoffset={CIRCUMFERENCE * (1 - DEMO_PROGRESS)}
             transform="rotate(-90 50 50)"
           />
-          <text x="50" y="57" textAnchor="middle" fontSize="22" fontWeight="700" fill="var(--primary)">
+          <text x="50" y="56" textAnchor="middle" fontSize="20" fontWeight="700" fill="var(--primary)">
             82%
           </text>
         </svg>
@@ -38,20 +45,17 @@ export function DashboardPreview() {
         </div>
       </div>
 
-      <div className="mt-3 grid grid-cols-3 gap-2">
-        <div className="rounded-xl border border-border bg-background p-3">
-          <p className="text-[10px] text-muted-foreground">Agenda hoje</p>
-          <p className="font-heading text-base font-semibold">12</p>
-        </div>
-        <div className="rounded-xl border border-border bg-background p-3">
-          <p className="text-[10px] text-muted-foreground">Leads pendentes</p>
-          <p className="font-heading text-base font-semibold">4</p>
-        </div>
-        <div className="rounded-xl border border-border bg-background p-3">
-          <p className="text-[10px] text-muted-foreground">A receber</p>
-          <p className="font-heading text-base font-semibold">R$ 3,6k</p>
-        </div>
+      <div className="mt-3 grid grid-cols-2 gap-2 sm:grid-cols-4">
+        <StatTile label="Agenda hoje" value="12" />
+        <StatTile label="Leads pendentes" value="4" />
+        <StatTile label="A receber" value="R$ 3,6k" />
+        <StatTile label="Estoque baixo" value="2" emphasis />
       </div>
-    </div>
+
+      <div className="mt-3 flex items-center gap-2 rounded-xl border border-border bg-background px-3 py-2 text-xs text-muted-foreground">
+        <span className="inline-block size-1.5 shrink-0 rounded-full bg-champagne" />
+        3 leads parados há mais de 5 dias
+      </div>
+    </BrowserFrame>
   );
 }

@@ -10,6 +10,7 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Table, TableBody, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { EntryFormDialog } from "@/components/financeiro/EntryFormDialog";
 import { EntryRow } from "@/components/financeiro/EntryRow";
+import { CashFlowChart } from "@/components/financeiro/CashFlowChart";
 
 export const metadata = { title: "Financeiro — EstéticaOS" };
 
@@ -58,6 +59,38 @@ export default async function FinanceiroPage({
 
   const { data: entries } = allowedTypes.length > 0 ? await query : { data: [] };
 
+  // Independent of the `filter` tab above — always reflects the full
+  // clinic's revenue/expense split, so the summary tiles and chart don't
+  // shift when the user is just browsing a filtered list below.
+  let cashFlowData: { label: string; pago: number; pendente: number }[] = [];
+  let receivableTotal = 0;
+  let payableTotal = 0;
+  let receivedTotal = 0;
+  let paidExpenseTotal = 0;
+  if (allowedTypes.length > 0) {
+    const { data: summaryEntries } = await supabase
+      .from("financial_entries")
+      .select("type, status, amount")
+      .eq("clinic_id", member.clinicId)
+      .in("type", allowedTypes);
+
+    for (const entry of summaryEntries ?? []) {
+      const amount = Number(entry.amount);
+      if (entry.type === "revenue") {
+        if (entry.status === "paid") receivedTotal += amount;
+        else receivableTotal += amount;
+      } else {
+        if (entry.status === "paid") paidExpenseTotal += amount;
+        else payableTotal += amount;
+      }
+    }
+
+    cashFlowData = [
+      ...(canViewRevenue ? [{ label: "Receita", pago: receivedTotal, pendente: receivableTotal }] : []),
+      ...(canViewExpense ? [{ label: "Despesa", pago: paidExpenseTotal, pendente: payableTotal }] : []),
+    ];
+  }
+
   const patientIds = [...new Set((entries ?? []).map((e) => e.patient_id).filter((id): id is string => Boolean(id)))];
   const { data: patients } =
     patientIds.length > 0
@@ -97,6 +130,54 @@ export default async function FinanceiroPage({
         </div>
         {canEdit && <EntryFormDialog patients={patients ?? []} />}
       </div>
+
+      {cashFlowData.length > 0 && (
+        <Card>
+          <CardHeader>
+            <CardTitle className="text-base">Resumo financeiro</CardTitle>
+            <CardDescription>Receita e despesa, pago/recebido contra o que ainda está pendente.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-2 gap-3 sm:grid-cols-4">
+              {canViewRevenue && (
+                <>
+                  <div className="rounded-lg border bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">Recebido</p>
+                    <p className="text-lg font-semibold text-sage">{formatCurrency(receivedTotal)}</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">A receber</p>
+                    <p className="text-lg font-semibold text-champagne">{formatCurrency(receivableTotal)}</p>
+                  </div>
+                </>
+              )}
+              {canViewExpense && (
+                <>
+                  <div className="rounded-lg border bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">Pago</p>
+                    <p className="text-lg font-semibold text-sage">{formatCurrency(paidExpenseTotal)}</p>
+                  </div>
+                  <div className="rounded-lg border bg-muted/40 p-3">
+                    <p className="text-xs text-muted-foreground">A pagar</p>
+                    <p className="text-lg font-semibold text-champagne">{formatCurrency(payableTotal)}</p>
+                  </div>
+                </>
+              )}
+            </div>
+            <div className="mt-4">
+              <CashFlowChart data={cashFlowData} />
+              <div className="mt-2 flex items-center gap-4 text-xs text-muted-foreground">
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-full bg-sage" /> Pago / recebido
+                </span>
+                <span className="flex items-center gap-1.5">
+                  <span className="size-2.5 rounded-full bg-champagne" /> Pendente
+                </span>
+              </div>
+            </div>
+          </CardContent>
+        </Card>
+      )}
 
       <div className="flex flex-wrap gap-1 rounded-lg border p-0.5 sm:w-fit">
         {FILTERS.map((f) => (
