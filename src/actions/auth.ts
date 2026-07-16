@@ -84,10 +84,23 @@ export async function signUp(
   });
 
   if (signUpError) {
+    console.error("signUp falhou:", signUpError.code, signUpError.status, signUpError.message);
+
     if (signUpError.code === "user_already_exists") {
       return { error: "Este e-mail já está cadastrado. Faça login ou recupere sua senha." };
     }
-    return { error: "Não foi possível criar sua conta. Tente novamente." };
+    if (signUpError.code === "email_address_invalid") {
+      return { error: "Esse endereço de e-mail parece inválido. Confira e tente novamente." };
+    }
+    if (signUpError.code === "weak_password") {
+      return {
+        error: "Senha muito fraca. Use pelo menos 8 caracteres, misturando letras e números.",
+      };
+    }
+    if (signUpError.code === "over_email_send_rate_limit" || signUpError.status === 429) {
+      return { error: "Muitas tentativas em pouco tempo. Aguarde alguns minutos e tente novamente." };
+    }
+    return { error: "Não foi possível criar sua conta. Tente novamente em instantes." };
   }
 
   const userId = signUpData.user?.id;
@@ -107,6 +120,7 @@ export async function signUp(
     .single();
 
   if (clinicError || !clinic) {
+    console.error("signUp: falha ao criar clínica:", clinicError?.message);
     return { error: "Não foi possível criar sua clínica. Tente novamente." };
   }
 
@@ -121,6 +135,7 @@ export async function signUp(
   });
 
   if (memberError) {
+    console.error("signUp: falha ao criar clinic_members:", memberError.message);
     return { error: "Não foi possível concluir seu cadastro. Tente novamente." };
   }
 

@@ -3,8 +3,8 @@
 import { useActionState } from "react";
 import { updatePassword, type ActionState } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const initialState: ActionState = {};
@@ -22,15 +22,17 @@ export function ResetPasswordForm() {
 
       <div className="space-y-2">
         <Label htmlFor="password">Nova senha</Label>
-        <Input id="password" name="password" type="password" required />
-        {state.fieldErrors?.password && (
+        <PasswordInput id="password" name="password" minLength={8} required />
+        {state.fieldErrors?.password ? (
           <p className="text-sm text-destructive">{state.fieldErrors.password[0]}</p>
+        ) : (
+          <p className="text-xs text-muted-foreground">Mínimo de 8 caracteres.</p>
         )}
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="confirmPassword">Confirmar nova senha</Label>
-        <Input id="confirmPassword" name="confirmPassword" type="password" required />
+        <PasswordInput id="confirmPassword" name="confirmPassword" minLength={8} required />
         {state.fieldErrors?.confirmPassword && (
           <p className="text-sm text-destructive">{state.fieldErrors.confirmPassword[0]}</p>
         )}

@@ -6,6 +6,7 @@ import type { ActionState } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MaskedInput } from "@/components/ui/masked-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const initialState: ActionState = {};
@@ -49,14 +50,24 @@ export function ClinicForm({
 
       <div className="space-y-2">
         <Label htmlFor="cnpj">CNPJ</Label>
-        <Input id="cnpj" name="cnpj" defaultValue={clinic.cnpj ?? ""} disabled={readOnly} />
+        <MaskedInput
+          mask="cnpj"
+          id="cnpj"
+          name="cnpj"
+          placeholder="00.000.000/0000-00"
+          defaultValue={clinic.cnpj ?? ""}
+          disabled={readOnly}
+        />
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="phone">Telefone</Label>
-        <Input
+        <MaskedInput
+          mask="phone"
           id="phone"
           name="phone"
+          type="tel"
+          placeholder="(11) 99999-9999"
           defaultValue={clinic.phone ?? ""}
           disabled={readOnly}
           required

@@ -1,19 +1,18 @@
 "use client";
 
-import { useActionState, useState } from "react";
+import { useActionState } from "react";
 import Link from "next/link";
-import { Eye, EyeOff } from "lucide-react";
 import { login, type ActionState } from "@/actions/auth";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { PasswordInput } from "@/components/ui/password-input";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 
 const initialState: ActionState = {};
 
 export function LoginForm({ redirectTo }: { redirectTo: string }) {
   const [state, formAction, pending] = useActionState(login, initialState);
-  const [showPassword, setShowPassword] = useState(false);
 
   return (
     <form action={formAction} className="space-y-4">
@@ -48,25 +47,7 @@ export function LoginForm({ redirectTo }: { redirectTo: string }) {
             Esqueceu a senha?
           </Link>
         </div>
-        <div className="relative">
-          <Input
-            id="password"
-            name="password"
-            type={showPassword ? "text" : "password"}
-            autoCapitalize="none"
-            autoCorrect="off"
-            className="pr-9"
-            required
-          />
-          <button
-            type="button"
-            onClick={() => setShowPassword((value) => !value)}
-            aria-label={showPassword ? "Ocultar senha" : "Mostrar senha"}
-            className="absolute right-2 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-foreground"
-          >
-            {showPassword ? <EyeOff className="size-4" /> : <Eye className="size-4" />}
-          </button>
-        </div>
+        <PasswordInput id="password" name="password" required />
         {state.fieldErrors?.password && (
           <p className="text-sm text-destructive">{state.fieldErrors.password[0]}</p>
         )}
