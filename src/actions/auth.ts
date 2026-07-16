@@ -223,6 +223,23 @@ export async function requestPasswordReset(
   return { success: true };
 }
 
+export async function requestOwnPasswordReset(email: string): Promise<ActionState> {
+  if (!email) return { error: "E-mail inválido." };
+
+  const siteUrl = await getSiteUrl();
+  const supabase = await createClient();
+
+  const { error } = await supabase.auth.resetPasswordForEmail(email, {
+    redirectTo: `${siteUrl}/auth/callback?next=/redefinir-senha`,
+  });
+
+  if (error) {
+    return { error: "Não foi possível enviar o link. Tente novamente em instantes." };
+  }
+
+  return { success: true };
+}
+
 export async function updatePassword(
   _prevState: ActionState,
   formData: FormData,

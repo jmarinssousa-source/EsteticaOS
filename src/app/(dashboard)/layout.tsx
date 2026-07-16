@@ -30,6 +30,7 @@ export default async function DashboardLayout({
             <Topbar
               clinicName={member.clinicName}
               fullName={member.fullName}
+              email={member.email}
               role={member.role}
               permissions={member.permissions}
             />
