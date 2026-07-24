@@ -44,7 +44,7 @@ export default async function FinanceiroPage({
   let query = supabase
     .from("financial_entries")
     .select(
-      "id, patient_id, sale_id, type, description, amount, due_date, payment_date, status, payment_method, commission_amount, nf_issued, nf_number, created_at",
+      "id, patient_id, sale_id, type, description, amount, due_date, payment_date, status, payment_method, installments, card_authorization_code, commission_amount, nf_issued, nf_number, created_at",
     )
     .eq("clinic_id", member.clinicId)
     .order("created_at", { ascending: false });

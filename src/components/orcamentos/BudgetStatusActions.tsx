@@ -5,14 +5,22 @@ import { toast } from "sonner";
 import {
   approveBudget,
   cancelBudget,
-  convertBudgetToSale,
   rejectBudget,
   sendBudget,
 } from "@/actions/orcamentos";
 import type { BudgetStatus } from "@/lib/orcamentos/constants";
 import { Button } from "@/components/ui/button";
+import { ConvertToSaleDialog } from "@/components/orcamentos/ConvertToSaleDialog";
 
-export function BudgetStatusActions({ budgetId, status }: { budgetId: string; status: BudgetStatus }) {
+export function BudgetStatusActions({
+  budgetId,
+  status,
+  total,
+}: {
+  budgetId: string;
+  status: BudgetStatus;
+  total: number;
+}) {
   const [isPending, startTransition] = useTransition();
 
   function run(action: (id: string) => Promise<{ error?: string } | { success: true }>, successMessage: string) {
@@ -49,11 +57,7 @@ export function BudgetStatusActions({ budgetId, status }: { budgetId: string; st
           </Button>
         </>
       )}
-      {status === "approved" && (
-        <Button size="sm" disabled={isPending} onClick={() => run(convertBudgetToSale, "Venda criada.")}>
-          Converter em venda
-        </Button>
-      )}
+      {status === "approved" && <ConvertToSaleDialog budgetId={budgetId} total={total} />}
       <Button
         size="sm"
         variant="ghost"

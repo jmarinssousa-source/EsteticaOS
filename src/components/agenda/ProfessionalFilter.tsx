@@ -8,6 +8,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { getProfessionalColor } from "@/lib/agenda/professional-colors";
 import type { ProfessionalOption } from "@/lib/agenda/types";
 
 export function ProfessionalFilter({ professionals }: { professionals: ProfessionalOption[] }) {
@@ -28,11 +29,17 @@ export function ProfessionalFilter({ professionals }: { professionals: Professio
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">Todos os profissionais</SelectItem>
-        {professionals.map((professional) => (
-          <SelectItem key={professional.user_id} value={professional.user_id}>
-            {professional.full_name}
-          </SelectItem>
-        ))}
+        {professionals.map((professional) => {
+          const color = getProfessionalColor(professional.user_id);
+          return (
+            <SelectItem key={professional.user_id} value={professional.user_id}>
+              <span className="flex items-center gap-1.5">
+                {color && <span className={`size-1.5 shrink-0 rounded-full ${color.dot}`} />}
+                {professional.full_name}
+              </span>
+            </SelectItem>
+          );
+        })}
       </SelectContent>
     </Select>
   );

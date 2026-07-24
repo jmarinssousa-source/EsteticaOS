@@ -38,10 +38,14 @@ function buildForm(entry: FinancialEntry) {
     status: entry.status,
     paymentDate: entry.payment_date ?? "",
     paymentMethod: entry.payment_method ?? "",
+    installments: entry.installments ? String(entry.installments) : "",
+    cardAuthorizationCode: entry.card_authorization_code ?? "",
     nfIssued: entry.nf_issued,
     nfNumber: entry.nf_number ?? "",
   };
 }
+
+const CARD_METHODS = new Set(["debit_card", "credit_card"]);
 
 export function EntryDetailDialog({
   entry,
@@ -65,9 +69,16 @@ export function EntryDetailDialog({
     if (open) setForm(buildForm(entry));
   }
 
+  function submit(next: typeof form) {
+    return updateEntryPayment(entry.id, entry.patient_id, {
+      ...next,
+      installments: next.installments ? Number(next.installments) : null,
+    });
+  }
+
   function handleSave() {
     startTransition(async () => {
-      const result = await updateEntryPayment(entry.id, entry.patient_id, form);
+      const result = await submit(form);
       if ("error" in result) toast.error(result.error);
       else toast.success("Lançamento atualizado.");
     });
@@ -77,11 +88,13 @@ export function EntryDetailDialog({
     const next = { ...form, status: "paid" as const, paymentDate: form.paymentDate || new Date().toISOString().slice(0, 10) };
     setForm(next);
     startTransition(async () => {
-      const result = await updateEntryPayment(entry.id, entry.patient_id, next);
+      const result = await submit(next);
       if ("error" in result) toast.error(result.error);
       else toast.success("Marcado como pago.");
     });
   }
+
+  const isCardMethod = CARD_METHODS.has(form.paymentMethod);
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
@@ -146,6 +159,31 @@ export function EntryDetailDialog({
               </SelectContent>
             </Select>
           </div>
+
+          {isCardMethod && (
+            <div className="grid grid-cols-2 gap-4">
+              {form.paymentMethod === "credit_card" && (
+                <div className="space-y-2">
+                  <Label>Parcelas</Label>
+                  <Input
+                    type="number"
+                    min={1}
+                    value={form.installments}
+                    disabled={!canEdit}
+                    onChange={(e) => setForm((f) => ({ ...f, installments: e.target.value }))}
+                  />
+                </div>
+              )}
+              <div className="space-y-2">
+                <Label>Código de autorização</Label>
+                <Input
+                  value={form.cardAuthorizationCode}
+                  disabled={!canEdit}
+                  onChange={(e) => setForm((f) => ({ ...f, cardAuthorizationCode: e.target.value }))}
+                />
+              </div>
+            </div>
+          )}
 
           <div className="flex items-center justify-between">
             <Label htmlFor="nfIssued">Nota fiscal emitida</Label>

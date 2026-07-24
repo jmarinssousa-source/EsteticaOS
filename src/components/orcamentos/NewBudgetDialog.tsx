@@ -1,6 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { createBudget } from "@/actions/orcamentos";
@@ -26,6 +27,7 @@ import {
 } from "@/components/ui/dialog";
 
 export function NewBudgetDialog({ patients }: { patients: PatientOption[] }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [patientId, setPatientId] = useState("");
   const [notes, setNotes] = useState("");
@@ -35,7 +37,11 @@ export function NewBudgetDialog({ patients }: { patients: PatientOption[] }) {
     if (!patientId) return;
     startTransition(async () => {
       const result = await createBudget(patientId, notes);
-      if (result && "error" in result) toast.error(result.error);
+      if ("error" in result) toast.error(result.error);
+      else {
+        setOpen(false);
+        router.push(`/orcamentos/${result.id}`);
+      }
     });
   }
 

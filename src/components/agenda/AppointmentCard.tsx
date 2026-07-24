@@ -4,6 +4,7 @@ import { useState } from "react";
 import { cn } from "@/lib/utils";
 import { APPOINTMENT_STATUS_COLORS, APPOINTMENT_STATUS_LABELS } from "@/lib/agenda/constants";
 import { formatTime } from "@/lib/agenda/date-utils";
+import { getProfessionalColor } from "@/lib/agenda/professional-colors";
 import type { Appointment, PatientOption, ProcedureOption, ProfessionalOption } from "@/lib/agenda/types";
 import { Badge } from "@/components/ui/badge";
 import { Card } from "@/components/ui/card";
@@ -28,6 +29,7 @@ export function AppointmentCard({
   const patient = patients.find((p) => p.id === appointment.patient_id);
   const professional = professionals.find((p) => p.user_id === appointment.professional_id);
   const procedure = procedures.find((p) => p.id === appointment.procedure_id);
+  const professionalColor = getProfessionalColor(appointment.professional_id);
 
   return (
     <>
@@ -35,6 +37,7 @@ export function AppointmentCard({
         className={cn(
           "cursor-pointer gap-1 border-l-4 p-2.5 shadow-sm transition-shadow hover:shadow-md",
           APPOINTMENT_STATUS_COLORS[appointment.status],
+          professionalColor?.tint,
         )}
         onClick={() => setOpen(true)}
       >
@@ -48,7 +51,12 @@ export function AppointmentCard({
             </Badge>
           )}
         </div>
-        <p className="truncate text-sm font-medium">{patient?.name ?? "Paciente"}</p>
+        <div className="flex min-w-0 items-center gap-1.5">
+          {professionalColor && (
+            <span className={cn("size-1.5 shrink-0 rounded-full", professionalColor.dot)} />
+          )}
+          <p className="truncate text-sm font-medium">{patient?.name ?? "Paciente"}</p>
+        </div>
         {!compact && (procedure || professional) && (
           <p className="truncate text-xs text-muted-foreground">
             {[procedure?.name, professional?.full_name].filter(Boolean).join(" · ")}

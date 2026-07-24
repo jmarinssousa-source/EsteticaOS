@@ -1,6 +1,7 @@
 "use client";
 
 import { useTransition } from "react";
+import { useRouter } from "next/navigation";
 import { KeyRound, LogOut } from "lucide-react";
 import { toast } from "sonner";
 import { logout, requestOwnPasswordReset } from "@/actions/auth";
@@ -35,6 +36,7 @@ export function AccountMenu({
   email: string;
   role: ClinicRole;
 }) {
+  const router = useRouter();
   const [isPending, startTransition] = useTransition();
 
   function handleResetPassword() {
@@ -51,6 +53,8 @@ export function AccountMenu({
   function handleLogout() {
     startTransition(async () => {
       await logout();
+      router.push("/login");
+      router.refresh();
     });
   }
 

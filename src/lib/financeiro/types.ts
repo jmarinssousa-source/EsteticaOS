@@ -11,6 +11,8 @@ export type FinancialEntry = {
   payment_date: string | null;
   status: EntryStatus;
   payment_method: PaymentMethod | null;
+  installments: number | null;
+  card_authorization_code: string | null;
   commission_amount: number | null;
   nf_issued: boolean;
   nf_number: string | null;

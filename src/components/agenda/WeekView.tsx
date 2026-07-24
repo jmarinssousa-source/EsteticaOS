@@ -1,4 +1,5 @@
 import { addDays, formatWeekdayShort, isSameDay, startOfWeek, toISODate } from "@/lib/agenda/date-utils";
+import { groupOverlapping } from "@/lib/agenda/grouping";
 import type { Appointment, PatientOption, ProcedureOption, ProfessionalOption } from "@/lib/agenda/types";
 import { AppointmentCard } from "@/components/agenda/AppointmentCard";
 import { cn } from "@/lib/utils";
@@ -40,16 +41,28 @@ export function WeekView({
               {formatWeekdayShort(day)} {day.getDate()}
             </p>
             <div className="space-y-1.5">
-              {dayAppointments.map((appointment) => (
-                <AppointmentCard
-                  key={appointment.id}
-                  appointment={appointment}
-                  patients={patients}
-                  professionals={professionals}
-                  procedures={procedures}
-                  canEdit={canEdit}
-                  compact
-                />
+              {groupOverlapping(dayAppointments).map((group) => (
+                <div
+                  key={group[0].id}
+                  className={group.length > 1 ? "grid gap-1" : ""}
+                  style={
+                    group.length > 1
+                      ? { gridTemplateColumns: `repeat(${group.length}, minmax(0, 1fr))` }
+                      : undefined
+                  }
+                >
+                  {group.map((appointment) => (
+                    <AppointmentCard
+                      key={appointment.id}
+                      appointment={appointment}
+                      patients={patients}
+                      professionals={professionals}
+                      procedures={procedures}
+                      canEdit={canEdit}
+                      compact
+                    />
+                  ))}
+                </div>
               ))}
               {dayAppointments.length === 0 && (
                 <p className="text-center text-xs text-muted-foreground/60">—</p>

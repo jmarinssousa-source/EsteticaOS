@@ -54,6 +54,8 @@ export async function updateEntryPayment(
     status: string;
     paymentDate: string;
     paymentMethod: string;
+    installments: number | null;
+    cardAuthorizationCode: string;
     nfIssued: boolean;
     nfNumber: string;
   },
@@ -69,6 +71,8 @@ export async function updateEntryPayment(
       status: parsed.data.status,
       payment_date: parsed.data.paymentDate,
       payment_method: parsed.data.paymentMethod,
+      installments: parsed.data.installments,
+      card_authorization_code: parsed.data.cardAuthorizationCode,
       nf_issued: parsed.data.nfIssued,
       nf_number: parsed.data.nfNumber,
     })

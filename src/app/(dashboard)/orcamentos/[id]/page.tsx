@@ -11,6 +11,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { BudgetItemsTable } from "@/components/orcamentos/BudgetItemsTable";
 import { BudgetStatusActions } from "@/components/orcamentos/BudgetStatusActions";
 import { BudgetNotesForm } from "@/components/orcamentos/BudgetNotesForm";
+import { BudgetPdfActions } from "@/components/orcamentos/BudgetPdfActions";
 
 export const metadata = { title: "Orçamento — EstéticaOS" };
 
@@ -26,14 +27,14 @@ export default async function BudgetDetailPage({
   const supabase = await createClient();
   const { data: budget } = await supabase
     .from("budgets")
-    .select("id, status, discount, total_value, notes, created_at, patients(id, name)")
+    .select("id, status, discount, total_value, notes, created_at, patients(id, name, phone)")
     .eq("id", id)
     .eq("clinic_id", member.clinicId)
     .maybeSingle();
 
   if (!budget) notFound();
 
-  const [{ data: items }, { data: procedures }, { data: packages }, { data: professionals }] = await Promise.all([
+  const [{ data: items }, { data: procedures }, { data: packages }, { data: professionals }, { data: clinic }] = await Promise.all([
     supabase
       .from("budget_items")
       .select(
@@ -53,9 +54,10 @@ export default async function BudgetDetailPage({
       .eq("clinic_id", member.clinicId)
       .eq("status", "active")
       .order("full_name"),
+    supabase.from("clinics").select("name").eq("id", member.clinicId).single(),
   ]);
 
-  const patient = budget.patients as unknown as { id: string; name: string } | null;
+  const patient = budget.patients as unknown as { id: string; name: string; phone: string | null } | null;
   const status = budget.status as BudgetStatus;
 
   return (
@@ -80,7 +82,18 @@ export default async function BudgetDetailPage({
         </Badge>
       </div>
 
-      {canEdit && <BudgetStatusActions budgetId={budget.id} status={status} />}
+      <div className="flex flex-wrap items-center justify-between gap-2">
+        {canEdit && (
+          <BudgetStatusActions budgetId={budget.id} status={status} total={Number(budget.total_value)} />
+        )}
+        <BudgetPdfActions
+          budgetId={budget.id}
+          clinicName={clinic?.name ?? ""}
+          patientName={patient?.name ?? null}
+          patientPhone={patient?.phone ?? null}
+          total={Number(budget.total_value)}
+        />
+      </div>
 
       <Card>
         <CardHeader>

@@ -1,10 +1,10 @@
 "use server";
 
-import { redirect } from "next/navigation";
 import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/session";
 import { budgetItemSchema, budgetNotesSchema } from "@/lib/validations/orcamentos";
+import { saleCheckoutSchema } from "@/lib/validations/financeiro";
 
 type ActionResult = { error?: string } | { success: true };
 type SupabaseServerClient = Awaited<ReturnType<typeof createClient>>;
@@ -41,7 +41,10 @@ async function recalcBudgetTotal(supabase: SupabaseServerClient, budgetId: strin
     .eq("clinic_id", clinicId);
 }
 
-export async function createBudget(patientId: string, notes: string) {
+export async function createBudget(
+  patientId: string,
+  notes: string,
+): Promise<{ error: string } | { id: string }> {
   const member = await requirePermission("budgets_edit");
 
   const supabase = await createClient();
@@ -54,7 +57,7 @@ export async function createBudget(patientId: string, notes: string) {
   if (error || !budget) return { error: "Não foi possível criar o orçamento." };
 
   revalidateBudget();
-  redirect(`/orcamentos/${budget.id}`);
+  return { id: budget.id };
 }
 
 export async function addBudgetItem(
@@ -217,8 +220,19 @@ export async function cancelBudget(budgetId: string) {
   return transitionStatus(budgetId, ["open", "sent", "approved"], "canceled");
 }
 
-export async function convertBudgetToSale(budgetId: string): Promise<ActionResult> {
+export async function convertBudgetToSale(
+  budgetId: string,
+  payments: {
+    method: string;
+    amount: number;
+    installments: number | null;
+    authorizationCode: string | null;
+  }[],
+): Promise<ActionResult> {
   const member = await requirePermission("budgets_edit");
+  const parsed = saleCheckoutSchema.safeParse({ payments });
+  if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados de pagamento inválidos." };
+
   const supabase = await createClient();
 
   const { data: budget } = await supabase
@@ -231,6 +245,11 @@ export async function convertBudgetToSale(budgetId: string): Promise<ActionResul
   if (!budget) return { error: "Orçamento não encontrado." };
   if (budget.status !== "approved") {
     return { error: "Apenas orçamentos aprovados podem virar venda." };
+  }
+
+  const paymentsTotal = parsed.data.payments.reduce((sum, p) => sum + p.amount, 0);
+  if (Math.abs(paymentsTotal - Number(budget.total_value)) > 0.01) {
+    return { error: "A soma das formas de pagamento precisa ser igual ao total do orçamento." };
   }
 
   const { data: sale, error: saleError } = await supabase
@@ -277,15 +296,26 @@ export async function convertBudgetToSale(budgetId: string): Promise<ActionResul
     }
   }
 
-  const { error: entryError } = await supabase.from("financial_entries").insert({
-    clinic_id: member.clinicId,
-    patient_id: budget.patient_id,
-    sale_id: sale.id,
-    type: "revenue",
-    description: "Venda de orçamento",
-    amount: budget.total_value,
-    due_date: new Date().toISOString().slice(0, 10),
-  });
+  const today = new Date().toISOString().slice(0, 10);
+  const multiplePayments = parsed.data.payments.length > 1;
+  const { error: entryError } = await supabase.from("financial_entries").insert(
+    parsed.data.payments.map((payment, index) => ({
+      clinic_id: member.clinicId,
+      patient_id: budget.patient_id,
+      sale_id: sale.id,
+      type: "revenue" as const,
+      description: multiplePayments
+        ? `Venda de orçamento (forma ${index + 1}/${parsed.data.payments.length})`
+        : "Venda de orçamento",
+      amount: payment.amount,
+      due_date: today,
+      payment_date: today,
+      status: "paid" as const,
+      payment_method: payment.method,
+      installments: payment.installments,
+      card_authorization_code: payment.authorizationCode,
+    })),
+  );
 
   if (entryError) return { error: "Venda criada, mas não foi possível gerar o lançamento financeiro." };
 

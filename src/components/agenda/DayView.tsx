@@ -1,3 +1,4 @@
+import { groupOverlapping } from "@/lib/agenda/grouping";
 import type { Appointment, PatientOption, ProcedureOption, ProfessionalOption } from "@/lib/agenda/types";
 import { AppointmentCard } from "@/components/agenda/AppointmentCard";
 
@@ -24,17 +25,27 @@ export function DayView({
     );
   }
 
+  const groups = groupOverlapping(sorted);
+
   return (
-    <div className="mx-auto max-w-lg space-y-2">
-      {sorted.map((appointment) => (
-        <AppointmentCard
-          key={appointment.id}
-          appointment={appointment}
-          patients={patients}
-          professionals={professionals}
-          procedures={procedures}
-          canEdit={canEdit}
-        />
+    <div className="mx-auto max-w-3xl space-y-2">
+      {groups.map((group) => (
+        <div
+          key={group[0].id}
+          className={group.length > 1 ? "grid gap-2" : ""}
+          style={group.length > 1 ? { gridTemplateColumns: `repeat(${group.length}, minmax(0, 1fr))` } : undefined}
+        >
+          {group.map((appointment) => (
+            <AppointmentCard
+              key={appointment.id}
+              appointment={appointment}
+              patients={patients}
+              professionals={professionals}
+              procedures={procedures}
+              canEdit={canEdit}
+            />
+          ))}
+        </div>
       ))}
     </div>
   );
