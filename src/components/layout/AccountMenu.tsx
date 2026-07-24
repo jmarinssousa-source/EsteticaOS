@@ -10,6 +10,7 @@ import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
+  DropdownMenuGroup,
   DropdownMenuItem,
   DropdownMenuLabel,
   DropdownMenuSeparator,
@@ -67,25 +68,29 @@ export function AccountMenu({
         <span className="hidden text-sm font-medium sm:inline">{fullName}</span>
       </DropdownMenuTrigger>
       <DropdownMenuContent align="end">
-        <DropdownMenuLabel>
-          <div className="flex flex-col">
-            <span className="font-medium">{fullName}</span>
-            <span className="text-xs font-normal text-muted-foreground">{ROLE_LABELS[role]}</span>
-          </div>
-        </DropdownMenuLabel>
+        <DropdownMenuGroup>
+          <DropdownMenuLabel>
+            <div className="flex flex-col">
+              <span className="font-medium">{fullName}</span>
+              <span className="text-xs font-normal text-muted-foreground">{ROLE_LABELS[role]}</span>
+            </div>
+          </DropdownMenuLabel>
+        </DropdownMenuGroup>
         <DropdownMenuSeparator />
         <div className="px-2 py-1.5">
           <OrbyniqBadge />
         </div>
         <DropdownMenuSeparator />
-        <DropdownMenuItem disabled={isPending} onClick={handleResetPassword}>
-          <KeyRound className="size-4" />
-          Redefinir senha
-        </DropdownMenuItem>
-        <DropdownMenuItem disabled={isPending} onClick={handleLogout} variant="destructive">
-          <LogOut className="size-4" />
-          Sair
-        </DropdownMenuItem>
+        <DropdownMenuGroup>
+          <DropdownMenuItem disabled={isPending} onClick={handleResetPassword}>
+            <KeyRound className="size-4" />
+            Redefinir senha
+          </DropdownMenuItem>
+          <DropdownMenuItem disabled={isPending} onClick={handleLogout} variant="destructive">
+            <LogOut className="size-4" />
+            Sair
+          </DropdownMenuItem>
+        </DropdownMenuGroup>
       </DropdownMenuContent>
     </DropdownMenu>
   );
