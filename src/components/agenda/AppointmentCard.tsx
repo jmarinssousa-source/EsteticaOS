@@ -29,15 +29,21 @@ export function AppointmentCard({
   const patient = patients.find((p) => p.id === appointment.patient_id);
   const professional = professionals.find((p) => p.user_id === appointment.professional_id);
   const procedure = procedures.find((p) => p.id === appointment.procedure_id);
-  const professionalColor = getProfessionalColor(appointment.professional_id);
+  const professionalColor = getProfessionalColor(appointment.professional_id, professional?.color);
+  const isCanceled =
+    appointment.status === "canceled_by_patient" ||
+    appointment.status === "canceled_by_clinic" ||
+    appointment.status === "no_show";
 
   return (
     <>
       <Card
         className={cn(
           "cursor-pointer gap-1 border-l-4 p-2.5 shadow-sm transition-shadow hover:shadow-md",
-          APPOINTMENT_STATUS_COLORS[appointment.status],
-          professionalColor?.tint,
+          professionalColor
+            ? [professionalColor.border, professionalColor.tint]
+            : APPOINTMENT_STATUS_COLORS[appointment.status],
+          isCanceled && "opacity-55",
         )}
         onClick={() => setOpen(true)}
       >

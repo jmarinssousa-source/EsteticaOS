@@ -167,6 +167,10 @@ export function LeadDetailDialog({
             <div className="space-y-2">
               <Label>Origem</Label>
               <Select
+                items={LEAD_ORIGINS.map((origin) => ({
+                  value: origin,
+                  label: LEAD_ORIGIN_LABELS[origin as LeadOrigin],
+                }))}
                 value={form.origin}
                 onValueChange={(v) => v && setForm((f) => ({ ...f, origin: v as LeadOrigin }))}
                 disabled={!canEdit}
@@ -208,6 +212,10 @@ export function LeadDetailDialog({
             <div className="space-y-2">
               <Label>Responsável</Label>
               <Select
+                items={[
+                  { value: "none", label: "Sem responsável" },
+                  ...members.map((member) => ({ value: member.user_id, label: member.full_name })),
+                ]}
                 value={form.assignedTo || "none"}
                 onValueChange={(v) => setForm((f) => ({ ...f, assignedTo: v === "none" ? "" : (v ?? "") }))}
                 disabled={!canEdit}
@@ -227,7 +235,12 @@ export function LeadDetailDialog({
             </div>
             <div className="space-y-2">
               <Label>Coluna</Label>
-              <Select value={lead.stage_id} onValueChange={handleMoveStage} disabled={!canEdit || !isOpenLead}>
+              <Select
+                items={stages.map((stage) => ({ value: stage.id, label: stage.name }))}
+                value={lead.stage_id}
+                onValueChange={handleMoveStage}
+                disabled={!canEdit || !isOpenLead}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>

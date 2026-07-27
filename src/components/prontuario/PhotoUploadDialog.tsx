@@ -67,7 +67,12 @@ export function PhotoUploadDialog({ patientId }: { patientId: string }) {
 
           <div className="space-y-2">
             <Label htmlFor="photoType">Tipo</Label>
-            <Select name="photoType" value={photoType} onValueChange={(v) => v && setPhotoType(v as PhotoType)}>
+            <Select
+              name="photoType"
+              items={PHOTO_TYPES.map((type) => ({ value: type, label: PHOTO_TYPE_LABELS[type] }))}
+              value={photoType}
+              onValueChange={(v) => v && setPhotoType(v as PhotoType)}
+            >
               <SelectTrigger id="photoType" className="w-full">
                 <SelectValue />
               </SelectTrigger>

@@ -265,7 +265,6 @@ async function main() {
   }
 
   const packageDrenagem = packages.find((p) => p.name.includes("Drenagem"));
-  const packageLaser = packages.find((p) => p.name.includes("Laser"));
 
   // ---------------------------------------------------------------------
   // 5. Pacientes

@@ -16,6 +16,7 @@ import { hasPermission } from "@/lib/auth/permissions";
 import { currentYearMonth, daysFromNow, formatCurrency } from "@/lib/format";
 import { EXPIRING_SOON_DAYS } from "@/lib/estoque/constants";
 import { isExpired, isExpiringSoon, isLowStock } from "@/lib/estoque/types";
+import { Alert, AlertDescription } from "@/components/ui/alert";
 import { GoalCard } from "@/components/dashboard/GoalCard";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { AlertsPanel, type AlertItem } from "@/components/dashboard/AlertsPanel";
@@ -27,8 +28,12 @@ function isStaleLead(lastMovedAt: string, staleLeadDays: number) {
   return daysSinceMoved >= staleLeadDays;
 }
 
-export default async function HojePage() {
-  const member = await getCurrentMember();
+export default async function HojePage({
+  searchParams,
+}: {
+  searchParams: Promise<{ error?: string }>;
+}) {
+  const [{ error }, member] = await Promise.all([searchParams, getCurrentMember()]);
   if (!member) return null;
 
   const canViewAgenda = hasPermission(member, "agenda_view");
@@ -188,6 +193,14 @@ export default async function HojePage() {
 
   return (
     <div className="space-y-4">
+      {error === "sem-permissao" && (
+        <Alert variant="destructive">
+          <AlertDescription>
+            Você não tem permissão para acessar essa área. Fale com quem administra a clínica se
+            precisar desse acesso.
+          </AlertDescription>
+        </Alert>
+      )}
       <div>
         <h1 className="text-2xl font-bold tracking-tight">
           Olá, {member.fullName.split(" ")[0]}

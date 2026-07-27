@@ -80,7 +80,14 @@ export function LeadFormDialog({ members }: { members: { user_id: string; full_n
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="origin">Origem</Label>
-              <Select name="origin" defaultValue="instagram">
+              <Select
+                name="origin"
+                defaultValue="instagram"
+                items={LEAD_ORIGINS.map((origin) => ({
+                  value: origin,
+                  label: LEAD_ORIGIN_LABELS[origin as LeadOrigin],
+                }))}
+              >
                 <SelectTrigger id="origin" className="w-full">
                   <SelectValue />
                 </SelectTrigger>
@@ -95,7 +102,11 @@ export function LeadFormDialog({ members }: { members: { user_id: string; full_n
             </div>
             <div className="space-y-2">
               <Label htmlFor="assignedTo">Responsável</Label>
-              <Select name="assignedTo" defaultValue="">
+              <Select
+                name="assignedTo"
+                defaultValue=""
+                items={members.map((member) => ({ value: member.user_id, label: member.full_name }))}
+              >
                 <SelectTrigger id="assignedTo" className="w-full">
                   <SelectValue placeholder="Sem responsável" />
                 </SelectTrigger>

@@ -85,7 +85,11 @@ export function CreateUserDialog() {
 
           <div className="space-y-2">
             <Label htmlFor="role">Perfil</Label>
-            <Select name="role" defaultValue="reception">
+            <Select
+              name="role"
+              defaultValue="reception"
+              items={ASSIGNABLE_ROLES.map((role) => ({ value: role, label: ROLE_LABELS[role] }))}
+            >
               <SelectTrigger id="role" className="w-full">
                 <SelectValue />
               </SelectTrigger>

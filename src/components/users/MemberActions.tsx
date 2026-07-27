@@ -82,7 +82,12 @@ export function MemberActions({
 
   return (
     <div className="flex flex-wrap items-center gap-2">
-      <Select value={role} onValueChange={handleRoleChange} disabled={isPending}>
+      <Select
+        items={ASSIGNABLE_ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
+        value={role}
+        onValueChange={handleRoleChange}
+        disabled={isPending}
+      >
         <SelectTrigger className="h-8 w-40">
           <SelectValue />
         </SelectTrigger>

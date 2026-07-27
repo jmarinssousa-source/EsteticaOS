@@ -5,6 +5,7 @@ import { Badge } from "@/components/ui/badge";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { MemberActions } from "@/components/users/MemberActions";
+import { MemberColorPicker } from "@/components/users/MemberColorPicker";
 import { ROLE_LABELS, type ClinicRole, type Permissions } from "@/lib/auth/permissions";
 
 export const metadata = { title: "Usuários e permissões — EstéticaOS" };
@@ -16,7 +17,7 @@ export default async function UsuariosPage() {
   const supabase = await createClient();
   const { data: members } = await supabase
     .from("clinic_members")
-    .select("user_id, full_name, email, role, permissions, status")
+    .select("user_id, full_name, email, role, permissions, status, color")
     .eq("clinic_id", member.clinicId)
     .order("created_at", { ascending: true });
 
@@ -43,6 +44,7 @@ export default async function UsuariosPage() {
                 <TableHead>Nome</TableHead>
                 <TableHead>E-mail</TableHead>
                 <TableHead>Perfil</TableHead>
+                <TableHead>Cor na agenda</TableHead>
                 <TableHead>Status</TableHead>
                 {isOwner && <TableHead className="text-right">Ações</TableHead>}
               </TableRow>
@@ -58,6 +60,13 @@ export default async function UsuariosPage() {
                     ) : (
                       <Badge variant="secondary">{ROLE_LABELS[m.role as ClinicRole]}</Badge>
                     )}
+                  </TableCell>
+                  <TableCell>
+                    <MemberColorPicker
+                      userId={m.user_id}
+                      color={(m.color as string | null) ?? null}
+                      canEdit={isOwner}
+                    />
                   </TableCell>
                   <TableCell>
                     <Badge variant={m.status === "active" ? "default" : "outline"}>

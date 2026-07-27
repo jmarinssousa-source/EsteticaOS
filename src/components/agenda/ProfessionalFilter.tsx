@@ -23,14 +23,32 @@ export function ProfessionalFilter({ professionals }: { professionals: Professio
   }
 
   return (
-    <Select value={searchParams.get("prof") ?? "all"} onValueChange={handleChange}>
+    <Select
+      items={[
+        { value: "all", label: "Todos os profissionais" },
+        ...professionals.map((professional) => {
+          const color = getProfessionalColor(professional.user_id, professional.color);
+          return {
+            value: professional.user_id,
+            label: (
+              <span className="flex items-center gap-1.5">
+                {color && <span className={`size-1.5 shrink-0 rounded-full ${color.dot}`} />}
+                {professional.full_name}
+              </span>
+            ),
+          };
+        }),
+      ]}
+      value={searchParams.get("prof") ?? "all"}
+      onValueChange={handleChange}
+    >
       <SelectTrigger className="w-full sm:w-56">
         <SelectValue placeholder="Todos os profissionais" />
       </SelectTrigger>
       <SelectContent>
         <SelectItem value="all">Todos os profissionais</SelectItem>
         {professionals.map((professional) => {
-          const color = getProfessionalColor(professional.user_id);
+          const color = getProfessionalColor(professional.user_id, professional.color);
           return (
             <SelectItem key={professional.user_id} value={professional.user_id}>
               <span className="flex items-center gap-1.5">

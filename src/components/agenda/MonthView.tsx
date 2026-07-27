@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { buildMonthGrid, formatTime, isSameDay, toISODate } from "@/lib/agenda/date-utils";
-import type { Appointment, PatientOption } from "@/lib/agenda/types";
+import { getProfessionalColor } from "@/lib/agenda/professional-colors";
+import type { Appointment, PatientOption, ProfessionalOption } from "@/lib/agenda/types";
 import { cn } from "@/lib/utils";
 
 const WEEKDAY_HEADERS = ["Seg", "Ter", "Qua", "Qui", "Sex", "Sáb", "Dom"];
@@ -9,11 +10,13 @@ export function MonthView({
   anchorDate,
   appointments,
   patients,
+  professionals,
   prof,
 }: {
   anchorDate: Date;
   appointments: Appointment[];
   patients: PatientOption[];
+  professionals: ProfessionalOption[];
   prof?: string;
 }) {
   const weeks = buildMonthGrid(anchorDate);
@@ -60,16 +63,34 @@ export function MonthView({
                 {day.getDate()}
               </span>
               <div className="space-y-0.5">
-                {dayAppointments.slice(0, 2).map((appointment) => {
+                {dayAppointments.slice(0, 3).map((appointment) => {
                   const patient = patients.find((p) => p.id === appointment.patient_id);
+                  const professional = professionals.find(
+                    (p) => p.user_id === appointment.professional_id,
+                  );
+                  const color = getProfessionalColor(
+                    appointment.professional_id,
+                    professional?.color,
+                  );
                   return (
-                    <p key={appointment.id} className="truncate text-[10px] text-muted-foreground">
-                      {formatTime(appointment.start_time)} {patient?.name ?? "Paciente"}
+                    <p
+                      key={appointment.id}
+                      className={cn(
+                        "flex items-center gap-1 truncate rounded px-1 py-px text-[10px]",
+                        color ? color.tint : "text-muted-foreground",
+                      )}
+                    >
+                      {color && <span className={cn("size-1.5 shrink-0 rounded-full", color.dot)} />}
+                      <span className="truncate">
+                        {formatTime(appointment.start_time)} {patient?.name ?? "Paciente"}
+                      </span>
                     </p>
                   );
                 })}
-                {dayAppointments.length > 2 && (
-                  <p className="text-[10px] text-muted-foreground">+{dayAppointments.length - 2}</p>
+                {dayAppointments.length > 3 && (
+                  <p className="px-1 text-[10px] font-medium text-muted-foreground">
+                    +{dayAppointments.length - 3} agendamento(s)
+                  </p>
                 )}
               </div>
             </Link>

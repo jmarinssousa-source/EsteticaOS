@@ -43,7 +43,21 @@ export type ActionState = {
   error?: string;
   fieldErrors?: Record<string, string[]>;
   success?: boolean;
+  /** Aviso neutro (nem erro, nem sucesso) para exibir ao usuário. */
+  info?: string;
 };
+
+/**
+ * Só aceita caminhos internos ("/algo") como destino de redirect, para
+ * impedir open redirect via redirectTo/next controlados pelo cliente.
+ */
+function safeInternalPath(value: unknown, fallback = "/hoje") {
+  if (typeof value !== "string") return fallback;
+  if (!value.startsWith("/") || value.startsWith("//") || value.includes("\\")) {
+    return fallback;
+  }
+  return value;
+}
 
 async function getSiteUrl() {
   if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
@@ -108,10 +122,29 @@ export async function signUp(
     return { error: "Não foi possível criar sua conta. Tente novamente." };
   }
 
+  // Com proteção contra enumeração de e-mails ativada, o Supabase devolve
+  // um usuário "fantasma" (sem identities) quando o e-mail já existe, em
+  // vez de erro. Não podemos criar clínica para esse caso.
+  if (signUpData.user && signUpData.user.identities?.length === 0) {
+    return { error: "Este e-mail já está cadastrado. Faça login ou recupere sua senha." };
+  }
+
   // Bootstrap the clinic + owner membership with the service role: the
   // new user has no session yet (email not confirmed), so RLS on
   // clinic_members would otherwise block this insert.
   const admin = createAdminClient();
+
+  // Reenvio de cadastro com e-mail ainda não confirmado retorna o mesmo
+  // usuário: se a clínica já foi criada, não duplica o bootstrap.
+  const { data: existingMember } = await admin
+    .from("clinic_members")
+    .select("clinic_id")
+    .eq("user_id", userId)
+    .maybeSingle();
+
+  if (existingMember) {
+    redirect(`/verificar-email?email=${encodeURIComponent(email)}`);
+  }
 
   const { data: clinic, error: clinicError } = await admin
     .from("clinics")
@@ -176,7 +209,7 @@ export async function login(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const redirectTo = (formData.get("redirectTo") as string) || "/hoje";
+  const redirectTo = safeInternalPath(formData.get("redirectTo"));
   const supabase = await createClient();
 
   const { data, error } = await supabase.auth.signInWithPassword(parsed.data);
@@ -233,6 +266,14 @@ export async function requestOwnPasswordReset(email: string): Promise<ActionStat
   });
 
   if (error) {
+    // O Supabase limita reenvios (1 por minuto por padrão). Nesse caso um
+    // link já foi enviado há pouco — não é falha, então não mostramos erro.
+    if (error.code === "over_email_send_rate_limit" || error.status === 429) {
+      return {
+        info: "Um link já foi enviado há pouco. Confira sua caixa de entrada (e o spam). Você pode pedir outro em 1 minuto.",
+      };
+    }
+    console.error("requestOwnPasswordReset falhou:", error.code, error.status, error.message);
     return { error: "Não foi possível enviar o link. Tente novamente em instantes." };
   }
 

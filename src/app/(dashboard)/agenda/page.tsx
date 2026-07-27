@@ -11,6 +11,7 @@ import {
 import type { AgendaView } from "@/lib/agenda/constants";
 import type { Appointment } from "@/lib/agenda/types";
 import { AgendaNav } from "@/components/agenda/AgendaNav";
+import { ProfessionalLegend } from "@/components/agenda/ProfessionalLegend";
 import { AppointmentFormDialog } from "@/components/agenda/AppointmentFormDialog";
 import { DayView } from "@/components/agenda/DayView";
 import { WeekView } from "@/components/agenda/WeekView";
@@ -66,7 +67,7 @@ export default async function AgendaPage({
       supabase.from("patients").select("id, name").eq("clinic_id", member.clinicId).order("name"),
       supabase
         .from("clinic_members")
-        .select("user_id, full_name")
+        .select("user_id, full_name, color")
         .eq("clinic_id", member.clinicId)
         .eq("status", "active")
         .order("full_name"),
@@ -115,9 +116,17 @@ export default async function AgendaPage({
           anchorDate={anchorDate}
           appointments={(appointments ?? []) as Appointment[]}
           patients={patients ?? []}
+          professionals={professionals ?? []}
           prof={params.prof}
         />
       )}
+
+      <ProfessionalLegend
+        professionals={professionals ?? []}
+        activeProf={params.prof}
+        view={view}
+        date={toISODate(anchorDate)}
+      />
     </div>
   );
 }

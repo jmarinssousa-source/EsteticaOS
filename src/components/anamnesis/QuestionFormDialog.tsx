@@ -112,7 +112,11 @@ export function QuestionFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="type">Tipo de resposta</Label>
-            <Select value={type} onValueChange={(v) => v && setType(v as QuestionType)}>
+            <Select
+              items={QUESTION_TYPES.map((t) => ({ value: t, label: QUESTION_TYPE_LABELS[t] }))}
+              value={type}
+              onValueChange={(v) => v && setType(v as QuestionType)}
+            >
               <SelectTrigger id="type" className="w-full">
                 <SelectValue />
               </SelectTrigger>

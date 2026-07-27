@@ -1,8 +1,8 @@
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
 
-const SUPPORT_WHATSAPP_URL = "https://wa.me/5521971925107";
-const SUPPORT_WHATSAPP_LABEL = "(21) 97192-5107";
+export const SUPPORT_WHATSAPP_URL = "https://wa.me/5521971925107";
+export const SUPPORT_WHATSAPP_LABEL = "(21) 97192-5107";
 
 export function OrbyniqBadge({
   showSupport = true,

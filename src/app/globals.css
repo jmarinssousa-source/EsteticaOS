@@ -157,3 +157,21 @@
     @apply font-heading tracking-tight;
   }
 }
+
+@layer base {
+  /* Grids dentro de dialogs: sem isso, inputs de data/hora do iOS Safari
+     têm largura mínima intrínseca e estouram a borda do dialog. */
+  [data-slot="dialog-content"] .grid > * {
+    min-width: 0;
+  }
+  input[type="date"],
+  input[type="time"] {
+    min-width: 0;
+  }
+  /* iOS Safari centraliza o valor de date/time; alinha à esquerda como os
+     demais inputs e evita o campo "sumir" quando vazio. */
+  input[type="date"]::-webkit-date-and-time-value,
+  input[type="time"]::-webkit-date-and-time-value {
+    text-align: left;
+  }
+}

@@ -112,6 +112,10 @@ export function EntryDetailDialog({
             <div className="space-y-2">
               <Label>Status</Label>
               <Select
+                items={ENTRY_STATUSES.map((status) => ({
+                  value: status,
+                  label: ENTRY_STATUS_LABELS[status],
+                }))}
                 value={form.status}
                 onValueChange={(v) => v && setForm((f) => ({ ...f, status: v as typeof form.status }))}
                 disabled={!canEdit}
@@ -142,6 +146,13 @@ export function EntryDetailDialog({
           <div className="space-y-2">
             <Label>Forma de pagamento</Label>
             <Select
+              items={[
+                { value: "none", label: "Não informada" },
+                ...PAYMENT_METHODS.map((method) => ({
+                  value: method,
+                  label: PAYMENT_METHOD_LABELS[method],
+                })),
+              ]}
               value={form.paymentMethod || "none"}
               onValueChange={(v) => setForm((f) => ({ ...f, paymentMethod: v === "none" ? "" : (v ?? "") }))}
               disabled={!canEdit}

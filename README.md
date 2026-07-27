@@ -13,7 +13,7 @@ Escopo implementado: cadastro de clínica com verificação de e-mail, login, re
 3. Copie `.env.local.example` para `.env.local` e preencha os três valores.
 4. Em **Authentication > URL Configuration**, adicione `http://localhost:3000/auth/callback` (e a URL de produção, quando houver) às Redirect URLs.
 5. Confirme que **Authentication > Providers > Email > Confirm email** está habilitado (obrigatório para o fluxo de verificação de e-mail).
-6. Rode, em ordem, o SQL de cada arquivo em `supabase/migrations/` (0001 a 0011) no **SQL Editor** do Supabase — ou via Supabase CLI, se o projeto estiver linkado. A migração `0008_prontuario.sql` cria também o bucket de Storage `patient-media` (privado); confirme em **Storage** que ele existe após rodar essa migração.
+6. Rode, em ordem, o SQL de cada arquivo em `supabase/migrations/` (0001 a 0013) no **SQL Editor** do Supabase — ou via Supabase CLI, se o projeto estiver linkado. A migração `0008_prontuario.sql` cria também o bucket de Storage `patient-media` (privado); confirme em **Storage** que ele existe após rodar essa migração.
 7. Instale as dependências e suba o servidor:
 
 ```bash

@@ -104,6 +104,10 @@ export function ConvertToSaleDialog({ budgetId, total }: { budgetId: string; tot
                 <div className="space-y-1.5">
                   <Label>Forma de pagamento</Label>
                   <Select
+                    items={PAYMENT_METHODS.map((method) => ({
+                      value: method,
+                      label: PAYMENT_METHOD_LABELS[method],
+                    }))}
                     value={row.method}
                     onValueChange={(v) => v && updateRow(index, { method: v as PaymentMethod })}
                   >

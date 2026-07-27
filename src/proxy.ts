@@ -7,6 +7,7 @@ const PUBLIC_PATHS = [
   "/verificar-email",
   "/recuperar-senha",
   "/redefinir-senha",
+  "/conta-desativada",
   "/auth/callback",
   "/anamnese",
 ];
