@@ -99,7 +99,7 @@ export function SignaturePad({
         onPointerUp={handlePointerUp}
         onPointerLeave={handlePointerUp}
       />
-      <div className="flex items-center gap-2">
+      <div className="flex flex-wrap items-center gap-2">
         <Button type="button" variant="outline" size="sm" onClick={handleClear} disabled={!hasDrawn}>
           <Eraser className="size-4" />
           Limpar
