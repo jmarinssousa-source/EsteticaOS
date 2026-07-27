@@ -308,9 +308,11 @@ export default async function PatientDetailPage({
               </div>
             )}
             <RecordHistory
+              patientId={patient.id}
               records={(records ?? []) as PatientRecord[]}
               procedures={procedures ?? []}
               signedMapUrls={signedMediaUrls}
+              canEdit={canEditRecords}
             />
           </TabsContent>
         )}
