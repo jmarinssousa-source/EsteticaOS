@@ -68,7 +68,7 @@ export function SessionFormDialog({
         <Plus className="size-4" />
         Nova sessão
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Nova sessão</DialogTitle>
           <DialogDescription>Registre uma sessão avulsa ou vinculada a um pacote.</DialogDescription>

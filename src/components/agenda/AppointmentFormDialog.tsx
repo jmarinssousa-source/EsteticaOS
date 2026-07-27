@@ -76,7 +76,7 @@ export function AppointmentFormDialog({
         <Plus className="size-4" />
         Novo agendamento
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Novo agendamento</DialogTitle>
           <DialogDescription>Marque uma avaliação, procedimento ou retorno.</DialogDescription>
