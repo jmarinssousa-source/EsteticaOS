@@ -167,14 +167,37 @@
   [data-slot$="dialog-content"] .grid > * {
     min-width: 0;
   }
+  /* iOS Safari renderiza date/time com aparência nativa e largura
+     intrínseca própria: o valor ("2 de ago. de 2026") transborda a borda
+     do campo e invade o campo vizinho. Desligar a aparência nativa faz o
+     input respeitar a largura da coluna; o pseudo-elemento do valor
+     precisa do mesmo tratamento, senão ele volta a esticar por dentro. */
   input[type="date"],
-  input[type="time"] {
+  input[type="time"],
+  input[type="datetime-local"],
+  input[type="month"] {
+    -webkit-appearance: none;
+    appearance: none;
     min-width: 0;
+    width: 100%;
+    overflow: hidden;
   }
-  /* iOS Safari centraliza o valor de date/time; alinha à esquerda como os
-     demais inputs e evita o campo "sumir" quando vazio. */
   input[type="date"]::-webkit-date-and-time-value,
-  input[type="time"]::-webkit-date-and-time-value {
+  input[type="time"]::-webkit-date-and-time-value,
+  input[type="datetime-local"]::-webkit-date-and-time-value,
+  input[type="month"]::-webkit-date-and-time-value {
+    min-width: 0;
+    max-width: 100%;
     text-align: left;
+    overflow: hidden;
+    text-overflow: ellipsis;
+  }
+  /* O ícone de calendário do WebKit não pode encolher, senão some. */
+  input[type="date"]::-webkit-calendar-picker-indicator,
+  input[type="time"]::-webkit-calendar-picker-indicator,
+  input[type="datetime-local"]::-webkit-calendar-picker-indicator,
+  input[type="month"]::-webkit-calendar-picker-indicator {
+    flex-shrink: 0;
+    margin-inline-start: auto;
   }
 }

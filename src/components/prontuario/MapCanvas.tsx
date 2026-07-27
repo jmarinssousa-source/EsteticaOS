@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Eraser, RotateCcw, RotateCw } from "lucide-react";
+import { Eraser, RotateCcw, RotateCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BodyView, Gender, MapType } from "@/lib/prontuario/constants";
@@ -35,6 +35,11 @@ const PEN_COLORS = [
   { value: "#dc2626", label: "Vermelha" },
   { value: "#16a34a", label: "Verde" },
 ] as const;
+
+/** Valor sentinela: a "cor" ativa quando a borracha está selecionada. */
+const ERASER = "eraser";
+const PEN_WIDTH = 3;
+const ERASER_WIDTH = 18;
 
 function normalizeAngle(angle: number) {
   return ((angle % 360) + 360) % 360;
@@ -93,13 +98,20 @@ function useDrawing(colorRef: React.RefObject<string>) {
       const from = lastPointRef.current;
       const to = getPoint(event);
       if (!ctx || !from) return;
-      ctx.strokeStyle = colorRef.current;
+
+      // A borracha apaga só a camada de marcação: o canvas fica
+      // transparente ali e a foto por baixo reaparece intacta.
+      const erasing = colorRef.current === ERASER;
+      ctx.globalCompositeOperation = erasing ? "destination-out" : "source-over";
+      ctx.lineWidth = erasing ? ERASER_WIDTH : PEN_WIDTH;
+      ctx.strokeStyle = erasing ? "rgba(0,0,0,1)" : colorRef.current;
+
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
       ctx.stroke();
       lastPointRef.current = to;
-      setHasDrawn(true);
+      if (!erasing) setHasDrawn(true);
     },
     onPointerUp() {
       drawingRef.current = false;
@@ -322,7 +334,11 @@ export function MapCanvas({
       )}
 
       <div className="flex flex-wrap items-center gap-2">
-        <div className="flex items-center gap-1.5 rounded-lg border p-1.5" role="radiogroup" aria-label="Cor da caneta">
+        <div
+          className="flex items-center gap-1.5 rounded-lg border p-1.5"
+          role="radiogroup"
+          aria-label="Cor da caneta"
+        >
           {PEN_COLORS.map((color) => (
             <button
               key={color.value}
@@ -330,6 +346,7 @@ export function MapCanvas({
               role="radio"
               aria-checked={penColor === color.value}
               aria-label={`Caneta ${color.label.toLowerCase()}`}
+              title={`Caneta ${color.label.toLowerCase()}`}
               onClick={() => setPenColor(color.value)}
               className={cn(
                 "size-6 rounded-full border border-border transition-shadow",
@@ -338,10 +355,25 @@ export function MapCanvas({
               style={{ backgroundColor: color.value }}
             />
           ))}
+          <span className="mx-0.5 h-5 w-px bg-border" aria-hidden />
+          <button
+            type="button"
+            role="radio"
+            aria-checked={penColor === ERASER}
+            aria-label="Borracha"
+            title="Borracha — apaga só o que foi desenhado"
+            onClick={() => setPenColor(ERASER)}
+            className={cn(
+              "flex size-6 items-center justify-center rounded-full border border-border bg-background text-muted-foreground transition-shadow",
+              penColor === ERASER && "ring-2 ring-ring ring-offset-1 text-foreground",
+            )}
+          >
+            <Eraser className="size-3.5" />
+          </button>
         </div>
         <Button type="button" variant="outline" size="sm" onClick={clearVisible} disabled={!hasDrawn}>
-          <Eraser className="size-4" />
-          Limpar marcação
+          <Trash2 className="size-4" />
+          Limpar tudo
         </Button>
         <Button type="button" size="sm" onClick={handleSave} disabled={!hasDrawn || saving}>
           {saving ? "Salvando..." : "Salvar marcação"}

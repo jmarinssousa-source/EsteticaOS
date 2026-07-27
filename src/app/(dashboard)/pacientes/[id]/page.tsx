@@ -444,12 +444,14 @@ export default async function PatientDetailPage({
         {canViewRecords && (
           <TabsContent value="fotos" className="space-y-4 pt-4">
             {canEditRecords && (
-              <div className="flex justify-end">
+              <div className="flex flex-wrap justify-end gap-2">
+                <PhotoUploadDialog patientId={patient.id} mode="camera" />
                 <PhotoUploadDialog patientId={patient.id} />
               </div>
             )}
             <PhotosGallery
               patientId={patient.id}
+              patientName={patient.name}
               photos={(photos ?? []) as PatientPhoto[]}
               signedUrls={signedMediaUrls}
               canEdit={canEditRecords}

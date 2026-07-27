@@ -79,7 +79,7 @@ export function AppointmentDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{patientName}</DialogTitle>
           <DialogDescription>Edite o agendamento, mude o status ou reagende.</DialogDescription>
