@@ -3,8 +3,9 @@
 import { useState, useTransition } from "react";
 import { useDraggable } from "@dnd-kit/core";
 import { toast } from "sonner";
-import { Trash2 } from "lucide-react";
+import { MessageCircle, Trash2 } from "lucide-react";
 import { deleteLead } from "@/actions/crm";
+import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { cn } from "@/lib/utils";
 import { LEAD_ORIGIN_LABELS, type LeadOrigin } from "@/lib/crm/constants";
 import { isLeadStale, type ClinicMemberOption, type Lead, type Stage } from "@/lib/crm/types";
@@ -82,6 +83,26 @@ export function LeadCard({
               <span className="rounded-full bg-amber-100 px-1.5 py-0.5 text-[10px] font-medium text-amber-800">
                 parado
               </span>
+            )}
+            {lead.phone && (
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-5 text-muted-foreground hover:text-emerald-600"
+                aria-label={`Chamar ${lead.name} no WhatsApp`}
+                nativeButton={false}
+                render={
+                  <a
+                    href={buildWhatsAppUrl(lead.phone, `Olá, ${lead.name.split(" ")[0]}! `)}
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    onPointerDown={(e) => e.stopPropagation()}
+                    onClick={(e) => e.stopPropagation()}
+                  />
+                }
+              >
+                <MessageCircle className="size-3" />
+              </Button>
             )}
             {canEdit && (
               <AlertDialog>

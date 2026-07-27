@@ -43,6 +43,8 @@ export type ActionState = {
   error?: string;
   fieldErrors?: Record<string, string[]>;
   success?: boolean;
+  /** Aviso neutro (nem erro, nem sucesso) para exibir ao usuário. */
+  info?: string;
 };
 
 /**
@@ -264,6 +266,14 @@ export async function requestOwnPasswordReset(email: string): Promise<ActionStat
   });
 
   if (error) {
+    // O Supabase limita reenvios (1 por minuto por padrão). Nesse caso um
+    // link já foi enviado há pouco — não é falha, então não mostramos erro.
+    if (error.code === "over_email_send_rate_limit" || error.status === 429) {
+      return {
+        info: "Um link já foi enviado há pouco. Confira sua caixa de entrada (e o spam). Você pode pedir outro em 1 minuto.",
+      };
+    }
+    console.error("requestOwnPasswordReset falhou:", error.code, error.status, error.message);
     return { error: "Não foi possível enviar o link. Tente novamente em instantes." };
   }
 

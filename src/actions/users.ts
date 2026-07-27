@@ -13,6 +13,7 @@ import {
   type Permissions,
 } from "@/lib/auth/permissions";
 import type { ActionState } from "@/actions/auth";
+import { PROFESSIONAL_COLOR_KEYS } from "@/lib/agenda/professional-colors";
 
 const ASSIGNABLE_ROLES = CLINIC_ROLES.filter((role) => role !== "owner") as Exclude<
   ClinicRole,
@@ -138,6 +139,27 @@ export async function updateMemberPermissions(
   if (error) return { error: "Não foi possível atualizar as permissões." };
 
   revalidatePath("/configuracoes/usuarios");
+  return { success: true };
+}
+
+export async function updateMemberColor(memberUserId: string, color: string | null) {
+  const owner = await requireOwner();
+  if (!owner) return { error: NOT_OWNER_ERROR };
+
+  const parsed = z.enum(PROFESSIONAL_COLOR_KEYS).nullable().safeParse(color);
+  if (!parsed.success) return { error: "Cor inválida." };
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("clinic_members")
+    .update({ color: parsed.data })
+    .eq("user_id", memberUserId)
+    .eq("clinic_id", owner.clinicId);
+
+  if (error) return { error: "Não foi possível atualizar a cor." };
+
+  revalidatePath("/configuracoes/usuarios");
+  revalidatePath("/agenda");
   return { success: true };
 }
 

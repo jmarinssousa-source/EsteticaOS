@@ -76,7 +76,7 @@ export function AgendaNav({
         >
           <ChevronRight className="size-4" />
         </Button>
-        <h2 className="text-sm font-semibold capitalize sm:text-base">{getTitle(view, date)}</h2>
+        <h2 className="text-sm font-semibold sm:text-base">{getTitle(view, date)}</h2>
       </div>
 
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center">

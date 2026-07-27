@@ -16,4 +16,9 @@ export type Appointment = {
 };
 
 export type PatientOption = { id: string; name: string };
-export type ProfessionalOption = { user_id: string; full_name: string };
+export type ProfessionalOption = {
+  user_id: string;
+  full_name: string;
+  /** Chave da paleta escolhida (clinic_members.color); null = automática. */
+  color?: string | null;
+};

@@ -105,6 +105,10 @@ export function SessionDetailDialog({
             <div className="space-y-2">
               <Label>Procedimento</Label>
               <Select
+                items={[
+                  { value: "none", label: "Sem procedimento" },
+                  ...procedures.map((procedure) => ({ value: procedure.id, label: procedure.name })),
+                ]}
                 value={form.procedureId || "none"}
                 onValueChange={(v) => setForm((f) => ({ ...f, procedureId: v === "none" ? "" : (v ?? "") }))}
                 disabled={!canEdit}
@@ -125,6 +129,13 @@ export function SessionDetailDialog({
             <div className="space-y-2">
               <Label>Profissional</Label>
               <Select
+                items={[
+                  { value: "none", label: "Sem profissional" },
+                  ...professionals.map((professional) => ({
+                    value: professional.user_id,
+                    label: professional.full_name,
+                  })),
+                ]}
                 value={form.professionalId || "none"}
                 onValueChange={(v) => setForm((f) => ({ ...f, professionalId: v === "none" ? "" : (v ?? "") }))}
                 disabled={!canEdit}
@@ -147,6 +158,13 @@ export function SessionDetailDialog({
           <div className="space-y-2">
             <Label>Pacote</Label>
             <Select
+              items={[
+                { value: "none", label: "Sessão avulsa (sem pacote)" },
+                ...availableBalances.map((balance) => ({
+                  value: balance.id,
+                  label: `${balance.package_name} (${balance.total_sessions - balance.used_sessions} restantes)`,
+                })),
+              ]}
               value={form.packageBalanceId || "none"}
               onValueChange={(v) => setForm((f) => ({ ...f, packageBalanceId: v === "none" ? "" : (v ?? "") }))}
               disabled={!canEdit}
@@ -178,6 +196,10 @@ export function SessionDetailDialog({
             <div className="space-y-2">
               <Label>Status</Label>
               <Select
+                items={SESSION_STATUSES.map((status) => ({
+                  value: status,
+                  label: SESSION_STATUS_LABELS[status],
+                }))}
                 value={form.status}
                 onValueChange={(v) => v && setForm((f) => ({ ...f, status: v as typeof form.status }))}
                 disabled={!canEdit}

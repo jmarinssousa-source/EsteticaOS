@@ -2,7 +2,7 @@
 
 import { useTransition } from "react";
 import { useRouter } from "next/navigation";
-import { KeyRound, LogOut } from "lucide-react";
+import { KeyRound, LogOut, MessageCircle } from "lucide-react";
 import { toast } from "sonner";
 import { logout, requestOwnPasswordReset } from "@/actions/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
@@ -16,7 +16,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
+import { SUPPORT_WHATSAPP_LABEL, SUPPORT_WHATSAPP_URL } from "@/components/layout/OrbyniqBadge";
 import { ROLE_LABELS, type ClinicRole } from "@/lib/auth/permissions";
 
 function initials(name: string) {
@@ -45,6 +45,8 @@ export function AccountMenu({
       const result = await requestOwnPasswordReset(email);
       if (result?.error) {
         toast.error(result.error);
+      } else if (result?.info) {
+        toast.info(result.info);
       } else {
         toast.success(`Enviamos um link para redefinir sua senha para ${email}.`);
       }
@@ -77,11 +79,20 @@ export function AccountMenu({
           </DropdownMenuLabel>
         </DropdownMenuGroup>
         <DropdownMenuSeparator />
-        <div className="px-2 py-1.5">
-          <OrbyniqBadge />
-        </div>
-        <DropdownMenuSeparator />
         <DropdownMenuGroup>
+          <DropdownMenuItem
+            render={
+              <a href={SUPPORT_WHATSAPP_URL} target="_blank" rel="noopener noreferrer" />
+            }
+          >
+            <MessageCircle className="size-4" />
+            <span className="flex flex-col">
+              Suporte via WhatsApp
+              <span className="text-xs font-normal text-muted-foreground">
+                {SUPPORT_WHATSAPP_LABEL}
+              </span>
+            </span>
+          </DropdownMenuItem>
           <DropdownMenuItem disabled={isPending} onClick={handleResetPassword}>
             <KeyRound className="size-4" />
             Redefinir senha
@@ -91,6 +102,10 @@ export function AccountMenu({
             Sair
           </DropdownMenuItem>
         </DropdownMenuGroup>
+        <DropdownMenuSeparator />
+        <p className="px-2 py-1.5 text-center text-[10px] font-medium uppercase tracking-wider text-muted-foreground/70">
+          Uma solução Orbyniq
+        </p>
       </DropdownMenuContent>
     </DropdownMenu>
   );

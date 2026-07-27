@@ -189,11 +189,11 @@ export function AppointmentFormDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="startTime">Início</Label>
-              <Input id="startTime" name="startTime" type="time" required />
+              <Input id="startTime" name="startTime" type="time" defaultValue="09:00" required />
             </div>
             <div className="space-y-2">
               <Label htmlFor="endTime">Fim</Label>
-              <Input id="endTime" name="endTime" type="time" required />
+              <Input id="endTime" name="endTime" type="time" defaultValue="10:00" required />
             </div>
             {state.fieldErrors?.endTime && (
               <p className="col-span-3 text-sm text-destructive">{state.fieldErrors.endTime[0]}</p>

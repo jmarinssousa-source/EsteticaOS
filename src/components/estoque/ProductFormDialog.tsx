@@ -76,7 +76,11 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
         </div>
         <div className="space-y-2">
           <Label htmlFor="unit">Unidade</Label>
-          <Select name="unit" defaultValue="un">
+          <Select
+            name="unit"
+            defaultValue="un"
+            items={PRODUCT_UNITS.map((unit) => ({ value: unit, label: unit }))}
+          >
             <SelectTrigger id="unit" className="w-full">
               <SelectValue />
             </SelectTrigger>
@@ -175,7 +179,11 @@ function EditForm({ product, onSaved }: { product: Product; onSaved: () => void 
         </div>
         <div className="space-y-2">
           <Label>Unidade</Label>
-          <Select value={form.unit} onValueChange={(v) => v && setForm((f) => ({ ...f, unit: v }))}>
+          <Select
+            items={PRODUCT_UNITS.map((unit) => ({ value: unit, label: unit }))}
+            value={form.unit}
+            onValueChange={(v) => v && setForm((f) => ({ ...f, unit: v }))}
+          >
             <SelectTrigger className="w-full">
               <SelectValue />
             </SelectTrigger>

@@ -60,7 +60,11 @@ export function NewBudgetDialog({ patients }: { patients: PatientOption[] }) {
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Paciente</Label>
-            <Select value={patientId} onValueChange={(v) => setPatientId(v ?? "")}>
+            <Select
+              items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
+              value={patientId}
+              onValueChange={(v) => setPatientId(v ?? "")}
+            >
               <SelectTrigger className="w-full">
                 <SelectValue placeholder="Selecione o paciente" />
               </SelectTrigger>

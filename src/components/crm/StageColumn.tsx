@@ -9,6 +9,7 @@ import { GripVertical, Trash2 } from "lucide-react";
 import { deleteStage, renameStage } from "@/actions/crm";
 import { cn } from "@/lib/utils";
 import type { ClinicMemberOption, Lead, Stage } from "@/lib/crm/types";
+import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LeadCard } from "@/components/crm/LeadCard";
@@ -56,6 +57,8 @@ export function StageColumn({
     transform: CSS.Transform.toString(transform),
     transition,
   };
+
+  const stageTotal = leads.reduce((sum, lead) => sum + Number(lead.potential_value ?? 0), 0);
 
   function handleRename() {
     setEditing(false);
@@ -119,7 +122,14 @@ export function StageColumn({
             {stage.name}
           </button>
         )}
-        <span className="text-xs text-muted-foreground">{leads.length}</span>
+        <span className="flex flex-col items-end leading-tight">
+          <span className="text-xs text-muted-foreground">{leads.length}</span>
+          {stageTotal > 0 && (
+            <span className="text-[10px] font-medium text-muted-foreground/80">
+              {formatCurrency(stageTotal)}
+            </span>
+          )}
+        </span>
         {canEdit && !editing && (
           <div className="flex items-center">
             <AlertDialog>

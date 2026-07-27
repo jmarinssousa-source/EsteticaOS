@@ -61,7 +61,12 @@ export function EntryFormDialog({ patients }: { patients: PatientOption[] }) {
 
           <div className="space-y-2">
             <Label htmlFor="type">Tipo</Label>
-            <Select name="type" value={type} onValueChange={(v) => v && setType(v as EntryType)}>
+            <Select
+              name="type"
+              items={ENTRY_TYPES.map((t) => ({ value: t, label: ENTRY_TYPE_LABELS[t] }))}
+              value={type}
+              onValueChange={(v) => v && setType(v as EntryType)}
+            >
               <SelectTrigger id="type" className="w-full">
                 <SelectValue />
               </SelectTrigger>
@@ -99,7 +104,11 @@ export function EntryFormDialog({ patients }: { patients: PatientOption[] }) {
 
           <div className="space-y-2">
             <Label htmlFor="patientId">Paciente (opcional)</Label>
-            <Select name="patientId" defaultValue="">
+            <Select
+              name="patientId"
+              defaultValue=""
+              items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
+            >
               <SelectTrigger id="patientId" className="w-full">
                 <SelectValue placeholder="Sem paciente vinculado" />
               </SelectTrigger>

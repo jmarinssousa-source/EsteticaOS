@@ -90,7 +90,11 @@ export function SendAnamnesisDialog({
           <>
             <div className="space-y-2">
               <Label>Modelo</Label>
-              <Select value={templateId} onValueChange={(v) => v && setTemplateId(v)}>
+              <Select
+                items={templates.map((template) => ({ value: template.id, label: template.name }))}
+                value={templateId}
+                onValueChange={(v) => v && setTemplateId(v)}
+              >
                 <SelectTrigger className="w-full">
                   <SelectValue />
                 </SelectTrigger>
