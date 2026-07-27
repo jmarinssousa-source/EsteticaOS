@@ -5,13 +5,10 @@ import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { createPatientRecord } from "@/actions/prontuario";
 import {
-  BODY_VIEWS,
-  BODY_VIEW_LABELS,
   GENDERS,
   GENDER_LABELS,
   MAP_TYPES,
   MAP_TYPE_LABELS,
-  type BodyView,
   type Gender,
   type MapType,
 } from "@/lib/prontuario/constants";
@@ -55,7 +52,6 @@ export function RecordFormDialog({
   const [notes, setNotes] = useState("");
   const [complication, setComplication] = useState("");
   const [mapType, setMapType] = useState<MapType | "">("");
-  const [bodyView, setBodyView] = useState<BodyView>("front");
   const [gender, setGender] = useState<Gender>("female");
   const [mapImageDataUrl, setMapImageDataUrl] = useState<string | null>(null);
 
@@ -68,7 +64,6 @@ export function RecordFormDialog({
       setNotes("");
       setComplication("");
       setMapType("");
-      setBodyView("front");
       setGender("female");
       setMapImageDataUrl(null);
       setError(null);
@@ -187,50 +182,30 @@ export function RecordFormDialog({
             </Select>
           </div>
 
-          {mapType === "body" && (
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-1 rounded-lg border p-0.5">
-                {BODY_VIEWS.map((v) => (
-                  <button
-                    key={v}
-                    type="button"
-                    onClick={() => setBodyView(v)}
-                    className={cn(
-                      "rounded-md px-3 py-1 text-sm font-medium transition-colors",
-                      bodyView === v
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted",
-                    )}
-                  >
-                    {BODY_VIEW_LABELS[v]}
-                  </button>
-                ))}
-              </div>
-              <div className="flex items-center gap-1 rounded-lg border p-0.5">
-                {GENDERS.map((g) => (
-                  <button
-                    key={g}
-                    type="button"
-                    onClick={() => setGender(g)}
-                    className={cn(
-                      "rounded-md px-3 py-1 text-sm font-medium transition-colors",
-                      gender === g
-                        ? "bg-primary text-primary-foreground"
-                        : "text-muted-foreground hover:bg-muted",
-                    )}
-                  >
-                    {GENDER_LABELS[g]}
-                  </button>
-                ))}
-              </div>
+          {mapType && (
+            <div className="flex w-fit items-center gap-1 rounded-lg border p-0.5">
+              {GENDERS.map((g) => (
+                <button
+                  key={g}
+                  type="button"
+                  onClick={() => setGender(g)}
+                  className={cn(
+                    "rounded-md px-3 py-1 text-sm font-medium transition-colors",
+                    gender === g
+                      ? "bg-primary text-primary-foreground"
+                      : "text-muted-foreground hover:bg-muted",
+                  )}
+                >
+                  {GENDER_LABELS[g]}
+                </button>
+              ))}
             </div>
           )}
 
           {mapType && (
             <MapCanvas
-              key={`${mapType}-${mapType === "body" ? `${bodyView}-${gender}` : ""}`}
+              key={`${mapType}-${gender}`}
               mapType={mapType}
-              view={bodyView}
               gender={gender}
               onSave={(dataUrl) => {
                 setMapImageDataUrl(dataUrl);
