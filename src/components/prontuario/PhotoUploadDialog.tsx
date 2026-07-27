@@ -28,6 +28,39 @@ import {
 
 const initialState: ActionState = {};
 
+// Comprime no aparelho antes de enviar: fotos de celular (4–10 MB) viram
+// JPEGs de ~200–400 KB, o que economiza armazenamento no Supabase e evita
+// o limite de 10 MB por envio do servidor. Se a foto não puder ser
+// decodificada (formato exótico), envia o arquivo original.
+const MAX_EDGE = 1600;
+const JPEG_QUALITY = 0.82;
+
+async function compressImage(file: File): Promise<File> {
+  try {
+    const bitmap = await createImageBitmap(file);
+    const scale = Math.min(1, MAX_EDGE / Math.max(bitmap.width, bitmap.height));
+    const width = Math.round(bitmap.width * scale);
+    const height = Math.round(bitmap.height * scale);
+
+    const canvas = document.createElement("canvas");
+    canvas.width = width;
+    canvas.height = height;
+    const ctx = canvas.getContext("2d");
+    if (!ctx) return file;
+    ctx.drawImage(bitmap, 0, 0, width, height);
+
+    const blob = await new Promise<Blob | null>((resolve) =>
+      canvas.toBlob(resolve, "image/jpeg", JPEG_QUALITY),
+    );
+    if (!blob || blob.size >= file.size) return file;
+
+    const name = file.name.replace(/\.[^.]+$/, "") + ".jpg";
+    return new File([blob], name, { type: "image/jpeg" });
+  } catch {
+    return file;
+  }
+}
+
 export function PhotoUploadDialog({ patientId }: { patientId: string }) {
   const [open, setOpen] = useState(false);
   const [photoType, setPhotoType] = useState<PhotoType>("general");
@@ -51,7 +84,20 @@ export function PhotoUploadDialog({ patientId }: { patientId: string }) {
           <DialogDescription>Envie uma ou mais fotos do celular, tablet ou computador.</DialogDescription>
         </DialogHeader>
 
-        <form action={formAction} className="space-y-4">
+        <form
+          action={async (formData) => {
+            const files = formData
+              .getAll("files")
+              .filter((f): f is File => f instanceof File && f.size > 0);
+            if (files.length > 0) {
+              const compressed = await Promise.all(files.map(compressImage));
+              formData.delete("files");
+              for (const file of compressed) formData.append("files", file);
+            }
+            formAction(formData);
+          }}
+          className="space-y-4"
+        >
           <input type="hidden" name="patientId" value={patientId} />
 
           {state.error && (

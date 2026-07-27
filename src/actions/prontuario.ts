@@ -72,6 +72,35 @@ export async function createPatientRecord(
   return { success: true };
 }
 
+export async function deletePatientRecord(recordId: string, patientId: string): Promise<ActionResult> {
+  const member = await requirePermission("records_edit");
+  const supabase = await createClient();
+
+  const { data: record } = await supabase
+    .from("patient_records")
+    .select("map_image_path")
+    .eq("id", recordId)
+    .eq("clinic_id", member.clinicId)
+    .maybeSingle();
+
+  if (!record) return { error: "Evolução não encontrada." };
+
+  if (record.map_image_path) {
+    await supabase.storage.from(PATIENT_MEDIA_BUCKET).remove([record.map_image_path]);
+  }
+
+  const { error } = await supabase
+    .from("patient_records")
+    .delete()
+    .eq("id", recordId)
+    .eq("clinic_id", member.clinicId);
+
+  if (error) return { error: "Não foi possível excluir a evolução." };
+
+  revalidatePatient(patientId);
+  return { success: true };
+}
+
 export async function uploadPatientPhotos(
   _prevState: ActionState,
   formData: FormData,

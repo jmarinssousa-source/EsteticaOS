@@ -28,6 +28,14 @@ function loadImage(src: string) {
   });
 }
 
+// Cores de caneta disponíveis para a marcação.
+const PEN_COLORS = [
+  { value: "#ffffff", label: "Branca" },
+  { value: "#2563eb", label: "Azul" },
+  { value: "#dc2626", label: "Vermelha" },
+  { value: "#16a34a", label: "Verde" },
+] as const;
+
 function normalizeAngle(angle: number) {
   return ((angle % 360) + 360) % 360;
 }
@@ -38,7 +46,7 @@ function sideForAngle(angle: number): BodyView {
   return norm < 90 || norm >= 270 ? "front" : "back";
 }
 
-function useDrawing(strokeColor = "#DC2626") {
+function useDrawing(colorRef: React.RefObject<string>) {
   const canvasRef = useRef<HTMLCanvasElement | null>(null);
   const drawingRef = useRef(false);
   const lastPointRef = useRef<{ x: number; y: number } | null>(null);
@@ -60,14 +68,13 @@ function useDrawing(strokeColor = "#DC2626") {
         ctx.lineCap = "round";
         ctx.lineJoin = "round";
         ctx.lineWidth = 3;
-        ctx.strokeStyle = strokeColor;
       }
     }
 
     resize();
     window.addEventListener("resize", resize);
     return () => window.removeEventListener("resize", resize);
-  }, [strokeColor]);
+  }, []);
 
   function getPoint(event: React.PointerEvent<HTMLCanvasElement>) {
     const rect = event.currentTarget.getBoundingClientRect();
@@ -86,6 +93,7 @@ function useDrawing(strokeColor = "#DC2626") {
       const from = lastPointRef.current;
       const to = getPoint(event);
       if (!ctx || !from) return;
+      ctx.strokeStyle = colorRef.current;
       ctx.beginPath();
       ctx.moveTo(from.x, from.y);
       ctx.lineTo(to.x, to.y);
@@ -124,8 +132,14 @@ export function MapCanvas({
   onSave: (dataUrl: string) => void;
   saving?: boolean;
 }) {
-  const front = useDrawing();
-  const back = useDrawing();
+  const [penColor, setPenColor] = useState<string>(PEN_COLORS[2].value);
+  const penColorRef = useRef(penColor);
+  useEffect(() => {
+    penColorRef.current = penColor;
+  }, [penColor]);
+
+  const front = useDrawing(penColorRef);
+  const back = useDrawing(penColorRef);
   const { canvasRef: faceCanvasRef, handlers: faceHandlers } = front;
 
   // Giro do corpo: ângulo contínuo, com animação ao usar os botões e
@@ -308,6 +322,23 @@ export function MapCanvas({
       )}
 
       <div className="flex flex-wrap items-center gap-2">
+        <div className="flex items-center gap-1.5 rounded-lg border p-1.5" role="radiogroup" aria-label="Cor da caneta">
+          {PEN_COLORS.map((color) => (
+            <button
+              key={color.value}
+              type="button"
+              role="radio"
+              aria-checked={penColor === color.value}
+              aria-label={`Caneta ${color.label.toLowerCase()}`}
+              onClick={() => setPenColor(color.value)}
+              className={cn(
+                "size-6 rounded-full border border-border transition-shadow",
+                penColor === color.value && "ring-2 ring-ring ring-offset-1",
+              )}
+              style={{ backgroundColor: color.value }}
+            />
+          ))}
+        </div>
         <Button type="button" variant="outline" size="sm" onClick={clearVisible} disabled={!hasDrawn}>
           <Eraser className="size-4" />
           Limpar marcação
