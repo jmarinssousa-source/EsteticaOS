@@ -99,7 +99,7 @@ export function RecordFormDialog({
         <Plus className="size-4" />
         Nova evolução
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Nova evolução</DialogTitle>
           <DialogDescription>
