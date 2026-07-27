@@ -1,5 +1,4 @@
 import Link from "next/link";
-import Image from "next/image";
 import {
   ArrowRightLeft,
   CalendarCheck,
@@ -8,9 +7,11 @@ import {
   MessageCircle,
   NotebookPen,
   PackageSearch,
+  Sparkles,
   Users,
 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { Logo, LogoMark } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
 import { DashboardPreview } from "@/components/marketing/DashboardPreview";
@@ -100,10 +101,7 @@ export function Landing() {
     <div className="flex min-h-screen flex-col bg-background">
       <header className="sticky top-0 z-20 border-b border-border/60 bg-background/80 backdrop-blur">
         <div className="mx-auto flex h-16 max-w-6xl items-center justify-between px-4 md:px-6">
-          <div className="flex items-center gap-2">
-            <Image src="/icon.svg" alt="" width={28} height={28} unoptimized className="rounded-lg" />
-            <span className="font-heading text-xl font-semibold tracking-tight">EstéticaOS</span>
-          </div>
+          <Logo />
           <div className="flex items-center gap-2">
             <ThemeToggle />
             <Button variant="ghost" render={<Link href="/login" />}>
@@ -126,7 +124,8 @@ export function Landing() {
           />
           <div className="mx-auto grid max-w-6xl items-center gap-12 lg:grid-cols-2">
             <div>
-              <span className="inline-flex items-center rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+              <span className="inline-flex items-center gap-1.5 rounded-full border border-border bg-card px-3 py-1 text-xs font-medium text-muted-foreground">
+                <Sparkles className="size-3.5 text-champagne" aria-hidden />
                 Feito só para clínicas de estética
               </span>
               <h1 className="mt-4 text-4xl font-semibold tracking-tight sm:text-5xl">
@@ -215,7 +214,8 @@ export function Landing() {
               background: "radial-gradient(80% 100% at 50% 0%, oklch(0.82 0.09 85 / 25%), transparent)",
             }}
           >
-            <h2 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            <LogoMark className="mx-auto size-12" />
+            <h2 className="mt-5 text-2xl font-semibold tracking-tight sm:text-3xl">
               Pronta pra tirar sua clínica do caderno?
             </h2>
             <p className="mx-auto mt-3 max-w-xl text-muted-foreground">
@@ -231,10 +231,7 @@ export function Landing() {
 
       <footer className="border-t border-border/60 px-4 py-8 md:px-6">
         <div className="mx-auto flex max-w-6xl flex-col items-center gap-3 sm:flex-row sm:justify-between">
-          <div className="flex items-center gap-2">
-            <Image src="/icon.svg" alt="" width={20} height={20} unoptimized className="rounded-md" />
-            <span className="font-heading text-base font-semibold">EstéticaOS</span>
-          </div>
+          <Logo markClassName="size-5" wordmarkClassName="text-base" />
           <OrbyniqBadge className="items-center text-center sm:items-end sm:text-right" />
         </div>
       </footer>

@@ -1,3 +1,5 @@
+import Link from "next/link";
+import { Logo } from "@/components/brand/Logo";
 import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 
@@ -19,9 +21,9 @@ export default function AuthLayout({
       <div className="absolute right-4 top-4">
         <ThemeToggle />
       </div>
-      <div className="mb-8 flex items-center gap-2">
-        <span className="font-heading text-2xl font-semibold tracking-tight">EstéticaOS</span>
-      </div>
+      <Link href="/" className="mb-8" aria-label="Ir para a página inicial">
+        <Logo markClassName="size-9" wordmarkClassName="text-2xl" />
+      </Link>
       <div className="w-full max-w-md">{children}</div>
       <div className="mt-8">
         <OrbyniqBadge className="items-center text-center" />

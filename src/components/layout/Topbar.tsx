@@ -1,4 +1,5 @@
 import { MobileNav } from "@/components/layout/MobileNav";
+import { LogoMark } from "@/components/brand/Logo";
 import { HelpButton } from "@/components/help/HelpButton";
 import { AccountMenu } from "@/components/layout/AccountMenu";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
@@ -21,11 +22,14 @@ export function Topbar({
     <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
       <div className="flex items-center gap-2">
         <MobileNav role={role} permissions={permissions} />
-        <div className="flex flex-col md:hidden">
-          <span className="font-heading text-sm font-semibold leading-tight">{clinicName}</span>
-          <span className="text-[9px] uppercase tracking-widest leading-tight text-muted-foreground">
-            EstéticaOS
-          </span>
+        <div className="flex items-center gap-2 md:hidden">
+          <LogoMark className="size-7" />
+          <div className="flex flex-col">
+            <span className="font-heading text-sm font-semibold leading-tight">{clinicName}</span>
+            <span className="text-[9px] uppercase tracking-widest leading-tight text-muted-foreground">
+              Estética<span className="text-primary">OS</span>
+            </span>
+          </div>
         </div>
         <span className="hidden font-heading text-sm font-medium text-foreground md:inline">
           {clinicName}

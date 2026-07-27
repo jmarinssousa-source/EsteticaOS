@@ -4,6 +4,12 @@ import { LoginForm } from "@/components/auth/LoginForm";
 
 export const metadata = { title: "Entrar — EstéticaOS" };
 
+const ERROR_MESSAGES: Record<string, string> = {
+  "link-invalido": "Este link expirou ou já foi usado. Solicite um novo.",
+  "conta-desativada":
+    "Seu acesso foi desativado. Fale com quem administra a clínica para reativá-lo.",
+};
+
 export default async function LoginPage({
   searchParams,
 }: {
@@ -19,11 +25,9 @@ export default async function LoginPage({
         <CardDescription>Acesse o sistema operacional da sua clínica.</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        {params.error === "link-invalido" && (
+        {params.error && ERROR_MESSAGES[params.error] && (
           <Alert variant="destructive">
-            <AlertDescription>
-              Este link expirou ou já foi usado. Solicite um novo.
-            </AlertDescription>
+            <AlertDescription>{ERROR_MESSAGES[params.error]}</AlertDescription>
           </Alert>
         )}
         <LoginForm redirectTo={redirectTo} />

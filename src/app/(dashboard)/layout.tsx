@@ -1,4 +1,5 @@
 import { redirect } from "next/navigation";
+import { createClient } from "@/lib/supabase/server";
 import { getCurrentMember } from "@/lib/auth/session";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
@@ -11,12 +12,22 @@ export default async function DashboardLayout({
 }) {
   const member = await getCurrentMember();
 
+  // Sem sessão: volta para o login. Com sessão mas sem vínculo ativo com
+  // uma clínica, vai para uma página pública dedicada — redirecionar para
+  // /login criaria loop, pois o proxy manda usuário logado de volta a /hoje.
   if (!member) {
-    redirect("/login");
+    const supabase = await createClient();
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    if (!user) {
+      redirect("/login");
+    }
+    redirect("/conta-desativada?motivo=sem-clinica");
   }
 
   if (member.memberStatus === "inactive") {
-    redirect("/login?error=conta-desativada");
+    redirect("/conta-desativada");
   }
 
   return (

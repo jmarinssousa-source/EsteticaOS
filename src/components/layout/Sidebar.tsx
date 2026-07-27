@@ -10,6 +10,7 @@ import { hasPermission, type ClinicRole, type Permissions } from "@/lib/auth/per
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
 import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
+import { LogoMark } from "@/components/brand/Logo";
 
 const COLLAPSE_STORAGE_KEY = "esteticaos:sidebar-collapsed";
 const COLLAPSE_CHANGE_EVENT = "esteticaos:sidebar-collapsed-change";
@@ -57,13 +58,16 @@ export function Sidebar({
     >
       <div className="flex h-16 items-center justify-between gap-2 border-b px-3">
         {!collapsed && (
-          <div className="min-w-0">
-            <p className="truncate font-heading text-base font-semibold tracking-tight">
-              {clinicName}
-            </p>
-            <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
-              EstéticaOS
-            </p>
+          <div className="flex min-w-0 items-center gap-2">
+            <LogoMark className="size-8" />
+            <div className="min-w-0">
+              <p className="truncate font-heading text-base font-semibold tracking-tight">
+                {clinicName}
+              </p>
+              <p className="text-[10px] uppercase tracking-widest text-muted-foreground">
+                Estética<span className="text-primary">OS</span>
+              </p>
+            </div>
           </div>
         )}
         <Button
