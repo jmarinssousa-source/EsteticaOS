@@ -6,7 +6,7 @@ import { setMonthlyGoal } from "@/actions/goals";
 import type { ActionState } from "@/actions/auth";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -140,13 +140,10 @@ export function GoalCard({
                 )}
                 <div className="space-y-2">
                   <Label htmlFor="goalAmount">Meta (R$)</Label>
-                  <Input
+                  <CurrencyInput
                     id="goalAmount"
                     name="goalAmount"
-                    type="number"
-                    min="0"
-                    step="0.01"
-                    defaultValue={goalAmount || ""}
+                    defaultValue={goalAmount}
                     required
                   />
                   {state.fieldErrors?.goalAmount && (
