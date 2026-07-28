@@ -8,6 +8,7 @@ import { ENTRY_TYPES, ENTRY_TYPE_LABELS, type EntryType } from "@/lib/financeiro
 import type { PatientOption } from "@/lib/agenda/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -91,7 +92,7 @@ export function EntryFormDialog({ patients }: { patients: PatientOption[] }) {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="amount">Valor (R$)</Label>
-              <Input id="amount" name="amount" type="number" min="0.01" step="0.01" required />
+              <CurrencyInput id="amount" name="amount" required />
               {state.fieldErrors?.amount && (
                 <p className="text-sm text-destructive">{state.fieldErrors.amount[0]}</p>
               )}

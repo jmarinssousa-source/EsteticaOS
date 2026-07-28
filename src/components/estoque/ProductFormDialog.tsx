@@ -9,6 +9,7 @@ import { PRODUCT_UNITS } from "@/lib/estoque/constants";
 import type { Product } from "@/lib/estoque/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -120,11 +121,11 @@ function CreateForm({ onCreated }: { onCreated: () => void }) {
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="cost">Custo (R$)</Label>
-          <Input id="cost" name="cost" type="number" min="0" step="0.01" />
+          <CurrencyInput id="cost" name="cost" />
         </div>
         <div className="space-y-2">
           <Label htmlFor="price">Preço (R$)</Label>
-          <Input id="price" name="price" type="number" min="0" step="0.01" />
+          <CurrencyInput id="price" name="price" />
         </div>
       </div>
 
@@ -239,22 +240,16 @@ function EditForm({ product, onSaved }: { product: Product; onSaved: () => void 
       <div className="grid grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label>Custo (R$)</Label>
-          <Input
-            type="number"
-            min="0"
-            step="0.01"
+          <CurrencyInput
             value={form.cost}
-            onChange={(e) => setForm((f) => ({ ...f, cost: e.target.value }))}
+            onValueChange={(cost) => setForm((f) => ({ ...f, cost }))}
           />
         </div>
         <div className="space-y-2">
           <Label>Preço (R$)</Label>
-          <Input
-            type="number"
-            min="0"
-            step="0.01"
+          <CurrencyInput
             value={form.price}
-            onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+            onValueChange={(price) => setForm((f) => ({ ...f, price }))}
           />
         </div>
       </div>

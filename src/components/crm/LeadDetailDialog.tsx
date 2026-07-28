@@ -16,6 +16,7 @@ import type { ClinicMemberOption, Lead, Stage } from "@/lib/crm/types";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -267,13 +268,10 @@ export function LeadDetailDialog({
             </div>
             <div className="space-y-2">
               <Label>Valor potencial (R$)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
+              <CurrencyInput
                 value={form.potentialValue}
                 disabled={!canEdit}
-                onChange={(e) => setForm((f) => ({ ...f, potentialValue: e.target.value }))}
+                onValueChange={(potentialValue) => setForm((f) => ({ ...f, potentialValue }))}
               />
             </div>
           </div>

@@ -4,28 +4,50 @@ import { useState } from "react";
 import { Input } from "@/components/ui/input";
 import { formatCurrencyInput, parseCurrencyInput } from "@/lib/format/masks";
 
+function maskFromNumber(value: string | number | undefined | null) {
+  if (value === "" || value == null) return "";
+  const numeric = Number(value);
+  if (!Number.isFinite(numeric) || numeric === 0) return "";
+  return formatCurrencyInput(numeric.toFixed(2));
+}
+
+function sameAmount(a: string, b: string | number | undefined | null) {
+  if (b === "" || b == null) return a === "";
+  return Number(a || 0) === Number(b);
+}
+
 /**
  * Campo de dinheiro que formata enquanto digita ("9.000,00"). O que aparece
- * é a máscara; o que vai no formulário é o número puro ("9000.00"), num
- * input escondido — assim as validações do servidor seguem iguais.
+ * é a máscara; o que sai é sempre o número puro ("9000.00") — em `name`
+ * (input escondido, para formulários) e/ou em `onValueChange` (para telas
+ * que guardam o valor em estado).
  */
 export function CurrencyInput({
   name,
+  value,
   defaultValue = "",
   onValueChange,
   ...props
 }: Omit<React.ComponentProps<typeof Input>, "defaultValue" | "value" | "type" | "name"> & {
   name?: string;
-  /** Número inicial (ex.: 9000 ou "9000.00"). */
+  /** Modo controlado: número vindo do estado do pai (ex.: preço preenchido
+   *  automaticamente ao escolher um procedimento). */
+  value?: string | number;
+  /** Modo não controlado: número inicial. */
   defaultValue?: string | number;
-  /** Recebe o valor numérico como string a cada digitação. */
   onValueChange?: (value: string) => void;
 }) {
-  const [masked, setMasked] = useState(() => {
-    const initial = String(defaultValue ?? "");
-    if (!initial || Number(initial) === 0) return "";
-    return formatCurrencyInput(Number(initial).toFixed(2));
-  });
+  const [masked, setMasked] = useState(() => maskFromNumber(value ?? defaultValue));
+
+  // Reflete mudanças que vêm de fora sem atropelar a digitação: só
+  // reformata quando o valor do pai difere do que já está no campo.
+  const [lastExternal, setLastExternal] = useState(value);
+  if (value !== undefined && value !== lastExternal) {
+    setLastExternal(value);
+    if (!sameAmount(parseCurrencyInput(masked), value)) {
+      setMasked(maskFromNumber(value));
+    }
+  }
 
   return (
     <>
