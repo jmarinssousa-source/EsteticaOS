@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { CheckSquare, Download, Loader2, Square, Trash2 } from "lucide-react";
+import { CheckSquare, Download, Loader2, Square, Trash2, ZoomIn } from "lucide-react";
+import { ImageViewerDialog } from "@/components/ui/image-lightbox";
 import { deletePatientPhoto } from "@/actions/prontuario";
 import { PHOTO_TYPE_LABELS } from "@/lib/prontuario/constants";
 import type { PatientPhoto } from "@/lib/prontuario/types";
@@ -53,6 +54,8 @@ export function PhotosGallery({
   const [isPending, startTransition] = useTransition();
   const [selected, setSelected] = useState<Set<string>>(new Set());
   const [downloading, setDownloading] = useState(false);
+  const [viewing, setViewing] = useState<string | null>(null);
+  const viewingPhoto = photos.find((p) => p.id === viewing) ?? null;
 
   function toggle(photoId: string) {
     setSelected((prev) => {
@@ -165,33 +168,47 @@ export function PhotosGallery({
           const isSelected = selected.has(photo.id);
           return (
             <div key={photo.id} className="space-y-1">
-              <button
-                type="button"
-                aria-pressed={isSelected}
-                aria-label={`Selecionar foto ${PHOTO_TYPE_LABELS[photo.photo_type]}`}
-                onClick={() => toggle(photo.id)}
+              {/* A foto abre ampliada; a seleção fica na caixinha do canto,
+                  fora do botão da imagem (botão dentro de botão é inválido). */}
+              <div
                 className={cn(
-                  "relative block aspect-square w-full overflow-hidden rounded-md border bg-muted transition-shadow",
+                  "group relative aspect-square overflow-hidden rounded-md border bg-muted transition-shadow",
                   isSelected && "ring-2 ring-primary ring-offset-2",
                 )}
               >
-                {url && (
-                  // eslint-disable-next-line @next/next/no-img-element
-                  <img
-                    src={url}
-                    alt={photo.label ?? "Foto do paciente"}
-                    className="h-full w-full object-cover"
-                  />
-                )}
-                <span
+                <button
+                  type="button"
+                  onClick={() => setViewing(photo.id)}
+                  aria-label={`Ampliar foto ${PHOTO_TYPE_LABELS[photo.photo_type]}`}
+                  className="block size-full"
+                >
+                  {url && (
+                    // eslint-disable-next-line @next/next/no-img-element
+                    <img
+                      src={url}
+                      alt={photo.label ?? "Foto do paciente"}
+                      className="h-full w-full object-cover"
+                    />
+                  )}
+                  <span className="absolute inset-0 flex items-center justify-center bg-foreground/0 opacity-0 transition-all group-hover:bg-foreground/10 group-hover:opacity-100">
+                    <span className="rounded-full bg-background/90 p-2 shadow-sm">
+                      <ZoomIn className="size-4" />
+                    </span>
+                  </span>
+                </button>
+                <button
+                  type="button"
+                  aria-pressed={isSelected}
+                  aria-label={`Selecionar foto ${PHOTO_TYPE_LABELS[photo.photo_type]}`}
+                  onClick={() => toggle(photo.id)}
                   className={cn(
-                    "absolute left-1.5 top-1.5 flex size-5 items-center justify-center rounded border bg-background/90",
+                    "absolute left-1.5 top-1.5 flex size-6 items-center justify-center rounded border bg-background/90 shadow-sm transition-colors hover:border-primary",
                     isSelected && "border-primary bg-primary text-primary-foreground",
                   )}
                 >
-                  {isSelected && <CheckSquare className="size-3.5" />}
-                </span>
-              </button>
+                  {isSelected && <CheckSquare className="size-4" />}
+                </button>
+              </div>
               <div className="flex items-center justify-between gap-1">
                 <Badge variant="outline" className="text-[10px]">
                   {PHOTO_TYPE_LABELS[photo.photo_type]}
@@ -214,6 +231,22 @@ export function PhotosGallery({
           );
         })}
       </div>
+
+      {viewingPhoto && (
+        <ImageViewerDialog
+          src={signedUrls[viewingPhoto.storage_path]}
+          alt={viewingPhoto.label ?? "Foto do paciente"}
+          title={[
+            PHOTO_TYPE_LABELS[viewingPhoto.photo_type],
+            new Date(viewingPhoto.created_at).toLocaleDateString("pt-BR"),
+            viewingPhoto.label,
+          ]
+            .filter(Boolean)
+            .join(" · ")}
+          open={viewing !== null}
+          onOpenChange={(next) => !next && setViewing(null)}
+        />
+      )}
     </div>
   );
 }

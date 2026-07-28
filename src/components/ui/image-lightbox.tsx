@@ -6,9 +6,44 @@ import { cn } from "@/lib/utils";
 import { Dialog, DialogContent, DialogTitle } from "@/components/ui/dialog";
 
 /**
+ * Visualizador ampliado, controlado por quem chama. Útil quando a
+ * miniatura já existe na tela com outros controles em cima (ex.: a caixa
+ * de seleção da galeria de fotos).
+ */
+export function ImageViewerDialog({
+  src,
+  alt,
+  title,
+  open,
+  onOpenChange,
+}: {
+  src: string;
+  alt: string;
+  title?: string;
+  open: boolean;
+  onOpenChange: (open: boolean) => void;
+}) {
+  return (
+    <Dialog open={open} onOpenChange={onOpenChange}>
+      {/* Largura explícita (não shrink-to-fit): num container que encolhe
+          com o conteúdo, o max-w-full da imagem vira referência circular e
+          ela quase não cresce em telas estreitas. */}
+      <DialogContent className="p-3 sm:max-w-3xl">
+        <DialogTitle className="pr-8 text-sm font-medium">{title ?? alt}</DialogTitle>
+        {/* eslint-disable-next-line @next/next/no-img-element */}
+        <img
+          src={src}
+          alt={alt}
+          className="mx-auto max-h-[80vh] w-auto max-w-full rounded-md bg-white object-contain"
+        />
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+/**
  * Miniatura clicável que abre a imagem ampliada. A imagem grande cresce
- * até caber na tela (95vw x 85vh), então funciona igual no celular e no
- * computador, sem cortar o desenho.
+ * até caber na tela, então funciona igual no celular e no computador.
  */
 export function ImageLightbox({
   src,
@@ -45,20 +80,7 @@ export function ImageLightbox({
         </span>
       </button>
 
-      <Dialog open={open} onOpenChange={setOpen}>
-        {/* Largura explícita (não shrink-to-fit): num container que encolhe
-            com o conteúdo, o max-w-full da imagem vira referência circular e
-            ela quase não cresce em telas estreitas. */}
-        <DialogContent className="p-3 sm:max-w-3xl">
-          <DialogTitle className="pr-8 text-sm font-medium">{title ?? alt}</DialogTitle>
-          {/* eslint-disable-next-line @next/next/no-img-element */}
-          <img
-            src={src}
-            alt={alt}
-            className="mx-auto max-h-[80vh] w-auto max-w-full rounded-md bg-white object-contain"
-          />
-        </DialogContent>
-      </Dialog>
+      <ImageViewerDialog src={src} alt={alt} title={title} open={open} onOpenChange={setOpen} />
     </>
   );
 }
