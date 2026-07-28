@@ -4,6 +4,7 @@ import {
   CircleDollarSign,
   ClipboardList,
   Clock,
+  HeartHandshake,
   Kanban,
   Package,
   PenLine,
@@ -20,6 +21,10 @@ import { Alert, AlertDescription } from "@/components/ui/alert";
 import { GoalCard } from "@/components/dashboard/GoalCard";
 import { StatCard } from "@/components/dashboard/StatCard";
 import { AlertsPanel, type AlertItem } from "@/components/dashboard/AlertsPanel";
+import {
+  DEFAULT_INACTIVE_PATIENT_DAYS,
+  getInactivePatients,
+} from "@/lib/patients/reactivation";
 
 export const metadata = { title: "Hoje — EstéticaOS" };
 
@@ -43,6 +48,7 @@ export default async function HojePage({
   const canViewRevenue = hasPermission(member, "finance_revenue_view");
   const canViewExpense = hasPermission(member, "finance_expense_view");
   const canViewInventory = hasPermission(member, "inventory_view");
+  const canViewPatients = hasPermission(member, "patients_view");
   const canEditGoal = member.role === "owner";
 
   const yearMonth = currentYearMonth();
@@ -94,9 +100,11 @@ export default async function HojePage({
           .eq("clinic_id", member.clinicId)
           .eq("status", "open")
       : Promise.resolve({ data: null }),
-    canViewCrm
-      ? supabase.from("clinics").select("stale_lead_days").eq("id", member.clinicId).single()
-      : Promise.resolve({ data: null }),
+    supabase
+      .from("clinics")
+      .select("stale_lead_days, inactive_patient_days")
+      .eq("id", member.clinicId)
+      .single(),
     canViewBudgets
       ? supabase
           .from("budgets")
@@ -145,6 +153,13 @@ export default async function HojePage({
 
   const soldAmount = (sales ?? []).reduce((sum, s) => sum + Number(s.total_value), 0);
 
+  // Reativação depende da lista de pacientes + agenda, então roda depois
+  // de saber o prazo configurado pela clínica.
+  const inactiveDays = clinic?.inactive_patient_days ?? DEFAULT_INACTIVE_PATIENT_DAYS;
+  const inactivePatients = canViewPatients
+    ? await getInactivePatients(supabase, member.clinicId, inactiveDays)
+    : [];
+
   const staleLeadDays = clinic?.stale_lead_days ?? 3;
   const openLeads = leads ?? [];
   const staleLeads = openLeads.filter((l) => isStaleLead(l.last_moved_at, staleLeadDays));
@@ -188,6 +203,14 @@ export default async function HojePage({
       : []),
     ...(expiringProducts.length > 0
       ? [{ label: `${expiringProducts.length} produto(s) vencendo em breve`, href: "/estoque" }]
+      : []),
+    ...(inactivePatients.length > 0
+      ? [
+          {
+            label: `${inactivePatients.length} paciente(s) sem retorno há mais de ${inactiveDays} dias`,
+            href: "/pacientes/reativacao",
+          },
+        ]
       : []),
   ];
 
@@ -282,6 +305,16 @@ export default async function HojePage({
             value={formatCurrency(payableTotal)}
             icon={ReceiptText}
             href="/financeiro?filter=pagar"
+          />
+        )}
+
+        {canViewPatients && (
+          <StatCard
+            title="Pacientes para reativar"
+            value={String(inactivePatients.length)}
+            icon={HeartHandshake}
+            href="/pacientes/reativacao"
+            emphasis={inactivePatients.length > 0}
           />
         )}
 

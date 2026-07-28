@@ -1,4 +1,7 @@
+import Link from "next/link";
+import { HeartHandshake } from "lucide-react";
 import { hasPermission } from "@/lib/auth/permissions";
+import { Button } from "@/components/ui/button";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { PatientFormDialog } from "@/components/patients/PatientFormDialog";
@@ -24,7 +27,18 @@ export default async function PacientesPage() {
           <h1 className="text-2xl font-bold tracking-tight">Pacientes</h1>
           <p className="text-sm text-muted-foreground">Busque por nome, telefone ou CPF.</p>
         </div>
-        {canEdit && <PatientFormDialog />}
+        <div className="flex items-center gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            nativeButton={false}
+            render={<Link href="/pacientes/reativacao" />}
+          >
+            <HeartHandshake className="size-4" />
+            Reativação
+          </Button>
+          {canEdit && <PatientFormDialog />}
+        </div>
       </div>
 
       <PatientsTable patients={patients ?? []} />

@@ -13,6 +13,7 @@ const updateClinicSchema = z.object({
   email: z.email("Informe um e-mail válido."),
   address: z.string().trim().optional(),
   staleLeadDays: z.coerce.number().int().min(1, "Informe pelo menos 1 dia."),
+  inactivePatientDays: z.coerce.number().int().min(1, "Informe pelo menos 1 dia."),
 });
 
 export async function updateClinic(
@@ -31,17 +32,22 @@ export async function updateClinic(
     email: formData.get("email"),
     address: formData.get("address"),
     staleLeadDays: formData.get("staleLeadDays"),
+    inactivePatientDays: formData.get("inactivePatientDays"),
   });
 
   if (!parsed.success) {
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const { staleLeadDays, ...clinicFields } = parsed.data;
+  const { staleLeadDays, inactivePatientDays, ...clinicFields } = parsed.data;
   const supabase = await createClient();
   const { error } = await supabase
     .from("clinics")
-    .update({ ...clinicFields, stale_lead_days: staleLeadDays })
+    .update({
+      ...clinicFields,
+      stale_lead_days: staleLeadDays,
+      inactive_patient_days: inactivePatientDays,
+    })
     .eq("id", member.clinicId);
 
   if (error) {

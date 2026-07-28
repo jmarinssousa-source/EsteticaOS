@@ -22,6 +22,7 @@ export function ClinicForm({
     email: string | null;
     address: string | null;
     stale_lead_days: number;
+    inactive_patient_days: number;
   };
   readOnly: boolean;
 }) {
@@ -110,6 +111,27 @@ export function ClinicForm({
         />
         {state.fieldErrors?.staleLeadDays && (
           <p className="text-sm text-destructive">{state.fieldErrors.staleLeadDays[0]}</p>
+        )}
+      </div>
+
+      <div className="space-y-2">
+        <Label htmlFor="inactivePatientDays">
+          Sugerir reativação de paciente após quantos dias sem retorno
+        </Label>
+        <Input
+          id="inactivePatientDays"
+          name="inactivePatientDays"
+          type="number"
+          min="1"
+          defaultValue={clinic.inactive_patient_days}
+          disabled={readOnly}
+          required
+        />
+        <p className="text-xs text-muted-foreground">
+          Pacientes com horário marcado não entram na lista. Padrão: 90 dias.
+        </p>
+        {state.fieldErrors?.inactivePatientDays && (
+          <p className="text-sm text-destructive">{state.fieldErrors.inactivePatientDays[0]}</p>
         )}
       </div>
 

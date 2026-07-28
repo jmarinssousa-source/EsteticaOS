@@ -12,7 +12,7 @@ export default async function ClinicaPage() {
   const supabase = await createClient();
   const { data: clinic } = await supabase
     .from("clinics")
-    .select("name, cnpj, phone, email, address, stale_lead_days")
+    .select("name, cnpj, phone, email, address, stale_lead_days, inactive_patient_days")
     .eq("id", member.clinicId)
     .single();
 
