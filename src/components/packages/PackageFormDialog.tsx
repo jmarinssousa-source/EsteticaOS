@@ -6,6 +6,7 @@ import { createPackage, updatePackage } from "@/actions/packages";
 import type { ProcedureOption } from "@/lib/procedures/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Checkbox } from "@/components/ui/checkbox";
@@ -127,12 +128,9 @@ export function PackageFormDialog({
             </div>
             <div className="space-y-2">
               <Label>Valor (R$)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
+              <CurrencyInput
                 value={form.price}
-                onChange={(e) => setForm((f) => ({ ...f, price: e.target.value }))}
+                onValueChange={(price) => setForm((f) => ({ ...f, price }))}
               />
             </div>
             <div className="space-y-2">

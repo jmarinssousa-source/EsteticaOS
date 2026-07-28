@@ -4,7 +4,7 @@ import { useState, useTransition } from "react";
 import { toast } from "sonner";
 import { updateBudgetNotes } from "@/actions/orcamentos";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 
@@ -37,13 +37,10 @@ export function BudgetNotesForm({
     <div className="space-y-4">
       <div className="max-w-xs space-y-2">
         <Label>Desconto geral (R$)</Label>
-        <Input
-          type="number"
-          min="0"
-          step="0.01"
+        <CurrencyInput
           value={form.discount}
           disabled={!canEdit}
-          onChange={(e) => setForm((f) => ({ ...f, discount: e.target.value }))}
+          onValueChange={(discount) => setForm((f) => ({ ...f, discount }))}
         />
       </div>
       <div className="space-y-2">

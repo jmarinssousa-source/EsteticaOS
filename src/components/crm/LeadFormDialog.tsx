@@ -7,6 +7,7 @@ import type { ActionState } from "@/actions/auth";
 import { LEAD_ORIGINS, LEAD_ORIGIN_LABELS, type LeadOrigin } from "@/lib/crm/constants";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -128,7 +129,7 @@ export function LeadFormDialog({ members }: { members: { user_id: string; full_n
             </div>
             <div className="space-y-2">
               <Label htmlFor="potentialValue">Valor potencial (R$)</Label>
-              <Input id="potentialValue" name="potentialValue" type="number" min="0" step="0.01" />
+              <CurrencyInput id="potentialValue" name="potentialValue" />
             </div>
           </div>
 

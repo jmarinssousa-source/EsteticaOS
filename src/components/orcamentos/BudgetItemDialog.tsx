@@ -12,6 +12,7 @@ import type { ProfessionalOption } from "@/lib/agenda/types";
 import type { BudgetItem } from "@/lib/orcamentos/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -257,12 +258,9 @@ export function BudgetItemDialog({
             </div>
             <div className="space-y-2">
               <Label>Valor unitário (R$)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
+              <CurrencyInput
                 value={form.unitPrice}
-                onChange={(e) => setForm((f) => ({ ...f, unitPrice: e.target.value }))}
+                onValueChange={(unitPrice) => setForm((f) => ({ ...f, unitPrice }))}
               />
             </div>
           </div>
@@ -270,22 +268,16 @@ export function BudgetItemDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Desconto (R$)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
+              <CurrencyInput
                 value={form.discount}
-                onChange={(e) => setForm((f) => ({ ...f, discount: e.target.value }))}
+                onValueChange={(discount) => setForm((f) => ({ ...f, discount }))}
               />
             </div>
             <div className="space-y-2">
               <Label>Comissão (R$)</Label>
-              <Input
-                type="number"
-                min="0"
-                step="0.01"
+              <CurrencyInput
                 value={form.commission}
-                onChange={(e) => setForm((f) => ({ ...f, commission: e.target.value }))}
+                onValueChange={(commission) => setForm((f) => ({ ...f, commission }))}
               />
             </div>
           </div>

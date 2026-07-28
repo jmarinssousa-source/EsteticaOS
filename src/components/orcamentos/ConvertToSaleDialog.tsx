@@ -8,6 +8,7 @@ import { PAYMENT_METHODS, PAYMENT_METHOD_LABELS, type PaymentMethod } from "@/li
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import {
   Select,
@@ -125,12 +126,9 @@ export function ConvertToSaleDialog({ budgetId, total }: { budgetId: string; tot
                 </div>
                 <div className="space-y-1.5">
                   <Label>Valor</Label>
-                  <Input
-                    type="number"
-                    step="0.01"
-                    min={0}
+                  <CurrencyInput
                     value={row.amount}
-                    onChange={(e) => updateRow(index, { amount: e.target.value })}
+                    onValueChange={(amount) => updateRow(index, { amount })}
                   />
                 </div>
               </div>
