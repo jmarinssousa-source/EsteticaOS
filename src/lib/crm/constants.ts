@@ -1,11 +1,19 @@
-export const DEFAULT_STAGES = [
-  "Novo lead",
-  "Em atendimento",
-  "Avaliação marcada",
-  "Compareceu",
-  "Orçamento enviado",
-  "Fechado",
-  "Perdido",
+/** Papel da coluna no funil — ver 0014_crm_stage_roles.sql. */
+export type StageRole = "won" | "lost";
+
+export const STAGE_ROLE_LABELS: Record<StageRole, string> = {
+  won: "Converte em paciente",
+  lost: "Marca como perdido",
+};
+
+export const DEFAULT_STAGES: { name: string; role: StageRole | null }[] = [
+  { name: "Novo lead", role: null },
+  { name: "Em atendimento", role: null },
+  { name: "Avaliação marcada", role: null },
+  { name: "Compareceu", role: null },
+  { name: "Orçamento enviado", role: null },
+  { name: "Fechado", role: "won" },
+  { name: "Perdido", role: "lost" },
 ];
 
 export const LEAD_ORIGINS = [

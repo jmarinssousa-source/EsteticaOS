@@ -19,7 +19,7 @@ export default async function CrmPage() {
   const [{ data: stages }, { data: leads }, { data: members }, { data: clinic }] = await Promise.all([
     supabase
       .from("crm_stages")
-      .select("id, name, position")
+      .select("id, name, position, role")
       .eq("clinic_id", member.clinicId)
       .order("position", { ascending: true }),
     supabase

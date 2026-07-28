@@ -29,6 +29,16 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+} from "@/components/ui/alert-dialog";
+import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -74,6 +84,7 @@ export function LeadDetailDialog({
   const [interactions, setInteractions] = useState<LeadInteraction[]>([]);
   const [note, setNote] = useState("");
   const [form, setForm] = useState(() => buildForm(lead));
+  const [pendingStage, setPendingStage] = useState<Stage | null>(null);
 
   // Reset the editable form whenever the dialog opens for a (possibly
   // different) lead. Derived during render — guarded by comparing against
@@ -103,6 +114,19 @@ export function LeadDetailDialog({
 
   function handleMoveStage(stageId: string | null) {
     if (!stageId || stageId === lead.stage_id) return;
+
+    // Mesma regra do quadro: mandar para a coluna de ganho vira paciente,
+    // então confirma antes de criar o cadastro.
+    const target = stages.find((s) => s.id === stageId);
+    if (target?.role === "won" && lead.status !== "converted") {
+      setPendingStage(target);
+      return;
+    }
+
+    moveTo(stageId);
+  }
+
+  function moveTo(stageId: string) {
     startTransition(async () => {
       const result = await moveLeadToStage(lead.id, stageId);
       if ("error" in result) toast.error(result.error);
@@ -357,6 +381,30 @@ export function LeadDetailDialog({
 
         <DialogFooter />
       </DialogContent>
+
+      <AlertDialog open={pendingStage !== null} onOpenChange={(o) => !o && setPendingStage(null)}>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Converter {lead.name} em paciente?</AlertDialogTitle>
+            <AlertDialogDescription>
+              O lead vai para a coluna &quot;{pendingStage?.name}&quot; e um cadastro de paciente
+              será criado com os dados dele, liberando agenda, prontuário e financeiro.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction
+              onClick={() => {
+                const stageId = pendingStage?.id;
+                setPendingStage(null);
+                if (stageId) moveTo(stageId);
+              }}
+            >
+              Converter
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </Dialog>
   );
 }
