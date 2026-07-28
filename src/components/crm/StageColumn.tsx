@@ -5,10 +5,11 @@ import { useDroppable } from "@dnd-kit/core";
 import { useSortable } from "@dnd-kit/sortable";
 import { CSS } from "@dnd-kit/utilities";
 import { toast } from "sonner";
-import { GripVertical, Trash2 } from "lucide-react";
+import { CircleCheck, CircleSlash, GripVertical, Trash2 } from "lucide-react";
 import { deleteStage, renameStage } from "@/actions/crm";
 import { cn } from "@/lib/utils";
 import type { ClinicMemberOption, Lead, Stage } from "@/lib/crm/types";
+import { STAGE_ROLE_LABELS } from "@/lib/crm/constants";
 import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -116,10 +117,25 @@ export function StageColumn({
         ) : (
           <button
             type="button"
-            className="flex-1 truncate text-left text-sm font-semibold"
+            className="flex min-w-0 flex-1 items-center gap-1 text-left text-sm font-semibold"
             onClick={() => canEdit && setEditing(true)}
           >
-            {stage.name}
+            <span className="truncate">{stage.name}</span>
+            {stage.role && (
+              <span
+                title={`Soltar um lead aqui: ${STAGE_ROLE_LABELS[stage.role].toLowerCase()}`}
+                className={cn(
+                  "shrink-0",
+                  stage.role === "won" ? "text-emerald-600" : "text-muted-foreground",
+                )}
+              >
+                {stage.role === "won" ? (
+                  <CircleCheck className="size-3.5" />
+                ) : (
+                  <CircleSlash className="size-3.5" />
+                )}
+              </span>
+            )}
           </button>
         )}
         <span className="flex flex-col items-end leading-tight">

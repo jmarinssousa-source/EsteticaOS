@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentMember, requirePermission } from "@/lib/auth/session";
 import { leadSchema, stageNameSchema, interactionSchema } from "@/lib/validations/crm";
-import { DEFAULT_STAGES } from "@/lib/crm/constants";
+import { DEFAULT_STAGES, type LeadStatus, type StageRole } from "@/lib/crm/constants";
 import type { ActionState } from "@/actions/auth";
 
 type ActionResult = { error?: string } | { success: true };
@@ -24,9 +24,10 @@ export async function ensureDefaultStages(clinicId: string) {
   if (count && count > 0) return;
 
   await supabase.from("crm_stages").insert(
-    DEFAULT_STAGES.map((name, index) => ({
+    DEFAULT_STAGES.map((stage, index) => ({
       clinic_id: clinicId,
-      name,
+      name: stage.name,
+      role: stage.role,
       position: index,
     })),
   );
@@ -213,17 +214,56 @@ export async function updateLead(
   return { success: true };
 }
 
+/**
+ * Move o card e aplica o papel da coluna de destino, para o quadro e os
+ * números do sistema contarem a mesma história:
+ *   - coluna "perdido" → marca o lead como perdido
+ *   - coluna "ganho"   → converte em paciente (a tela confirma antes)
+ *   - coluna comum     → reabre um lead que estava perdido
+ * Conversão não se desfaz sozinha: o paciente já existe, então tirar o
+ * card da coluna de ganho não apaga o cadastro.
+ */
 export async function moveLeadToStage(leadId: string, stageId: string): Promise<ActionResult> {
   const member = await requirePermission("crm_edit");
   const supabase = await createClient();
 
+  const [{ data: stage }, { data: lead }] = await Promise.all([
+    supabase
+      .from("crm_stages")
+      .select("role")
+      .eq("id", stageId)
+      .eq("clinic_id", member.clinicId)
+      .maybeSingle(),
+    supabase
+      .from("leads")
+      .select("status")
+      .eq("id", leadId)
+      .eq("clinic_id", member.clinicId)
+      .maybeSingle(),
+  ]);
+
+  if (!stage || !lead) return { error: "Lead ou coluna não encontrada." };
+
+  const role = stage.role as StageRole | null;
+  let status = lead.status as LeadStatus;
+  if (role === "lost") status = "lost";
+  else if (role === null && status === "lost") status = "open";
+
   const { error } = await supabase
     .from("leads")
-    .update({ stage_id: stageId, last_moved_at: new Date().toISOString() })
+    .update({ stage_id: stageId, last_moved_at: new Date().toISOString(), status })
     .eq("id", leadId)
     .eq("clinic_id", member.clinicId);
 
   if (error) return { error: "Não foi possível mover o lead." };
+
+  if (role === "won" && lead.status !== "converted") {
+    const converted = await convertLeadToPatient(leadId);
+    if ("error" in converted && converted.error) {
+      return { error: `Lead movido, mas ${converted.error.toLowerCase()}` };
+    }
+  }
+
   revalidateCrm();
   return { success: true };
 }
@@ -242,6 +282,15 @@ export async function addLeadInteraction(leadId: string, note: string): Promise<
   });
 
   if (error) return { error: "Não foi possível salvar a anotação." };
+
+  // Anotar uma conversa também é dar atenção ao lead: zera o contador de
+  // "parado", que antes só reiniciava ao arrastar o card de coluna.
+  await supabase
+    .from("leads")
+    .update({ last_moved_at: new Date().toISOString() })
+    .eq("id", leadId)
+    .eq("clinic_id", member.clinicId);
+
   revalidateCrm();
   return { success: true };
 }

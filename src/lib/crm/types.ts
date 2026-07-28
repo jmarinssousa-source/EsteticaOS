@@ -1,9 +1,11 @@
-import type { LeadOrigin, LeadStatus } from "@/lib/crm/constants";
+import type { LeadOrigin, LeadStatus, StageRole } from "@/lib/crm/constants";
 
 export type Stage = {
   id: string;
   name: string;
   position: number;
+  /** Arrastar para cá muda o status do lead. Ver StageRole. */
+  role: StageRole | null;
 };
 
 export type Lead = {

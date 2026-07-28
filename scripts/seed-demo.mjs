@@ -155,19 +155,25 @@ async function main() {
     .select("id", { count: "exact", head: true })
     .eq("clinic_id", clinicId);
 
+  // Mesmos papéis de src/lib/crm/constants.ts (won/lost movem o status).
   const DEFAULT_STAGES = [
-    "Novo lead",
-    "Em atendimento",
-    "Avaliação marcada",
-    "Compareceu",
-    "Orçamento enviado",
-    "Fechado",
-    "Perdido",
+    { name: "Novo lead", role: null },
+    { name: "Em atendimento", role: null },
+    { name: "Avaliação marcada", role: null },
+    { name: "Compareceu", role: null },
+    { name: "Orçamento enviado", role: null },
+    { name: "Fechado", role: "won" },
+    { name: "Perdido", role: "lost" },
   ];
 
   if (!stageCount) {
     await admin.from("crm_stages").insert(
-      DEFAULT_STAGES.map((name, index) => ({ clinic_id: clinicId, name, position: index })),
+      DEFAULT_STAGES.map((stage, index) => ({
+        clinic_id: clinicId,
+        name: stage.name,
+        role: stage.role,
+        position: index,
+      })),
     );
   }
 
