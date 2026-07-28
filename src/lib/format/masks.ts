@@ -15,6 +15,28 @@ export function formatPhone(raw: string): string {
   return out;
 }
 
+/**
+ * Máscara de dinheiro no padrão brasileiro. Os dígitos entram pela
+ * direita preenchendo os centavos, como em caixa de supermercado:
+ * "9" → "0,09", "900" → "9,00", "900000" → "9.000,00".
+ */
+export function formatCurrencyInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "").slice(0, 12).replace(/^0+(?=\d)/, "");
+  if (!digits) return "";
+
+  const cents = digits.padStart(3, "0");
+  const whole = cents.slice(0, -2);
+  const decimals = cents.slice(-2);
+  return `${whole.replace(/\B(?=(\d{3})+(?!\d))/g, ".")},${decimals}`;
+}
+
+/** Converte "9.000,00" no número que o servidor espera (9000). */
+export function parseCurrencyInput(masked: string): string {
+  const digits = masked.replace(/\D/g, "");
+  if (!digits) return "";
+  return (Number(digits) / 100).toFixed(2);
+}
+
 export function formatCnpj(raw: string): string {
   const d = raw.replace(/\D/g, "").slice(0, 14);
   let out = d.slice(0, 2);
