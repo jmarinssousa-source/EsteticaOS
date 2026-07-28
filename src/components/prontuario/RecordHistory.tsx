@@ -4,6 +4,7 @@ import type { ProcedureOption } from "@/lib/procedures/types";
 import { Badge } from "@/components/ui/badge";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { DeleteRecordButton } from "@/components/prontuario/DeleteRecordButton";
+import { ImageLightbox } from "@/components/ui/image-lightbox";
 
 export function RecordHistory({
   patientId,
@@ -46,11 +47,12 @@ export function RecordHistory({
                 <p className="text-sm text-amber-700">Intercorrência: {record.complication}</p>
               )}
               {mapUrl && (
-                // eslint-disable-next-line @next/next/no-img-element
-                <img
+                <ImageLightbox
                   src={mapUrl}
-                  alt={`Mapa ${record.map_type ?? ""}`}
-                  className="h-48 rounded-md border bg-white object-contain"
+                  alt={record.map_type ? MAP_TYPE_LABELS[record.map_type] : "Mapa da evolução"}
+                  title={`${MAP_TYPE_LABELS[record.map_type ?? "body"]} · ${new Date(
+                    record.record_date,
+                  ).toLocaleDateString("pt-BR")}`}
                 />
               )}
             </CardContent>
