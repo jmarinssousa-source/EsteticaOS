@@ -29,7 +29,7 @@ export function ExportCard({
         return;
       }
       if (format === "csv") downloadCsv(filename, headers, rows);
-      else downloadExcel(filename, headers, rows);
+      else await downloadExcel(filename, headers, rows);
     });
   }
 

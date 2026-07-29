@@ -23,7 +23,7 @@ export function ReportTable({
     const headers = columns.map((c) => c.label);
     const data = rows.map((row) => columns.map((c) => row[c.key] ?? ""));
     if (format === "csv") downloadCsv(filename, headers, data);
-    else downloadExcel(filename, headers, data);
+    else void downloadExcel(filename, headers, data);
   }
 
   return (
