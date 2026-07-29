@@ -9,7 +9,13 @@ const PUBLIC_PATHS = [
   "/redefinir-senha",
   "/conta-desativada",
   "/auth/callback",
+  // Links que o paciente abre sem ter conta, autorizados só pela posse
+  // do token na URL.
   "/anamnese",
+  "/termo",
+  // Imagem de pré-visualização dos links: quem busca é o robô do
+  // WhatsApp/rede social, sempre sem sessão.
+  "/opengraph-image",
 ];
 
 function isPublicPath(pathname: string) {

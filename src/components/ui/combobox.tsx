@@ -10,6 +10,14 @@ export type ComboboxOption = { value: string; label: string };
 
 type CreatableOption = ComboboxOption & { create?: string };
 
+/** Sem acento e sem caixa: digitar "andre" acha "André Luiz". */
+function normalize(value: string) {
+  return value
+    .normalize("NFD")
+    .replace(/\p{Diacritic}/gu, "")
+    .toLocaleLowerCase();
+}
+
 /**
  * Campo de seleção com busca: o usuário digita e a lista vai filtrando,
  * em vez de rolar até achar. Substitui o `Select` em listas que crescem
@@ -31,6 +39,7 @@ export function Combobox({
   className,
   clearable = true,
   onCreate,
+  canCreate,
   createLabel = (query: string) => `Cadastrar “${query}”`,
 }: {
   options: ComboboxOption[];
@@ -45,6 +54,8 @@ export function Combobox({
   className?: string;
   clearable?: boolean;
   onCreate?: (label: string) => void;
+  /** Recusa a opção de cadastrar para textos que não fazem sentido. */
+  canCreate?: (query: string) => boolean;
   createLabel?: (query: string) => string;
 }) {
   const [uncontrolled, setUncontrolled] = React.useState(defaultValue);
@@ -58,10 +69,12 @@ export function Combobox({
     trimmed !== "" &&
     options.some((option) => option.label.trim().toLocaleLowerCase() === trimmed.toLocaleLowerCase());
 
-  const items: CreatableOption[] =
-    onCreate && trimmed !== "" && !exists
-      ? [...options, { value: `__create__:${trimmed}`, label: createLabel(trimmed), create: trimmed }]
-      : options;
+  const showCreate =
+    Boolean(onCreate) && trimmed !== "" && !exists && (canCreate?.(trimmed) ?? true);
+
+  const items: CreatableOption[] = showCreate
+    ? [...options, { value: `__create__:${trimmed}`, label: createLabel(trimmed), create: trimmed }]
+    : options;
 
   function commit(next: string) {
     if (value === undefined) setUncontrolled(next);
@@ -73,6 +86,11 @@ export function Combobox({
       items={items}
       value={selected}
       disabled={disabled}
+      // Filtro próprio por dois motivos: ignorar acentos e nunca esconder
+      // a opção de cadastrar, cujo rótulo não contém o texto digitado.
+      filter={(item, query) =>
+        Boolean(item.create) || normalize(item.label).includes(normalize(query))
+      }
       onValueChange={(next) => {
         if (next?.create) {
           onCreate?.(next.create);
@@ -118,8 +136,11 @@ export function Combobox({
       <ComboboxPrimitive.Portal>
         <ComboboxPrimitive.Positioner className="isolate z-50 outline-none" sideOffset={4}>
           <ComboboxPrimitive.Popup className="max-h-[min(24rem,var(--available-height))] w-(--anchor-width) max-w-(--available-width) origin-(--transform-origin) overflow-y-auto overscroll-contain rounded-lg bg-popover py-1 text-popover-foreground shadow-md ring-1 ring-foreground/10 data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95">
-            <ComboboxPrimitive.Empty className="px-2.5 py-2 text-sm text-muted-foreground data-empty:block">
-              {emptyMessage}
+            {/* O elemento raiz do Empty fica sempre montado (é o que
+                anuncia a mudança para leitores de tela), então o espaçamento
+                vai no filho — senão sobra um vão no topo da lista cheia. */}
+            <ComboboxPrimitive.Empty>
+              <p className="px-2.5 py-2 text-sm text-muted-foreground">{emptyMessage}</p>
             </ComboboxPrimitive.Empty>
             <ComboboxPrimitive.List>
               {(item: CreatableOption) => (

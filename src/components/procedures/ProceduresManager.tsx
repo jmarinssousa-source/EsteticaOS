@@ -5,7 +5,6 @@ import { toast } from "sonner";
 import { Plus, Trash2 } from "lucide-react";
 import { createProcedure, deleteProcedure, updateProcedure } from "@/actions/procedures";
 import type { ProcedureOption } from "@/lib/procedures/types";
-import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
@@ -27,9 +26,9 @@ function ProcedureRow({ procedure }: { procedure: ProcedureOption }) {
   const [price, setPrice] = useState(procedure.price != null ? String(procedure.price) : "");
   const [isPending, startTransition] = useTransition();
 
+  // Compara como número: "1234.50" e 1234.5 são o mesmo preço.
   const changed =
-    name.trim() !== procedure.name ||
-    (price || "") !== (procedure.price != null ? String(procedure.price) : "");
+    name.trim() !== procedure.name || Number(price || 0) !== Number(procedure.price ?? 0);
 
   function handleSave() {
     startTransition(async () => {

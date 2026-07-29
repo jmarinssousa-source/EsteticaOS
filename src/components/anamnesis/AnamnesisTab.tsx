@@ -1,7 +1,9 @@
 "use client";
 
+import Link from "next/link";
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Printer } from "lucide-react";
 import { markResponseReviewed } from "@/actions/anamnesis";
 import { RESPONSE_STATUS_LABELS, type ResponseStatus } from "@/lib/anamnesis/constants";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +11,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { SendAnamnesisDialog } from "@/components/anamnesis/SendAnamnesisDialog";
 import { AnamnesisResponseViewer } from "@/components/anamnesis/AnamnesisResponseViewer";
+import { AnamnesisRowActions } from "@/components/anamnesis/AnamnesisRowActions";
 
 function formatDate(iso: string) {
   return new Date(iso).toLocaleDateString("pt-BR");
@@ -65,42 +68,66 @@ export function AnamnesisTab({
         <p className="text-sm text-muted-foreground">Nenhuma anamnese enviada para este paciente.</p>
       ) : (
         <div className="space-y-2">
-          {responses.map((response) => (
-            <Card key={response.id}>
-              <CardContent className="flex flex-wrap items-center justify-between gap-2">
-                <div>
-                  <p className="text-sm font-medium">{response.template_name}</p>
-                  <p className="text-xs text-muted-foreground">
-                    Enviada em {formatDate(response.created_at)}
-                  </p>
-                </div>
-                <div className="flex items-center gap-2">
-                  <Badge variant={response.status === "pending" ? "outline" : "secondary"}>
-                    {RESPONSE_STATUS_LABELS[response.status]}
-                  </Badge>
-                  {response.status !== "pending" && (
-                    <Button variant="outline" size="sm" onClick={() => setViewerId(response.id)}>
-                      Ver respostas
-                    </Button>
-                  )}
-                  {response.status === "completed" && canEdit && (
-                    <Button
-                      size="sm"
-                      disabled={isPending}
-                      onClick={() => handleReview(response.id)}
-                    >
-                      Marcar como revisada
-                    </Button>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          ))}
+          {responses.map((response) => {
+            const printHref = `/pacientes/${patientId}/anamnese/${response.id}`;
+            return (
+              <Card key={response.id}>
+                <CardContent className="flex flex-wrap items-center justify-between gap-2">
+                  <div>
+                    <p className="text-sm font-medium">{response.template_name}</p>
+                    <p className="text-xs text-muted-foreground">
+                      Enviada em {formatDate(response.created_at)}
+                    </p>
+                  </div>
+                  <div className="flex flex-wrap items-center gap-2">
+                    <Badge variant={response.status === "pending" ? "outline" : "secondary"}>
+                      {RESPONSE_STATUS_LABELS[response.status]}
+                    </Badge>
+
+                    {response.status === "pending" && canEdit && (
+                      <AnamnesisRowActions
+                        responseId={response.id}
+                        patientId={patientId}
+                        patientName={patientName}
+                        patientPhone={patientPhone}
+                        clinicName={clinicName}
+                      />
+                    )}
+
+                    {response.status !== "pending" && (
+                      <>
+                        <Button variant="outline" size="sm" onClick={() => setViewerId(response.id)}>
+                          Ver respostas
+                        </Button>
+                        <Button
+                          variant="outline"
+                          size="sm"
+                          nativeButton={false}
+                          render={<Link href={printHref} target="_blank" />}
+                        >
+                          <Printer className="size-4" />
+                          Imprimir / PDF
+                        </Button>
+                      </>
+                    )}
+
+                    {response.status === "completed" && canEdit && (
+                      <Button size="sm" disabled={isPending} onClick={() => handleReview(response.id)}>
+                        Marcar como revisada
+                      </Button>
+                    )}
+                  </div>
+                </CardContent>
+              </Card>
+            );
+          })}
         </div>
       )}
 
       <AnamnesisResponseViewer
         responseId={viewerId}
+        patientName={patientName}
+        printHref={viewerId ? `/pacientes/${patientId}/anamnese/${viewerId}` : undefined}
         open={viewerId != null}
         onOpenChange={(open) => !open && setViewerId(null)}
       />

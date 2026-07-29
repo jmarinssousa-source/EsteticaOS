@@ -41,7 +41,6 @@ export default function OpengraphImage() {
           fontSize: 40,
         }}
       >
-        {/* eslint-disable-next-line @next/next/no-img-element */}
         <img
           alt=""
           width={240}

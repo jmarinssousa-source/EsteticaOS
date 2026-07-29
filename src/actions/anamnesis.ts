@@ -223,9 +223,49 @@ export async function sendAnamnesis(
   return { success: true, token };
 }
 
+/** Token de uma anamnese ainda pendente, para reenviar o link. */
+export async function getAnamnesisLinkToken(
+  responseId: string,
+): Promise<{ error: string } | { success: true; token: string }> {
+  const member = await requirePermission("patients_edit");
+  const supabase = await createClient();
+
+  const { data } = await supabase
+    .from("anamnesis_responses")
+    .select("access_token, status")
+    .eq("id", responseId)
+    .eq("clinic_id", member.clinicId)
+    .maybeSingle();
+
+  if (!data) return { error: "Anamnese não encontrada." };
+  if (data.status !== "pending") return { error: "Esta anamnese já foi preenchida." };
+
+  return { success: true, token: data.access_token };
+}
+
+export async function deleteAnamnesisResponse(
+  responseId: string,
+  patientId: string,
+): Promise<ActionResult> {
+  const member = await requirePermission("patients_edit");
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("anamnesis_responses")
+    .delete()
+    .eq("id", responseId)
+    .eq("clinic_id", member.clinicId);
+
+  if (error) return { error: "Não foi possível excluir esta anamnese." };
+
+  revalidateAnamnesis(patientId);
+  return { success: true };
+}
+
 export type ResponseAnswerDetail = {
   templateName: string;
   status: "pending" | "completed" | "reviewed";
+  completedAt: string | null;
   questions: { id: string; label: string; type: string; options: string[] }[];
   answers: Record<string, string | string[]>;
 };
@@ -237,7 +277,7 @@ export async function getResponseAnswers(responseId: string): Promise<ResponseAn
   const { data: response } = await supabase
     .from("anamnesis_responses")
     .select(
-      "status, answers, anamnesis_templates(name, anamnesis_questions(id, label, type, options, position))",
+      "status, answers, completed_at, anamnesis_templates(name, anamnesis_questions(id, label, type, options, position))",
     )
     .eq("id", responseId)
     .eq("clinic_id", member.clinicId)
@@ -255,6 +295,7 @@ export async function getResponseAnswers(responseId: string): Promise<ResponseAn
   return {
     templateName: template.name,
     status: response.status as ResponseAnswerDetail["status"],
+    completedAt: response.completed_at,
     questions: [...template.anamnesis_questions].sort((a, b) => a.position - b.position),
     answers: (response.answers ?? {}) as Record<string, string | string[]>,
   };
