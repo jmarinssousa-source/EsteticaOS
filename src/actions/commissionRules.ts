@@ -16,7 +16,9 @@ export async function createCommissionRule(input: {
   professionalId: string;
   procedureId: string;
   basis: string;
-  ratePercent: number;
+  ratePercent: string;
+  fixedAmount: string;
+  customBasisLabel: string;
 }): Promise<ActionResult> {
   const member = await requirePermission("settings_access");
   const parsed = commissionRuleSchema.safeParse(input);
@@ -29,6 +31,8 @@ export async function createCommissionRule(input: {
     procedure_id: parsed.data.procedureId,
     basis: parsed.data.basis,
     rate_percent: parsed.data.ratePercent,
+    fixed_amount: parsed.data.fixedAmount,
+    custom_basis_label: parsed.data.customBasisLabel,
   });
 
   if (error) return { error: "Não foi possível criar a regra de comissão." };

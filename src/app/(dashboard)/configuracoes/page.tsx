@@ -1,7 +1,7 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { Card, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Building2, ClipboardList, FileUp, Package, Percent, Users } from "lucide-react";
+import { Building2, ClipboardList, FileUp, Package, Percent, Sparkles, Users } from "lucide-react";
 
 export const metadata = { title: "Configurações — EstéticaOS" };
 
@@ -26,6 +26,12 @@ export default async function ConfiguracoesPage() {
       title: "Anamnese e consentimento",
       description: "Modelos de anamnese e o termo de consentimento/autorização de imagem.",
       icon: ClipboardList,
+    },
+    {
+      href: "/configuracoes/procedimentos",
+      title: "Procedimentos",
+      description: "O catálogo da clínica — use os que já existem e cadastre os seus.",
+      icon: Sparkles,
     },
     {
       href: "/configuracoes/pacotes",

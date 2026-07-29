@@ -1,11 +1,13 @@
 import "server-only";
-import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { formatCurrency } from "@/lib/format";
+import { SYSTEM_NAME, VENDOR_FOOTER } from "@/lib/brand";
 import { PAYMENT_METHOD_LABELS, type PaymentMethod } from "@/lib/financeiro/constants";
 
 const PRIMARY = rgb(0.701, 0.216, 0.213);
 const GRAY = rgb(0.42, 0.42, 0.42);
 const BLACK = rgb(0.1, 0.1, 0.1);
+const FAINT = rgb(0.62, 0.62, 0.62);
 
 const PAGE_WIDTH = 420;
 const PAGE_HEIGHT = 560;
@@ -27,6 +29,34 @@ function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): 
   }
   if (current) lines.push(current);
   return lines;
+}
+
+
+/** Rodapé de marca: nome do sistema e assinatura discreta da Orbyniq. */
+function drawBrandFooter(
+  page: PDFPage,
+  font: PDFFont,
+  clinicName: string,
+  pageWidth: number,
+) {
+  const clinicLine = `${clinicName} · ${new Date().toLocaleDateString("pt-BR")}`;
+  const clinicWidth = font.widthOfTextAtSize(clinicLine, 9);
+  page.drawText(clinicLine, {
+    x: (pageWidth - clinicWidth) / 2,
+    y: 40,
+    size: 9,
+    font,
+    color: GRAY,
+  });
+
+  const vendorWidth = font.widthOfTextAtSize(VENDOR_FOOTER, 6.5);
+  page.drawText(VENDOR_FOOTER, {
+    x: (pageWidth - vendorWidth) / 2,
+    y: 26,
+    size: 6.5,
+    font,
+    color: FAINT,
+  });
 }
 
 export type ReceiptPdfData = {
@@ -68,6 +98,15 @@ export async function generateReceiptPdf(data: ReceiptPdfData): Promise<Uint8Arr
   const title = "RECIBO";
   const titleWidth = bold.widthOfTextAtSize(title, 14);
   page.drawText(title, { x: (PAGE_WIDTH - titleWidth) / 2, y, size: 14, font: bold, color: BLACK });
+
+  const systemWidth = font.widthOfTextAtSize(SYSTEM_NAME, 7);
+  page.drawText(SYSTEM_NAME, {
+    x: PAGE_WIDTH - MARGIN - systemWidth,
+    y,
+    size: 7,
+    font,
+    color: FAINT,
+  });
   y -= 34;
 
   const bodyText = data.patient
@@ -87,9 +126,7 @@ export async function generateReceiptPdf(data: ReceiptPdfData): Promise<Uint8Arr
   const dateLabel = data.paymentDate ? new Date(data.paymentDate).toLocaleDateString("pt-BR") : "—";
   page.drawText(`Data do pagamento: ${dateLabel}`, { x: MARGIN, y, size: 10, font, color: GRAY });
 
-  const footer = `${data.clinic.name} · ${new Date().toLocaleDateString("pt-BR")}`;
-  const footerWidth = font.widthOfTextAtSize(footer, 9);
-  page.drawText(footer, { x: (PAGE_WIDTH - footerWidth) / 2, y: 40, size: 9, font, color: GRAY });
+  drawBrandFooter(page, font, data.clinic.name, PAGE_WIDTH);
 
   return doc.save();
 }

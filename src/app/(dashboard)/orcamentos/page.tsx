@@ -10,8 +10,16 @@ import { Badge } from "@/components/ui/badge";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { NewBudgetDialog } from "@/components/orcamentos/NewBudgetDialog";
+import { BudgetDateFilter } from "@/components/orcamentos/BudgetDateFilter";
 
 export const metadata = { title: "Orçamentos — EstéticaOS" };
+
+/** Começo do dia seguinte, em ISO — limite superior exclusivo do filtro. */
+function nextDay(date: string) {
+  const next = new Date(`${date}T00:00:00`);
+  next.setDate(next.getDate() + 1);
+  return `${next.toISOString().slice(0, 10)}T00:00:00`;
+}
 
 const SORT_OPTIONS = [
   { key: "name", label: "Nome" },
@@ -21,21 +29,28 @@ const SORT_OPTIONS = [
 export default async function OrcamentosPage({
   searchParams,
 }: {
-  searchParams: Promise<{ sort?: string }>;
+  searchParams: Promise<{ sort?: string; de?: string; ate?: string }>;
 }) {
   const member = await requirePermission("budgets_view");
   const canEdit = hasPermission(member, "budgets_edit");
-  const { sort = "name" } = await searchParams;
+  const { sort = "name", de, ate } = await searchParams;
   const sortByName = sort !== "date";
 
   const supabase = await createClient();
 
+  // `created_at` é timestamp; o "até" precisa cobrir o dia inteiro, por
+  // isso compara com o começo do dia seguinte em vez de com a própria data.
+  let budgetsQuery = supabase
+    .from("budgets")
+    .select("id, status, total_value, created_at, patients(name)")
+    .eq("clinic_id", member.clinicId)
+    .order("created_at", { ascending: false });
+
+  if (de) budgetsQuery = budgetsQuery.gte("created_at", `${de}T00:00:00`);
+  if (ate) budgetsQuery = budgetsQuery.lt("created_at", nextDay(ate));
+
   const [{ data: rawBudgets }, { data: patients }] = await Promise.all([
-    supabase
-      .from("budgets")
-      .select("id, status, total_value, created_at, patients(name)")
-      .eq("clinic_id", member.clinicId)
-      .order("created_at", { ascending: false }),
+    budgetsQuery,
     supabase.from("patients").select("id, name").eq("clinic_id", member.clinicId).order("name"),
   ]);
 
@@ -60,13 +75,18 @@ export default async function OrcamentosPage({
         {canEdit && <NewBudgetDialog patients={patients ?? []} />}
       </div>
 
+      <BudgetDateFilter />
+
       <div className="flex items-center gap-2 text-sm text-muted-foreground">
         <span>Ordenar por:</span>
         <div className="flex gap-1 rounded-lg border p-0.5">
           {SORT_OPTIONS.map((option) => (
             <Link
               key={option.key}
-              href={`/orcamentos?sort=${option.key}`}
+              href={{
+                pathname: "/orcamentos",
+                query: { sort: option.key, ...(de ? { de } : {}), ...(ate ? { ate } : {}) },
+              }}
               className={cn(
                 "rounded-md px-3 py-1 text-sm font-medium transition-colors",
                 sort === option.key || (option.key === "name" && sort !== "date")
@@ -119,7 +139,9 @@ export default async function OrcamentosPage({
               {(!budgets || budgets.length === 0) && (
                 <TableRow>
                   <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
-                    Nenhum orçamento criado ainda.
+                    {de || ate
+                      ? "Nenhum orçamento neste período."
+                      : "Nenhum orçamento criado ainda."}
                   </TableCell>
                 </TableRow>
               )}

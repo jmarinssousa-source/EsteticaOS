@@ -24,5 +24,8 @@ export type CommissionRule = {
   professional_id: string | null;
   procedure_id: string | null;
   basis: CommissionBasis;
-  rate_percent: number;
+  /** Percentual OU valor fixo por atendimento — nunca os dois. */
+  rate_percent: number | null;
+  fixed_amount: number | null;
+  custom_basis_label: string | null;
 };

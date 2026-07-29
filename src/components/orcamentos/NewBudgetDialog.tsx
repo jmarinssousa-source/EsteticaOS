@@ -9,13 +9,7 @@ import type { PatientOption } from "@/lib/agenda/types";
 import { Button } from "@/components/ui/button";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
-import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Dialog,
   DialogContent,
@@ -59,23 +53,15 @@ export function NewBudgetDialog({ patients }: { patients: PatientOption[] }) {
 
         <div className="space-y-4">
           <div className="space-y-2">
-            <Label>Paciente</Label>
-            <Select
-              items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
+            <Label htmlFor="budgetPatient">Paciente</Label>
+            <Combobox
+              id="budgetPatient"
+              options={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
               value={patientId}
-              onValueChange={(v) => setPatientId(v ?? "")}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue placeholder="Selecione o paciente" />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              onValueChange={setPatientId}
+              placeholder="Digite para buscar o paciente"
+              emptyMessage="Nenhum paciente encontrado."
+            />
           </div>
 
           <div className="space-y-2">

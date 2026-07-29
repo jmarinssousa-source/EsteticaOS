@@ -2,7 +2,9 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
+import { Plus } from "lucide-react";
 import { createPackage, updatePackage } from "@/actions/packages";
+import { createProcedure } from "@/actions/procedures";
 import type { ProcedureOption } from "@/lib/procedures/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -55,6 +57,8 @@ export function PackageFormDialog({
   const [isPending, startTransition] = useTransition();
   const [error, setError] = useState<string | null>(null);
   const [form, setForm] = useState(() => buildForm(pkg));
+  const [procedureList, setProcedureList] = useState(procedures);
+  const [newProcedure, setNewProcedure] = useState("");
 
   const [syncedWith, setSyncedWith] = useState(open);
   if (open !== syncedWith) {
@@ -63,6 +67,21 @@ export function PackageFormDialog({
       setForm(buildForm(pkg));
       setError(null);
     }
+  }
+
+  function handleAddProcedure() {
+    const trimmed = newProcedure.trim();
+    if (!trimmed) return;
+    startTransition(async () => {
+      const result = await createProcedure(trimmed);
+      if ("error" in result) {
+        toast.error(result.error);
+        return;
+      }
+      setProcedureList((prev) => [...prev, { id: result.id, name: trimmed, price: null }]);
+      setForm((f) => ({ ...f, procedureIds: [...f.procedureIds, result.id] }));
+      setNewProcedure("");
+    });
   }
 
   function toggleProcedure(id: string, checked: boolean) {
@@ -148,7 +167,7 @@ export function PackageFormDialog({
           <div className="space-y-2">
             <Label>Procedimentos incluídos</Label>
             <div className="max-h-40 space-y-1.5 overflow-y-auto rounded-md border p-2">
-              {procedures.map((procedure) => (
+              {procedureList.map((procedure) => (
                 <label key={procedure.id} className="flex items-center gap-2 text-sm">
                   <Checkbox
                     checked={form.procedureIds.includes(procedure.id)}
@@ -157,12 +176,40 @@ export function PackageFormDialog({
                   {procedure.name}
                 </label>
               ))}
-              {procedures.length === 0 && (
+              {procedureList.length === 0 && (
                 <p className="text-xs text-muted-foreground">
-                  Nenhum procedimento cadastrado ainda. Crie um na Agenda ou em Orçamentos.
+                  Nenhum procedimento no catálogo ainda. Escreva o nome abaixo para cadastrar.
                 </p>
               )}
             </div>
+            <div className="flex items-center gap-2">
+              <Input
+                placeholder="Cadastrar outro procedimento"
+                value={newProcedure}
+                disabled={isPending}
+                onChange={(e) => setNewProcedure(e.target.value)}
+                onKeyDown={(e) => {
+                  if (e.key === "Enter") {
+                    e.preventDefault();
+                    handleAddProcedure();
+                  }
+                }}
+              />
+              <Button
+                type="button"
+                variant="outline"
+                size="sm"
+                onClick={handleAddProcedure}
+                disabled={isPending || !newProcedure.trim()}
+              >
+                <Plus className="size-4" />
+                Adicionar
+              </Button>
+            </div>
+            <p className="text-xs text-muted-foreground">
+              O procedimento cadastrado aqui entra no catálogo da clínica e passa a valer também na
+              agenda e nos orçamentos.
+            </p>
           </div>
 
           <div className="space-y-2">
