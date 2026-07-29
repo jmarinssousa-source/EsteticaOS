@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { Camera, Upload } from "lucide-react";
+import { ImagePlus } from "lucide-react";
 import { uploadPatientPhotos } from "@/actions/prontuario";
 import type { ActionState } from "@/actions/auth";
 import { PHOTO_TYPES, PHOTO_TYPE_LABELS, type PhotoType } from "@/lib/prontuario/constants";
@@ -61,18 +61,10 @@ async function compressImage(file: File): Promise<File> {
   }
 }
 
-export function PhotoUploadDialog({
-  patientId,
-  mode = "upload",
-}: {
-  patientId: string;
-  /** "camera" abre direto a câmera traseira em celular/tablet. */
-  mode?: "upload" | "camera";
-}) {
+export function PhotoUploadDialog({ patientId }: { patientId: string }) {
   const [open, setOpen] = useState(false);
   const [photoType, setPhotoType] = useState<PhotoType>("general");
   const [state, formAction, pending] = useActionState(uploadPatientPhotos, initialState);
-  const isCamera = mode === "camera";
 
   const [prevState, setPrevState] = useState(state);
   if (state !== prevState) {
@@ -82,17 +74,16 @@ export function PhotoUploadDialog({
 
   return (
     <Dialog open={open} onOpenChange={setOpen}>
-      <DialogTrigger render={<Button size="sm" variant={isCamera ? "outline" : "default"} />}>
-        {isCamera ? <Camera className="size-4" /> : <Upload className="size-4" />}
-        {isCamera ? "Tirar foto" : "Enviar fotos"}
+      <DialogTrigger render={<Button size="sm" />}>
+        <ImagePlus className="size-4" />
+        Adicionar fotos
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>{isCamera ? "Tirar foto" : "Enviar fotos"}</DialogTitle>
+          <DialogTitle>Adicionar fotos do paciente</DialogTitle>
           <DialogDescription>
-            {isCamera
-              ? "Toque no campo abaixo para abrir a câmera e registrar a evolução na hora."
-              : "Envie uma ou mais fotos do celular, tablet ou computador."}
+            No celular, o próprio aparelho oferece tirar na hora ou escolher da galeria; no
+            computador, abre a pasta de arquivos.
           </DialogDescription>
         </DialogHeader>
 
@@ -119,17 +110,8 @@ export function PhotoUploadDialog({
           )}
 
           <div className="space-y-2">
-            <Label htmlFor="files">{isCamera ? "Foto" : "Fotos"}</Label>
-            <Input
-              id="files"
-              name="files"
-              type="file"
-              accept="image/*"
-              // capture="environment" faz o iOS/Android abrirem a câmera
-              // traseira direto, sem passar pelo seletor de arquivos.
-              {...(isCamera ? { capture: "environment" as const } : { multiple: true })}
-              required
-            />
+            <Label htmlFor="files">Fotos</Label>
+            <Input id="files" name="files" type="file" accept="image/*" multiple required />
           </div>
 
           <div className="space-y-2">

@@ -3,6 +3,7 @@ import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { ClinicForm } from "@/components/settings/ClinicForm";
+import { SettingsBackLink } from "@/components/settings/SettingsBackLink";
 
 export const metadata = { title: "Minha clínica — EstéticaOS" };
 
@@ -20,6 +21,7 @@ export default async function ClinicaPage() {
 
   return (
     <div className="space-y-4">
+      <SettingsBackLink />
       <h1 className="text-2xl font-bold tracking-tight">Minha clínica</h1>
       <Card>
         <CardHeader>

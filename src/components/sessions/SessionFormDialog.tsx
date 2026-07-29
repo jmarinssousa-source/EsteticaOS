@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Select,
   SelectContent,
@@ -87,26 +88,18 @@ export function SessionFormDialog({
           {!fixedPatientId && (
             <div className="space-y-2">
               <Label htmlFor="patientId">Paciente</Label>
-              <Select
+              <Combobox
+                id="patientId"
                 name="patientId"
-                items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
+                placeholder="Digite para buscar o paciente"
+                emptyMessage="Nenhum paciente encontrado."
+                options={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
                 value={patientId}
-                onValueChange={(v) => {
-                  setPatientId(v ?? "");
+                onValueChange={(next) => {
+                  setPatientId(next);
                   setPackageBalanceId("");
                 }}
-              >
-                <SelectTrigger id="patientId" className="w-full">
-                  <SelectValue placeholder="Selecione o paciente" />
-                </SelectTrigger>
-                <SelectContent>
-                  {patients.map((patient) => (
-                    <SelectItem key={patient.id} value={patient.id}>
-                      {patient.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              />
               {state.fieldErrors?.patientId && (
                 <p className="text-sm text-destructive">{state.fieldErrors.patientId[0]}</p>
               )}
@@ -160,6 +153,13 @@ export function SessionFormDialog({
                 ))}
               </SelectContent>
             </Select>
+            {patientId && availableBalances.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Este paciente não tem pacote com saldo. Os pacotes aparecem aqui depois de vendidos
+                ao paciente — crie o pacote em Configurações &gt; Pacotes e inclua-o em um orçamento
+                aprovado.
+              </p>
+            )}
             {noBalanceLeft && (
               <p className="text-sm text-amber-600">
                 Este pacote não tem saldo de sessões, mas você ainda pode lançar a sessão.

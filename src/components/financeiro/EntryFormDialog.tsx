@@ -11,6 +11,7 @@ import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Combobox } from "@/components/ui/combobox";
 import {
   Select,
   SelectContent,
@@ -30,7 +31,15 @@ import {
 
 const initialState: ActionState = {};
 
-export function EntryFormDialog({ patients }: { patients: PatientOption[] }) {
+export function EntryFormDialog({
+  patients,
+  defaultPatientId,
+}: {
+  patients: PatientOption[];
+  /** Pré-seleciona o paciente — usado na aba Financeiro de um paciente,
+   *  onde o lançamento nasce ligado a ele. */
+  defaultPatientId?: string;
+}) {
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<EntryType>("revenue");
   const [state, formAction, pending] = useActionState(createFinancialEntry, initialState);
@@ -105,22 +114,18 @@ export function EntryFormDialog({ patients }: { patients: PatientOption[] }) {
 
           <div className="space-y-2">
             <Label htmlFor="patientId">Paciente (opcional)</Label>
-            <Select
+            <Combobox
+              id="patientId"
               name="patientId"
-              defaultValue=""
-              items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
-            >
-              <SelectTrigger id="patientId" className="w-full">
-                <SelectValue placeholder="Sem paciente vinculado" />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Sem paciente vinculado"
+              emptyMessage="Nenhum paciente encontrado."
+              options={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
+              defaultValue={defaultPatientId}
+            />
+            <p className="text-xs text-muted-foreground">
+              Despesas da clínica (aluguel, luz, material) podem ficar sem paciente — use o × para
+              desvincular.
+            </p>
           </div>
 
           <DialogFooter>

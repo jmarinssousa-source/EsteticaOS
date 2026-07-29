@@ -1,8 +1,8 @@
 import { MessageCircle } from "lucide-react";
 import { cn } from "@/lib/utils";
+import { SUPPORT_WHATSAPP_LABEL, SUPPORT_WHATSAPP_URL, VENDOR_LINE } from "@/lib/brand";
 
-export const SUPPORT_WHATSAPP_URL = "https://wa.me/5521971925107";
-export const SUPPORT_WHATSAPP_LABEL = "(21) 97192-5107";
+export { SUPPORT_WHATSAPP_LABEL, SUPPORT_WHATSAPP_URL };
 
 export function OrbyniqBadge({
   showSupport = true,
@@ -14,7 +14,7 @@ export function OrbyniqBadge({
   return (
     <div className={cn("flex flex-col gap-1 text-[11px] text-muted-foreground", className)}>
       <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
-        Uma solução Orbyniq
+        {VENDOR_LINE}
       </span>
       {showSupport && (
         <a

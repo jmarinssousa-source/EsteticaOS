@@ -37,6 +37,7 @@ export async function DashboardSection({
   const canViewExpense = hasPermission(member, "finance_expense_view");
   const canViewCommissions = hasPermission(member, "finance_commissions_view");
   const canEditGoal = member.role === "owner";
+  const canViewGoal = hasPermission(member, "goals_view");
 
   const supabase = await createClient();
   const yearMonth = from.slice(0, 7);
@@ -178,7 +179,9 @@ export async function DashboardSection({
   return (
     <div className="space-y-4">
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <GoalCard yearMonth={yearMonth} goalAmount={Number(goal?.goal_amount ?? 0)} soldAmount={soldInPeriod} canEdit={canEditGoal} />
+        {canViewGoal && (
+          <GoalCard yearMonth={yearMonth} goalAmount={Number(goal?.goal_amount ?? 0)} soldAmount={soldInPeriod} canEdit={canEditGoal} />
+        )}
 
         {canViewBudgets && (
           <>

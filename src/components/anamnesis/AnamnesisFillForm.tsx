@@ -33,7 +33,8 @@ export function AnamnesisFillForm({
     return (
       <Alert>
         <AlertDescription>
-          Obrigado! Suas respostas foram enviadas para a clínica.
+          Obrigado! Suas respostas foram enviadas para a clínica. Avise a recepção que você já
+          concluiu para darem sequência ao seu atendimento.
         </AlertDescription>
       </Alert>
     );

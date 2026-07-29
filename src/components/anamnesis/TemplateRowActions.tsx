@@ -38,11 +38,12 @@ export function TemplateRowActions({
     startTransition(async () => {
       const result = await deleteTemplate(templateId);
       if (result && "error" in result) toast.error(result.error);
+      else toast.success("Modelo excluído.");
     });
   }
 
   return (
-    <div className="flex items-center gap-3" onClick={(e) => e.stopPropagation()}>
+    <div className="flex items-center gap-3">
       <div className="flex items-center gap-2">
         <Switch checked={active} disabled={isPending} onCheckedChange={handleToggle} />
         <span className="text-xs text-muted-foreground">{active ? "Ativo" : "Inativo"}</span>

@@ -12,3 +12,5 @@ clínica.
 
 Declaro que as informações prestadas por mim sobre meu histórico de saúde são verdadeiras
 e completas.`;
+
+export const DEFAULT_CONSENT_TEMPLATE_NAME = "Termo de consentimento e autorização de imagem";

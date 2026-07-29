@@ -9,6 +9,7 @@ import type { ProcedureOption } from "@/lib/procedures/types";
 import type { ProfessionalOption } from "@/lib/agenda/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
+import { CurrencyInput } from "@/components/ui/currency-input";
 import { Label } from "@/components/ui/label";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import {
@@ -41,11 +42,23 @@ export function CommissionRuleFormDialog({
   const [professionalId, setProfessionalId] = useState("");
   const [procedureId, setProcedureId] = useState("");
   const [basis, setBasis] = useState<CommissionBasis>("sold");
+  const [customBasisLabel, setCustomBasisLabel] = useState("");
+  const [amountKind, setAmountKind] = useState<"percent" | "fixed">("percent");
   const [ratePercent, setRatePercent] = useState("");
+  const [fixedAmount, setFixedAmount] = useState("");
+
+  const amountFilled = amountKind === "percent" ? ratePercent !== "" : fixedAmount !== "";
 
   function handleSave() {
     startTransition(async () => {
-      const result = await createCommissionRule({ professionalId, procedureId, basis, ratePercent: Number(ratePercent) });
+      const result = await createCommissionRule({
+        professionalId,
+        procedureId,
+        basis,
+        ratePercent: amountKind === "percent" ? ratePercent : "",
+        fixedAmount: amountKind === "fixed" ? fixedAmount : "",
+        customBasisLabel: basis === "custom" ? customBasisLabel : "",
+      });
       if ("error" in result) {
         setError(result.error ?? "Não foi possível salvar.");
         toast.error(result.error);
@@ -54,6 +67,8 @@ export function CommissionRuleFormDialog({
         setProfessionalId("");
         setProcedureId("");
         setRatePercent("");
+        setFixedAmount("");
+        setCustomBasisLabel("");
       }
     });
   }
@@ -131,26 +146,62 @@ export function CommissionRuleFormDialog({
             </Select>
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
+          <div className="space-y-2">
+            <Label>Base de cálculo</Label>
+            <Select
+              items={COMMISSION_BASIS.map((b) => ({ value: b, label: COMMISSION_BASIS_LABELS[b] }))}
+              value={basis}
+              onValueChange={(v) => v && setBasis(v as CommissionBasis)}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                {COMMISSION_BASIS.map((b) => (
+                  <SelectItem key={b} value={b}>
+                    {COMMISSION_BASIS_LABELS[b]}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
+          </div>
+
+          {basis === "custom" && (
             <div className="space-y-2">
-              <Label>Base de cálculo</Label>
-              <Select
-                items={COMMISSION_BASIS.map((b) => ({ value: b, label: COMMISSION_BASIS_LABELS[b] }))}
-                value={basis}
-                onValueChange={(v) => v && setBasis(v as CommissionBasis)}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  {COMMISSION_BASIS.map((b) => (
-                    <SelectItem key={b} value={b}>
-                      {COMMISSION_BASIS_LABELS[b]}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+              <Label>Qual é a combinação?</Label>
+              <Input
+                placeholder="Ex.: só quando o paciente comparece"
+                value={customBasisLabel}
+                onChange={(e) => setCustomBasisLabel(e.target.value)}
+              />
+              <p className="text-xs text-muted-foreground">
+                Bases escritas pela clínica ficam registradas aqui como combinado, mas não entram no
+                cálculo automático — nesses casos, lance a comissão no próprio orçamento.
+              </p>
             </div>
+          )}
+
+          <div className="space-y-2">
+            <Label>Como paga</Label>
+            <Select
+              items={[
+                { value: "percent", label: "Percentual (%)" },
+                { value: "fixed", label: "Valor fixo por atendimento (R$)" },
+              ]}
+              value={amountKind}
+              onValueChange={(v) => v && setAmountKind(v as "percent" | "fixed")}
+            >
+              <SelectTrigger className="w-full">
+                <SelectValue />
+              </SelectTrigger>
+              <SelectContent>
+                <SelectItem value="percent">Percentual (%)</SelectItem>
+                <SelectItem value="fixed">Valor fixo por atendimento (R$)</SelectItem>
+              </SelectContent>
+            </Select>
+          </div>
+
+          {amountKind === "percent" ? (
             <div className="space-y-2">
               <Label>Percentual (%)</Label>
               <Input
@@ -162,11 +213,19 @@ export function CommissionRuleFormDialog({
                 onChange={(e) => setRatePercent(e.target.value)}
               />
             </div>
-          </div>
+          ) : (
+            <div className="space-y-2">
+              <Label>Valor por atendimento (R$)</Label>
+              <CurrencyInput value={fixedAmount} onValueChange={setFixedAmount} />
+              <p className="text-xs text-muted-foreground">
+                Ex.: R$ 20,00 por paciente atendido, independente do valor do procedimento.
+              </p>
+            </div>
+          )}
         </div>
 
         <DialogFooter>
-          <Button onClick={handleSave} disabled={isPending || !ratePercent}>
+          <Button onClick={handleSave} disabled={isPending || !amountFilled}>
             {isPending ? "Salvando..." : "Salvar regra"}
           </Button>
         </DialogFooter>

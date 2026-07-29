@@ -37,6 +37,7 @@ export const PERMISSION_KEYS = [
   "inventory_view",
   "inventory_edit",
   "reports_view",
+  "goals_view",
   "settings_access",
 ] as const;
 
@@ -62,7 +63,7 @@ export const PERMISSION_GROUPS: { label: string; keys: PermissionKey[] }[] = [
     ],
   },
   { label: "Estoque", keys: ["inventory_view", "inventory_edit"] },
-  { label: "Relatórios", keys: ["reports_view"] },
+  { label: "Relatórios", keys: ["reports_view", "goals_view"] },
   { label: "Configurações", keys: ["settings_access"] },
 ];
 
@@ -87,6 +88,7 @@ export const PERMISSION_LABELS: Record<PermissionKey, string> = {
   inventory_view: "Ver estoque",
   inventory_edit: "Editar estoque",
   reports_view: "Ver relatórios",
+  goals_view: "Ver a meta do mês",
   settings_access: "Acessar configurações",
 };
 
@@ -106,6 +108,7 @@ export const DEFAULT_PERMISSIONS: Record<ClinicRole, Permissions> = {
   manager: ALL_TRUE,
   reception: {
     ...ALL_FALSE,
+    goals_view: true,
     crm_view: true,
     crm_edit: true,
     patients_view: true,
@@ -120,6 +123,7 @@ export const DEFAULT_PERMISSIONS: Record<ClinicRole, Permissions> = {
   },
   professional: {
     ...ALL_FALSE,
+    goals_view: true,
     patients_view: true,
     records_view: true,
     records_edit: true,
@@ -129,6 +133,7 @@ export const DEFAULT_PERMISSIONS: Record<ClinicRole, Permissions> = {
   },
   finance: {
     ...ALL_FALSE,
+    goals_view: true,
     patients_view: true,
     agenda_view: true,
     budgets_view: true,

@@ -1,12 +1,13 @@
 import Link from "next/link";
 import { requirePermission } from "@/lib/auth/session";
 import { createClient } from "@/lib/supabase/server";
-import { getConsentTemplate } from "@/actions/consent";
+import { listSignableConsentTemplates } from "@/actions/consent";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { NewTemplateButton } from "@/components/anamnesis/NewTemplateButton";
 import { TemplateRowActions } from "@/components/anamnesis/TemplateRowActions";
 import { ConsentTemplateForm } from "@/components/settings/ConsentTemplateForm";
+import { SettingsBackLink } from "@/components/settings/SettingsBackLink";
 
 export const metadata = { title: "Anamnese e consentimento — EstéticaOS" };
 
@@ -14,29 +15,30 @@ export default async function FormulariosSettingsPage() {
   const member = await requirePermission("settings_access");
 
   const supabase = await createClient();
-  const [{ data: templates }, consentContent] = await Promise.all([
+  const [{ data: templates }, consentTemplates] = await Promise.all([
     supabase
       .from("anamnesis_templates")
       .select("id, name, active, anamnesis_questions(count)")
       .eq("clinic_id", member.clinicId)
       .order("created_at", { ascending: true }),
-    getConsentTemplate(),
+    listSignableConsentTemplates(),
   ]);
 
   return (
     <div className="space-y-4">
+      <SettingsBackLink />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Anamnese e consentimento</h1>
         <p className="text-sm text-muted-foreground">
-          Modelos de anamnese e o termo de consentimento/autorização de imagem que os pacientes
-          preenchem e assinam.
+          Modelos de anamnese e os termos de consentimento/autorização que os pacientes preenchem
+          e assinam.
         </p>
       </div>
 
       <Tabs defaultValue="anamnese">
         <TabsList>
           <TabsTrigger value="anamnese">Modelos de anamnese</TabsTrigger>
-          <TabsTrigger value="consentimento">Termo de consentimento</TabsTrigger>
+          <TabsTrigger value="consentimento">Termos de consentimento</TabsTrigger>
         </TabsList>
 
         <TabsContent value="anamnese" className="space-y-4">
@@ -46,7 +48,7 @@ export default async function FormulariosSettingsPage() {
           <Card>
             <CardHeader>
               <CardTitle>Seus modelos</CardTitle>
-              <CardDescription>Clique em um modelo para editar as perguntas.</CardDescription>
+              <CardDescription>Clique no nome de um modelo para editar as perguntas.</CardDescription>
             </CardHeader>
             <CardContent className="space-y-2">
               {(!templates || templates.length === 0) && (
@@ -56,19 +58,25 @@ export default async function FormulariosSettingsPage() {
                 const questionCount = (template.anamnesis_questions as unknown as { count: number }[])[0]
                   ?.count ?? 0;
                 return (
-                  <Link
+                  // O bloco deixou de ser um link inteiro: o botão de
+                  // excluir ficava dentro dele e a navegação disparava
+                  // junto com a confirmação, fechando o aviso antes de dar
+                  // tempo de ler.
+                  <div
                     key={template.id}
-                    href={`/configuracoes/anamnese/${template.id}`}
-                    className="flex items-center justify-between gap-2 rounded-md border p-3 transition-colors hover:bg-accent/50"
+                    className="flex items-center justify-between gap-2 rounded-md border p-3"
                   >
-                    <div>
-                      <p className="text-sm font-medium">{template.name}</p>
+                    <Link
+                      href={`/configuracoes/anamnese/${template.id}`}
+                      className="min-w-0 flex-1 rounded-md transition-colors hover:text-primary"
+                    >
+                      <p className="truncate text-sm font-medium">{template.name}</p>
                       <p className="text-xs text-muted-foreground">
                         {questionCount} pergunta{questionCount === 1 ? "" : "s"}
                       </p>
-                    </div>
+                    </Link>
                     <TemplateRowActions templateId={template.id} active={template.active} />
-                  </Link>
+                  </div>
                 );
               })}
             </CardContent>
@@ -76,19 +84,12 @@ export default async function FormulariosSettingsPage() {
         </TabsContent>
 
         <TabsContent value="consentimento" className="space-y-4">
-          <Card>
-            <CardHeader>
-              <CardTitle>Consentimento e autorização de imagem</CardTitle>
-              <CardDescription>
-                Este texto é mostrado ao paciente antes de assinar. Personalize como quiser — cada
-                assinatura guarda uma cópia do texto vigente no momento, então mudanças aqui não
-                alteram termos já assinados.
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <ConsentTemplateForm initialContent={consentContent} />
-            </CardContent>
-          </Card>
+          <p className="text-sm text-muted-foreground">
+            Cada termo pode ser assinado na clínica ou enviado pelo WhatsApp do paciente.
+            Assinaturas já colhidas guardam uma cópia do texto vigente, então editar aqui não
+            altera o que alguém já assinou.
+          </p>
+          <ConsentTemplateForm templates={consentTemplates} />
         </TabsContent>
       </Tabs>
     </div>

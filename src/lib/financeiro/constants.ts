@@ -37,10 +37,11 @@ export const PAYMENT_METHOD_LABELS: Record<PaymentMethod, string> = {
   other: "Outro",
 };
 
-export const COMMISSION_BASIS = ["sold", "received"] as const;
+export const COMMISSION_BASIS = ["sold", "received", "custom"] as const;
 export type CommissionBasis = (typeof COMMISSION_BASIS)[number];
 
 export const COMMISSION_BASIS_LABELS: Record<CommissionBasis, string> = {
   sold: "Sobre valor vendido",
   received: "Sobre valor recebido",
+  custom: "Outra base (escrita pela clínica)",
 };

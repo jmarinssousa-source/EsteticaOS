@@ -3,10 +3,23 @@
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/session";
 import { indexColumns, parseCsv } from "@/lib/importacao/csv";
+import { readXlsx } from "@/lib/spreadsheet/xlsx";
+import {
+  normalizeAmountInput,
+  normalizeCpfInput,
+  normalizeDateInput,
+  normalizePhoneInput,
+  normalizeTimeInput,
+} from "@/lib/spreadsheet/normalize";
 import type { ImportResult, ImportRowError } from "@/lib/importacao/types";
 
-const DATE_RE = /^\d{4}-\d{2}-\d{2}$/;
-const TIME_RE = /^\d{2}:\d{2}$/;
+const MISSING_FILE = "Envie uma planilha preenchida (.xlsx do Excel ou .csv).";
+
+/** Só os dígitos, para comparar documentos e telefones gravados com
+ *  máscaras diferentes ao longo do tempo. */
+function digitsOnly(value: string | null | undefined) {
+  return (value ?? "").replace(/\D/g, "");
+}
 
 function getCell(row: string[], columns: Record<string, number>, key: string): string {
   const idx = columns[key];
@@ -14,10 +27,23 @@ function getCell(row: string[], columns: Record<string, number>, key: string): s
   return (row[idx] ?? "").trim();
 }
 
+/**
+ * Aceita Excel (.xlsx) e CSV — a clínica não precisa saber a diferença.
+ * O formato é decidido pelo conteúdo, não pela extensão: um .xlsx é um
+ * zip, então começa sempre com "PK". Arquivo renomeado errado continua
+ * funcionando.
+ */
 async function readRows(file: File | null): Promise<{ header: string[]; data: string[][] } | null> {
   if (!file || file.size === 0) return null;
-  const text = await file.text();
-  const rows = parseCsv(text);
+
+  const buffer = await file.arrayBuffer();
+  const signature = new Uint8Array(buffer.slice(0, 2));
+  const isZip = signature[0] === 0x50 && signature[1] === 0x4b;
+
+  const rows = isZip
+    ? await readXlsx(buffer)
+    : parseCsv(new TextDecoder("utf-8").decode(buffer));
+
   if (rows.length === 0) return null;
   return { header: rows[0], data: rows.slice(1) };
 }
@@ -25,7 +51,7 @@ async function readRows(file: File | null): Promise<{ header: string[]; data: st
 export async function importPatients(_prevState: ImportResult | null, formData: FormData): Promise<ImportResult> {
   const member = await requirePermission("patients_edit");
   const parsed = await readRows(formData.get("file") as File | null);
-  if (!parsed) return { total: 0, imported: 0, errors: [{ row: 0, reason: "Envie um arquivo CSV com dados." }] };
+  if (!parsed) return { total: 0, imported: 0, errors: [{ row: 0, reason: MISSING_FILE }] };
 
   const columns = indexColumns(parsed.header);
   if (columns["nome"] == null) {
@@ -47,22 +73,39 @@ export async function importPatients(_prevState: ImportResult | null, formData: 
       return;
     }
 
-    const cpf = getCell(row, columns, "cpf") || null;
-    const phone = getCell(row, columns, "telefone") || null;
-    const birthDate = getCell(row, columns, "data_nascimento") || null;
-    if (birthDate && !DATE_RE.test(birthDate)) {
-      errors.push({ row: rowNumber, reason: "Data de nascimento inválida (use AAAA-MM-DD)." });
+    // Telefone e CPF entram no padrão do sistema qualquer que seja o
+    // formato da planilha, inclusive quando o Excel os gravou como
+    // número e comeu o zero à esquerda.
+    const cpf = normalizeCpfInput(getCell(row, columns, "cpf"));
+    const phone = normalizePhoneInput(getCell(row, columns, "telefone"));
+
+    const birthRaw = getCell(row, columns, "data_nascimento");
+    const birthDate = birthRaw ? normalizeDateInput(birthRaw) : null;
+    if (birthRaw && !birthDate) {
+      errors.push({
+        row: rowNumber,
+        reason: `Data de nascimento inválida ("${birthRaw}"). Use dd/mm/aaaa ou aaaa-mm-dd.`,
+      });
       return;
     }
 
+    // Compara por dígitos: cadastros antigos podem estar sem máscara.
+    const cpfDigits = digitsOnly(cpf);
+    const phoneDigits = digitsOnly(phone);
+
     const isDuplicate =
-      (cpf && (existing?.some((p) => p.cpf === cpf) || seenCpfs.has(cpf))) ||
-      existing?.some((p) => p.name.toLowerCase() === name.toLowerCase() && phone && p.phone === phone);
+      (cpfDigits && (existing?.some((p) => digitsOnly(p.cpf) === cpfDigits) || seenCpfs.has(cpfDigits))) ||
+      existing?.some(
+        (p) =>
+          p.name.toLowerCase() === name.toLowerCase() &&
+          phoneDigits !== "" &&
+          digitsOnly(p.phone) === phoneDigits,
+      );
     if (isDuplicate) {
       errors.push({ row: rowNumber, reason: "Paciente já cadastrado (duplicado)." });
       return;
     }
-    if (cpf) seenCpfs.add(cpf);
+    if (cpfDigits) seenCpfs.add(cpfDigits);
 
     toInsert.push({
       clinic_id: member.clinicId,
@@ -90,7 +133,7 @@ export async function importPatients(_prevState: ImportResult | null, formData: 
 export async function importProcedures(_prevState: ImportResult | null, formData: FormData): Promise<ImportResult> {
   const member = await requirePermission("budgets_edit");
   const parsed = await readRows(formData.get("file") as File | null);
-  if (!parsed) return { total: 0, imported: 0, errors: [{ row: 0, reason: "Envie um arquivo CSV com dados." }] };
+  if (!parsed) return { total: 0, imported: 0, errors: [{ row: 0, reason: MISSING_FILE }] };
 
   const columns = indexColumns(parsed.header);
   if (columns["nome"] == null) {
@@ -119,9 +162,9 @@ export async function importProcedures(_prevState: ImportResult | null, formData
     seenNames.add(key);
 
     const priceRaw = getCell(row, columns, "preco");
-    const price = priceRaw ? Number(priceRaw.replace(",", ".")) : null;
-    if (priceRaw && Number.isNaN(price)) {
-      errors.push({ row: rowNumber, reason: "Preço inválido." });
+    const price = priceRaw ? normalizeAmountInput(priceRaw) : null;
+    if (priceRaw && price == null) {
+      errors.push({ row: rowNumber, reason: `Preço inválido ("${priceRaw}").` });
       return;
     }
 
@@ -141,7 +184,7 @@ export async function importProcedures(_prevState: ImportResult | null, formData
 export async function importAppointments(_prevState: ImportResult | null, formData: FormData): Promise<ImportResult> {
   const member = await requirePermission("agenda_edit");
   const parsed = await readRows(formData.get("file") as File | null);
-  if (!parsed) return { total: 0, imported: 0, errors: [{ row: 0, reason: "Envie um arquivo CSV com dados." }] };
+  if (!parsed) return { total: 0, imported: 0, errors: [{ row: 0, reason: MISSING_FILE }] };
 
   const columns = indexColumns(parsed.header);
   for (const required of ["paciente_nome", "data", "hora_inicio", "hora_fim"]) {
@@ -165,9 +208,9 @@ export async function importAppointments(_prevState: ImportResult | null, formDa
   parsed.data.forEach((row, index) => {
     const rowNumber = index + 2;
     const patientName = getCell(row, columns, "paciente_nome");
-    const patientCpf = getCell(row, columns, "paciente_cpf");
+    const patientCpf = digitsOnly(getCell(row, columns, "paciente_cpf"));
     const patient = patientCpf
-      ? patients?.find((p) => p.cpf === patientCpf)
+      ? patients?.find((p) => digitsOnly(p.cpf) === patientCpf)
       : patients?.find((p) => p.name.toLowerCase() === patientName.toLowerCase());
 
     if (!patient) {
@@ -175,15 +218,16 @@ export async function importAppointments(_prevState: ImportResult | null, formDa
       return;
     }
 
-    const date = getCell(row, columns, "data");
-    const startTime = getCell(row, columns, "hora_inicio");
-    const endTime = getCell(row, columns, "hora_fim");
-    if (!DATE_RE.test(date)) {
-      errors.push({ row: rowNumber, reason: "Data inválida (use AAAA-MM-DD)." });
+    const dateRaw = getCell(row, columns, "data");
+    const date = normalizeDateInput(dateRaw);
+    const startTime = normalizeTimeInput(getCell(row, columns, "hora_inicio"));
+    const endTime = normalizeTimeInput(getCell(row, columns, "hora_fim"));
+    if (!date) {
+      errors.push({ row: rowNumber, reason: `Data inválida ("${dateRaw}"). Use dd/mm/aaaa ou aaaa-mm-dd.` });
       return;
     }
-    if (!TIME_RE.test(startTime) || !TIME_RE.test(endTime)) {
-      errors.push({ row: rowNumber, reason: "Horário inválido (use HH:MM)." });
+    if (!startTime || !endTime) {
+      errors.push({ row: rowNumber, reason: "Horário inválido. Use HH:MM (ex.: 14:00)." });
       return;
     }
     if (endTime <= startTime) {
@@ -250,7 +294,7 @@ export async function importFinancialEntries(
 ): Promise<ImportResult> {
   const member = await requirePermission("finance_edit");
   const parsed = await readRows(formData.get("file") as File | null);
-  if (!parsed) return { total: 0, imported: 0, errors: [{ row: 0, reason: "Envie um arquivo CSV com dados." }] };
+  if (!parsed) return { total: 0, imported: 0, errors: [{ row: 0, reason: MISSING_FILE }] };
 
   const columns = indexColumns(parsed.header);
   for (const required of ["descricao", "tipo", "valor"]) {
@@ -283,15 +327,19 @@ export async function importFinancialEntries(
       errors.push({ row: rowNumber, reason: 'Tipo inválido (use "receita" ou "despesa").' });
       return;
     }
-    const amount = Number(amountRaw.replace(",", "."));
-    if (!amountRaw || Number.isNaN(amount) || amount <= 0) {
-      errors.push({ row: rowNumber, reason: "Valor inválido." });
+    const amount = normalizeAmountInput(amountRaw);
+    if (amount == null || amount <= 0) {
+      errors.push({ row: rowNumber, reason: `Valor inválido ("${amountRaw}").` });
       return;
     }
 
-    const dueDate = getCell(row, columns, "vencimento") || null;
-    if (dueDate && !DATE_RE.test(dueDate)) {
-      errors.push({ row: rowNumber, reason: "Vencimento inválido (use AAAA-MM-DD)." });
+    const dueRaw = getCell(row, columns, "vencimento");
+    const dueDate = dueRaw ? normalizeDateInput(dueRaw) : null;
+    if (dueRaw && !dueDate) {
+      errors.push({
+        row: rowNumber,
+        reason: `Vencimento inválido ("${dueRaw}"). Use dd/mm/aaaa ou aaaa-mm-dd.`,
+      });
       return;
     }
 

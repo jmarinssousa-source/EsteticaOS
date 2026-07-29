@@ -21,7 +21,22 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/**
+ * Base para as URLs absolutas do Open Graph — sem ela o WhatsApp não
+ * consegue baixar a imagem de pré-visualização dos links enviados aos
+ * pacientes. Em produção o Vercel já expõe o domínio; localmente cai no
+ * localhost.
+ */
+const siteUrl =
+  process.env.NEXT_PUBLIC_SITE_URL ??
+  (process.env.VERCEL_PROJECT_PRODUCTION_URL
+    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
+    : process.env.VERCEL_URL
+      ? `https://${process.env.VERCEL_URL}`
+      : "http://localhost:3000");
+
 export const metadata: Metadata = {
+  metadataBase: new URL(siteUrl),
   title: "EstéticaOS — Gestão completa para clínicas de estética",
   description:
     "Agenda, prontuário, financeiro e CRM de leads num só sistema, feito para o dia a dia de clínicas de estética.",

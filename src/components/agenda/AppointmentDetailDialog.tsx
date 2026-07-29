@@ -9,6 +9,8 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { Combobox } from "@/components/ui/combobox";
+import { TimeField } from "@/components/ui/time-field";
 import {
   Select,
   SelectContent,
@@ -88,23 +90,14 @@ export function AppointmentDetailDialog({
         <div className="space-y-4">
           <div className="space-y-2">
             <Label>Paciente</Label>
-            <Select
-              items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
+            <Combobox
+              options={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
               value={form.patientId}
-              onValueChange={(v) => v && setForm((f) => ({ ...f, patientId: v }))}
+              onValueChange={(patientId) => setForm((f) => ({ ...f, patientId }))}
               disabled={!canEdit}
-            >
-              <SelectTrigger className="w-full">
-                <SelectValue />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Digite para buscar o paciente"
+              emptyMessage="Nenhum paciente encontrado."
+            />
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -137,27 +130,14 @@ export function AppointmentDetailDialog({
             </div>
             <div className="space-y-2">
               <Label>Procedimento</Label>
-              <Select
-                items={[
-                  { value: "none", label: "Sem procedimento" },
-                  ...procedures.map((procedure) => ({ value: procedure.id, label: procedure.name })),
-                ]}
-                value={form.procedureId || "none"}
-                onValueChange={(v) => setForm((f) => ({ ...f, procedureId: v === "none" ? "" : (v ?? "") }))}
+              <Combobox
+                options={procedures.map((procedure) => ({ value: procedure.id, label: procedure.name }))}
+                value={form.procedureId}
+                onValueChange={(procedureId) => setForm((f) => ({ ...f, procedureId }))}
                 disabled={!canEdit}
-              >
-                <SelectTrigger className="w-full">
-                  <SelectValue />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="none">Sem procedimento</SelectItem>
-                  {procedures.map((procedure) => (
-                    <SelectItem key={procedure.id} value={procedure.id}>
-                      {procedure.name}
-                    </SelectItem>
-                  ))}
-                </SelectContent>
-              </Select>
+                placeholder="Sem procedimento"
+                emptyMessage="Nenhum procedimento encontrado."
+              />
             </div>
           </div>
 
@@ -173,20 +153,18 @@ export function AppointmentDetailDialog({
             </div>
             <div className="space-y-2">
               <Label>Início</Label>
-              <Input
-                type="time"
+              <TimeField
                 value={form.startTime}
                 disabled={!canEdit}
-                onChange={(e) => setForm((f) => ({ ...f, startTime: e.target.value }))}
+                onValueChange={(startTime) => setForm((f) => ({ ...f, startTime }))}
               />
             </div>
             <div className="space-y-2">
               <Label>Fim</Label>
-              <Input
-                type="time"
+              <TimeField
                 value={form.endTime}
                 disabled={!canEdit}
-                onChange={(e) => setForm((f) => ({ ...f, endTime: e.target.value }))}
+                onValueChange={(endTime) => setForm((f) => ({ ...f, endTime }))}
               />
             </div>
           </div>

@@ -11,6 +11,7 @@ import {
 import { ImportCard } from "@/components/importacao/ImportCard";
 import { ExportCard } from "@/components/importacao/ExportCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SettingsBackLink } from "@/components/settings/SettingsBackLink";
 
 export const metadata = { title: "Importação/Exportação — EstéticaOS" };
 
@@ -19,10 +20,11 @@ export default async function ImportacaoPage() {
 
   return (
     <div className="space-y-4">
+      <SettingsBackLink />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Importação/Exportação</h1>
         <p className="text-sm text-muted-foreground">
-          Importe dados de uma planilha ou exporte os dados da clínica em CSV ou Excel.
+          Importe dados de uma planilha ou exporte os dados da clínica em Excel ou CSV.
         </p>
       </div>
 
@@ -34,9 +36,9 @@ export default async function ImportacaoPage() {
 
         <TabsContent value="importar" className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Baixe o modelo de planilha (CSV), preencha e envie de volta. Importe primeiro os
-            Pacientes e os Procedimentos — Agenda e Financeiro dependem deles para vincular os
-            registros corretamente.
+            Baixe o modelo em Excel ou CSV, preencha e envie de volta — o sistema entende os dois.
+            Importe primeiro os Pacientes e os Procedimentos: Agenda e Financeiro dependem deles
+            para vincular os registros corretamente.
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             {hasPermission(member, "patients_edit") && (
@@ -76,7 +78,7 @@ export default async function ImportacaoPage() {
 
         <TabsContent value="exportar" className="space-y-4">
           <p className="text-sm text-muted-foreground">
-            Exporte os dados da clínica para planilha, em CSV (texto) ou Excel.
+            Exporte os dados da clínica para planilha, em Excel (.xlsx) ou CSV (texto).
           </p>
           <div className="grid gap-4 sm:grid-cols-2">
             {hasPermission(member, "patients_edit") && (

@@ -104,7 +104,7 @@ export const FAQ_ENTRIES: FaqEntry[] = [
       "Abra o menu Pacientes.",
       'Clique em "Novo paciente".',
       "Preencha nome (obrigatório), telefone, e-mail, CPF, data de nascimento e demais dados.",
-      "Salve — você será levado direto para a tela completa do paciente, com todas as abas (Resumo, Anamnese, Agenda, Orçamentos, Sessões, Financeiro, Prontuário, Fotos, Assinaturas).",
+      "Salve — você será levado direto para a tela completa do paciente, com todas as abas (Resumo, Anamnese, Agenda, Orçamentos, Sessões, Financeiro, Registros clínicos, Fotos, Termos e assinaturas).",
       "Se o paciente já veio de um lead do CRM, use \"Converter em paciente\" em vez de cadastrar de novo.",
     ],
     keywords: ["paciente", "cadastrar paciente", "novo paciente"],
@@ -231,8 +231,9 @@ export const FAQ_ENTRIES: FaqEntry[] = [
     category: "Sessões e assinaturas",
     question: "Como coleto o termo de consentimento e autorização de imagem?",
     steps: [
-      "Abra o paciente e vá na aba Assinaturas.",
-      "Peça para o paciente ler o termo e assinar na tela.",
+      "Abra o paciente e vá na aba Termos e assinaturas.",
+      "Escolha qual termo quer usar — a clínica pode ter vários (uso de imagem, publicação em rede social, procedimento específico), criados em Configurações > Anamnese e consentimento.",
+      'Clique em "Assinar aqui" e peça para o paciente assinar na tela, ou em "Enviar pelo WhatsApp" para ele assinar com o dedo no celular dele.',
       'Depois de assinado, use "Visualizar / baixar" para ver ou imprimir o termo (você pode salvar como PDF direto da tela de impressão do navegador).',
     ],
     keywords: ["termo", "consentimento", "autorização de imagem"],
@@ -240,14 +241,14 @@ export const FAQ_ENTRIES: FaqEntry[] = [
   {
     id: "prontuario-evolucao",
     category: "Prontuário",
-    question: "Como registro uma evolução no prontuário?",
+    question: "Como registro um atendimento no prontuário?",
     steps: [
-      "Abra o paciente e vá na aba Prontuário.",
-      'Clique em "Nova evolução".',
+      "Abra o paciente e vá na aba Registros clínicos.",
+      'Clique em "Novo registro".',
       "Escreva as observações e, se quiser, escolha um mapa (facial ou corporal) para desenhar marcações direto na tela.",
       "Você também pode registrar uma intercorrência, se houver.",
     ],
-    keywords: ["prontuário", "evolução", "mapa facial", "mapa corporal"],
+    keywords: ["prontuário", "registro clínico", "evolução", "mapa facial", "mapa corporal"],
   },
   {
     id: "fotos-before-after",
@@ -255,7 +256,7 @@ export const FAQ_ENTRIES: FaqEntry[] = [
     question: "Como envio fotos de antes/depois?",
     steps: [
       "Abra o paciente e vá na aba Fotos.",
-      'Clique em "Enviar fotos", escolha a(s) imagem(ns) do celular ou computador e marque o tipo: Antes, Depois ou Geral.',
+      'Clique em "Adicionar fotos", escolha a(s) imagem(ns) — no celular o aparelho oferece tirar na hora ou pegar da galeria — e marque o tipo: Antes, Depois ou Geral.',
     ],
     keywords: ["fotos", "antes e depois", "before after"],
   },

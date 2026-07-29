@@ -50,6 +50,7 @@ export default async function HojePage({
   const canViewInventory = hasPermission(member, "inventory_view");
   const canViewPatients = hasPermission(member, "patients_view");
   const canEditGoal = member.role === "owner";
+  const canViewGoal = hasPermission(member, "goals_view");
 
   const yearMonth = currentYearMonth();
   const monthStart = `${yearMonth}-01`;
@@ -232,12 +233,14 @@ export default async function HojePage({
       </div>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
-        <GoalCard
-          yearMonth={yearMonth}
-          goalAmount={Number(goal?.goal_amount ?? 0)}
-          soldAmount={soldAmount}
-          canEdit={canEditGoal}
-        />
+        {canViewGoal && (
+          <GoalCard
+            yearMonth={yearMonth}
+            goalAmount={Number(goal?.goal_amount ?? 0)}
+            soldAmount={soldAmount}
+            canEdit={canEditGoal}
+          />
+        )}
 
         {canViewAgenda && (
           <StatCard

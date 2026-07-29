@@ -30,7 +30,7 @@ export function DeleteRecordButton({
     startTransition(async () => {
       const result = await deletePatientRecord(recordId, patientId);
       if (result && "error" in result) toast.error(result.error);
-      else toast.success("Evolução excluída.");
+      else toast.success("Registro excluído.");
     });
   }
 
@@ -42,7 +42,7 @@ export function DeleteRecordButton({
             variant="ghost"
             size="icon"
             className="size-7 text-muted-foreground hover:text-destructive"
-            aria-label="Excluir evolução"
+            aria-label="Excluir registro"
           />
         }
       >
@@ -50,7 +50,7 @@ export function DeleteRecordButton({
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Excluir esta evolução?</AlertDialogTitle>
+          <AlertDialogTitle>Excluir este registro?</AlertDialogTitle>
           <AlertDialogDescription>
             As observações e a marcação no mapa serão removidas. Essa ação não pode ser desfeita.
           </AlertDialogDescription>

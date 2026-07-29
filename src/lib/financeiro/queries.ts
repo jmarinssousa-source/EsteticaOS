@@ -47,7 +47,7 @@ export async function computeCommissionsByProfessional(
       .not("professional_id", "is", null),
     supabase
       .from("commission_rules")
-      .select("professional_id, procedure_id, basis, rate_percent")
+      .select("professional_id, procedure_id, basis, rate_percent, fixed_amount")
       .eq("clinic_id", clinicId),
   ]);
 
@@ -63,7 +63,11 @@ export async function computeCommissionsByProfessional(
 
     const rule = findBestRule(rules ?? [], professionalId, item.procedure_id, isPaid);
     const subtotal = item.quantity * Number(item.unit_price) - Number(item.discount);
-    const amount = rule ? subtotal * (rule.rate_percent / 100) : Number(item.commission ?? 0);
+    const amount = rule
+      ? rule.fixed_amount != null
+        ? Number(rule.fixed_amount) * item.quantity
+        : subtotal * (Number(rule.rate_percent) / 100)
+      : Number(item.commission ?? 0);
 
     totals.set(professionalId, (totals.get(professionalId) ?? 0) + amount);
   }
@@ -72,12 +76,24 @@ export async function computeCommissionsByProfessional(
 }
 
 function findBestRule(
-  rules: { professional_id: string | null; procedure_id: string | null; basis: CommissionBasis; rate_percent: number }[],
+  rules: {
+    professional_id: string | null;
+    procedure_id: string | null;
+    basis: CommissionBasis;
+    rate_percent: number | null;
+    fixed_amount: number | null;
+  }[],
   professionalId: string,
   procedureId: string | null,
   isPaid: boolean,
 ) {
-  const applicable = rules.filter((rule) => (rule.basis === "received" ? isPaid : true));
+  // Regras de base própria ("só se o paciente comparecer", por exemplo)
+  // dependem de informação que o sistema não tem; ficam de fora do
+  // cálculo automático e a comissão lançada no orçamento continua valendo.
+  const applicable = rules.filter((rule) => {
+    if (rule.basis === "custom") return false;
+    return rule.basis === "received" ? isPaid : true;
+  });
 
   const exact = applicable.find(
     (r) => r.professional_id === professionalId && r.procedure_id === procedureId && procedureId != null,

@@ -725,6 +725,59 @@ e completas.`;
     }
   }
 
+  // ---------------------------------------------------------------------
+  // 16. Paciente de teste da reativação
+  //
+  // Um paciente com a última visita bem antiga e sem horário marcado,
+  // para conferir na tela /pacientes/reativacao se o alerta aparece e se
+  // o botão de WhatsApp abre a conversa com a mensagem certa. Troque o
+  // telefone abaixo por um número real antes de testar o envio.
+  // ---------------------------------------------------------------------
+  console.log("Criando paciente de teste da reativação...");
+  const reactivationTestName = "Teste Reativação (WhatsApp)";
+  let { data: reactivationPatient } = await admin
+    .from("patients")
+    .select("id")
+    .eq("clinic_id", clinicId)
+    .eq("name", reactivationTestName)
+    .maybeSingle();
+
+  if (!reactivationPatient) {
+    const { data, error } = await admin
+      .from("patients")
+      .insert({
+        clinic_id: clinicId,
+        name: reactivationTestName,
+        phone: "(11) 90000-0000",
+        email: "teste.reativacao@example.com",
+        gender: "Outro",
+        notes: "Paciente de teste do alerta de reativação. Pode apagar.",
+      })
+      .select("id")
+      .single();
+    if (error) throw error;
+    reactivationPatient = data;
+  }
+
+  const { count: reactivationApptCount } = await admin
+    .from("appointments")
+    .select("id", { count: "exact", head: true })
+    .eq("patient_id", reactivationPatient.id);
+
+  if (!reactivationApptCount) {
+    const { error } = await admin.from("appointments").insert({
+      clinic_id: clinicId,
+      patient_id: reactivationPatient.id,
+      professional_id: professionalIds[0],
+      appointment_date: todayPlusDays(-180),
+      start_time: "10:00",
+      end_time: "11:00",
+      status: "attended",
+      notes: "Última visita antes de sumir — usado no teste de reativação.",
+    });
+    if (error) throw error;
+  }
+
   console.log("\nSeed concluído com sucesso.");
   console.log(`Clínica: ${clinicId}`);
   console.log(`Login owner: ${TARGET_EMAIL} (senha já existente)`);

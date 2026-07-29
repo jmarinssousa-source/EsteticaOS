@@ -32,9 +32,21 @@ export const saleCheckoutSchema = z.object({
   payments: z.array(saleItemSchema).min(1, "Informe ao menos uma forma de pagamento."),
 });
 
-export const commissionRuleSchema = z.object({
-  professionalId: z.preprocess(emptyToNull, z.string().trim().nullable()),
-  procedureId: z.preprocess(emptyToNull, z.string().trim().nullable()),
-  basis: z.enum(["sold", "received"]),
-  ratePercent: z.coerce.number().min(0).max(100),
-});
+export const commissionRuleSchema = z
+  .object({
+    professionalId: z.preprocess(emptyToNull, z.string().trim().nullable()),
+    procedureId: z.preprocess(emptyToNull, z.string().trim().nullable()),
+    basis: z.enum(["sold", "received", "custom"]),
+    /** Percentual OU valor fixo por atendimento — exatamente um dos dois. */
+    ratePercent: z.preprocess(emptyToNull, z.coerce.number().min(0).max(100).nullable()),
+    fixedAmount: z.preprocess(emptyToNull, z.coerce.number().min(0).nullable()),
+    customBasisLabel: z.preprocess(emptyToNull, z.string().trim().max(120).nullable()),
+  })
+  .refine((data) => (data.ratePercent == null) !== (data.fixedAmount == null), {
+    message: "Informe um percentual ou um valor fixo, não os dois.",
+    path: ["ratePercent"],
+  })
+  .refine((data) => data.basis !== "custom" || Boolean(data.customBasisLabel), {
+    message: "Descreva a base de cálculo combinada.",
+    path: ["customBasisLabel"],
+  });

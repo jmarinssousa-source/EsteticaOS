@@ -9,6 +9,15 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { MaskedInput } from "@/components/ui/masked-input";
+import { genderOptions } from "@/lib/patients/constants";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 import {
   Dialog,
   DialogContent,
@@ -55,7 +64,7 @@ export function PatientFormDialog() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
-              <Input id="phone" name="phone" type="tel" />
+              <MaskedInput id="phone" name="phone" type="tel" mask="phone" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>
@@ -66,7 +75,7 @@ export function PatientFormDialog() {
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="cpf">CPF</Label>
-              <Input id="cpf" name="cpf" />
+              <MaskedInput id="cpf" name="cpf" mask="cpf" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="birthDate">Data de nascimento</Label>
@@ -76,7 +85,18 @@ export function PatientFormDialog() {
 
           <div className="space-y-2">
             <Label htmlFor="gender">Gênero</Label>
-            <Input id="gender" name="gender" />
+            <Select name="gender" defaultValue="" items={genderOptions()}>
+              <SelectTrigger id="gender" className="w-full">
+                <SelectValue placeholder="Selecione" />
+              </SelectTrigger>
+              <SelectContent>
+                {genderOptions().map((option) => (
+                  <SelectItem key={option.value} value={option.value}>
+                    {option.label}
+                  </SelectItem>
+                ))}
+              </SelectContent>
+            </Select>
           </div>
 
           <div className="space-y-2">

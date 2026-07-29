@@ -1,11 +1,13 @@
 import "server-only";
-import { PDFDocument, StandardFonts, rgb, type PDFFont } from "pdf-lib";
+import { PDFDocument, StandardFonts, rgb, type PDFFont, type PDFPage } from "pdf-lib";
 import { formatCurrency } from "@/lib/format";
+import { SYSTEM_NAME, VENDOR_FOOTER } from "@/lib/brand";
 
 const PRIMARY = rgb(0.701, 0.216, 0.213);
 const GRAY = rgb(0.42, 0.42, 0.42);
 const BLACK = rgb(0.1, 0.1, 0.1);
 const LINE = rgb(0.85, 0.85, 0.85);
+const FAINT = rgb(0.62, 0.62, 0.62);
 
 const PAGE_WIDTH = 420;
 const MARGIN = 40;
@@ -27,6 +29,34 @@ function wrapText(text: string, font: PDFFont, size: number, maxWidth: number): 
   }
   if (current) lines.push(current);
   return lines;
+}
+
+
+/** Rodapé de marca: nome do sistema e assinatura discreta da Orbyniq. */
+function drawBrandFooter(
+  page: PDFPage,
+  font: PDFFont,
+  clinicName: string,
+  pageWidth: number,
+) {
+  const clinicLine = `${clinicName} · ${new Date().toLocaleDateString("pt-BR")}`;
+  const clinicWidth = font.widthOfTextAtSize(clinicLine, 9);
+  page.drawText(clinicLine, {
+    x: (pageWidth - clinicWidth) / 2,
+    y: 40,
+    size: 9,
+    font,
+    color: GRAY,
+  });
+
+  const vendorWidth = font.widthOfTextAtSize(VENDOR_FOOTER, 6.5);
+  page.drawText(VENDOR_FOOTER, {
+    x: (pageWidth - vendorWidth) / 2,
+    y: 26,
+    size: 6.5,
+    font,
+    color: FAINT,
+  });
 }
 
 export type BudgetPdfItem = {
@@ -54,7 +84,7 @@ export async function generateBudgetPdf(data: BudgetPdfData): Promise<Uint8Array
   // Height grows with the item count and any wrapped notes, so the page is
   // sized after computing content instead of a fixed guess.
   const notesLines = data.notes ? wrapText(data.notes, font, 9, CONTENT_WIDTH) : [];
-  const estimatedHeight = 300 + data.items.length * ROW_HEIGHT + notesLines.length * 12;
+  const estimatedHeight = 320 + data.items.length * ROW_HEIGHT + notesLines.length * 12;
   const page = doc.addPage([PAGE_WIDTH, estimatedHeight]);
 
   let y = estimatedHeight - 50;
@@ -81,6 +111,15 @@ export async function generateBudgetPdf(data: BudgetPdfData): Promise<Uint8Array
   const title = "ORÇAMENTO";
   const titleWidth = bold.widthOfTextAtSize(title, 14);
   page.drawText(title, { x: (PAGE_WIDTH - titleWidth) / 2, y, size: 14, font: bold, color: BLACK });
+
+  const systemWidth = font.widthOfTextAtSize(SYSTEM_NAME, 7);
+  page.drawText(SYSTEM_NAME, {
+    x: PAGE_WIDTH - MARGIN - systemWidth,
+    y,
+    size: 7,
+    font,
+    color: FAINT,
+  });
   y -= 28;
 
   if (data.patient) {
@@ -142,9 +181,7 @@ export async function generateBudgetPdf(data: BudgetPdfData): Promise<Uint8Array
     }
   }
 
-  const footer = `${data.clinic.name} · ${new Date().toLocaleDateString("pt-BR")}`;
-  const footerWidth = font.widthOfTextAtSize(footer, 9);
-  page.drawText(footer, { x: (PAGE_WIDTH - footerWidth) / 2, y: 30, size: 9, font, color: GRAY });
+  drawBrandFooter(page, font, data.clinic.name, PAGE_WIDTH);
 
   return doc.save();
 }

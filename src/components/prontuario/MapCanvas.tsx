@@ -1,7 +1,7 @@
 "use client";
 
 import { useEffect, useRef, useState } from "react";
-import { Eraser, RotateCcw, RotateCw, Trash2 } from "lucide-react";
+import { Eraser, RotateCw, Trash2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 import type { BodyView, Gender, MapType } from "@/lib/prontuario/constants";
@@ -154,37 +154,11 @@ export function MapCanvas({
   const back = useDrawing(penColorRef);
   const { canvasRef: faceCanvasRef, handlers: faceHandlers } = front;
 
-  // Giro do corpo: ângulo contínuo, com animação ao usar os botões e
-  // arraste livre na barra de girar (snap para frente/costas ao soltar).
+  // Giro do corpo: um único botão alterna entre frente e costas, meia
+  // volta por clique.
   const [angle, setAngle] = useState(0);
-  const [animated, setAnimated] = useState(true);
-  const dragRef = useRef<{ startX: number; startAngle: number } | null>(null);
   const visibleSide = sideForAngle(angle);
   const resting = normalizeAngle(angle) % 180 === 0;
-
-  function rotateBy(delta: number) {
-    setAnimated(true);
-    setAngle((a) => a + delta);
-  }
-
-  function handleDragStart(event: React.PointerEvent<HTMLDivElement>) {
-    event.currentTarget.setPointerCapture(event.pointerId);
-    setAnimated(false);
-    dragRef.current = { startX: event.clientX, startAngle: angle };
-  }
-
-  function handleDragMove(event: React.PointerEvent<HTMLDivElement>) {
-    const drag = dragRef.current;
-    if (!drag) return;
-    setAngle(drag.startAngle + (event.clientX - drag.startX) * 0.6);
-  }
-
-  function handleDragEnd() {
-    if (!dragRef.current) return;
-    dragRef.current = null;
-    setAnimated(true);
-    setAngle((a) => Math.round(a / 180) * 180);
-  }
 
   const isBody = mapType === "body";
   const imageSize = isBody ? BODY_IMAGE_SIZE : FACE_IMAGE_SIZE;
@@ -247,10 +221,7 @@ export function MapCanvas({
       >
         {isBody ? (
           <div
-            className={cn(
-              "relative size-full",
-              animated && "transition-transform duration-500 ease-out",
-            )}
+            className="relative size-full transition-transform duration-500 ease-out"
             style={{ transformStyle: "preserve-3d", transform: `rotateY(${angle}deg)` }}
           >
             {(["front", "back"] as const).map((side) => {
@@ -302,33 +273,15 @@ export function MapCanvas({
       </div>
 
       {isBody && (
-        <div className="mx-auto flex w-full max-w-xs items-center gap-2">
+        <div className="flex justify-center">
           <Button
             type="button"
             variant="outline"
-            size="icon-sm"
-            aria-label="Girar para a esquerda"
-            onClick={() => rotateBy(-180)}
-          >
-            <RotateCcw className="size-4" />
-          </Button>
-          <div
-            className="flex h-8 flex-1 cursor-ew-resize touch-none select-none items-center justify-center rounded-lg border border-dashed text-xs text-muted-foreground"
-            onPointerDown={handleDragStart}
-            onPointerMove={handleDragMove}
-            onPointerUp={handleDragEnd}
-            onPointerCancel={handleDragEnd}
-          >
-            ⇆ arraste para girar · {visibleSide === "front" ? "frente" : "costas"}
-          </div>
-          <Button
-            type="button"
-            variant="outline"
-            size="icon-sm"
-            aria-label="Girar para a direita"
-            onClick={() => rotateBy(180)}
+            size="sm"
+            onClick={() => setAngle((a) => a + 180)}
           >
             <RotateCw className="size-4" />
+            {visibleSide === "front" ? "Ver de costas" : "Ver de frente"}
           </Button>
         </div>
       )}

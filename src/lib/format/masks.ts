@@ -37,6 +37,15 @@ export function parseCurrencyInput(masked: string): string {
   return (Number(digits) / 100).toFixed(2);
 }
 
+export function formatCpf(raw: string): string {
+  const d = raw.replace(/\D/g, "").slice(0, 11);
+  let out = d.slice(0, 3);
+  if (d.length > 3) out += `.${d.slice(3, 6)}`;
+  if (d.length > 6) out += `.${d.slice(6, 9)}`;
+  if (d.length > 9) out += `-${d.slice(9, 11)}`;
+  return out;
+}
+
 export function formatCnpj(raw: string): string {
   const d = raw.replace(/\D/g, "").slice(0, 14);
   let out = d.slice(0, 2);

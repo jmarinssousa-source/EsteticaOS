@@ -1,7 +1,7 @@
 "use client";
 
 import { useActionState } from "react";
-import { Download, Upload } from "lucide-react";
+import { FileSpreadsheet, Sheet as SheetIcon, Upload } from "lucide-react";
 import type { ImportResult } from "@/lib/importacao/types";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,20 +31,44 @@ export function ImportCard({
         <CardDescription>{description}</CardDescription>
       </CardHeader>
       <CardContent className="space-y-4">
-        <Button
-          variant="outline"
-          size="sm"
-          nativeButton={false}
-          render={<a href={`/configuracoes/importacao/modelo/${type}`} />}
-        >
-          <Download className="size-4" />
-          Baixar modelo
-        </Button>
+        <div className="space-y-2">
+          <p className="text-sm font-medium">1. Baixe o modelo</p>
+          <div className="flex flex-wrap gap-2">
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<a href={`/configuracoes/importacao/modelo/${type}?formato=xlsx`} />}
+            >
+              <FileSpreadsheet className="size-4" />
+              Modelo Excel
+            </Button>
+            <Button
+              variant="outline"
+              size="sm"
+              nativeButton={false}
+              render={<a href={`/configuracoes/importacao/modelo/${type}`} />}
+            >
+              <SheetIcon className="size-4" />
+              Modelo CSV
+            </Button>
+          </div>
+        </div>
 
         <form action={formAction} className="space-y-3">
           <div className="space-y-2">
-            <Label htmlFor={`file-${type}`}>Arquivo CSV preenchido</Label>
-            <Input id={`file-${type}`} name="file" type="file" accept=".csv,text/csv" required />
+            <Label htmlFor={`file-${type}`}>2. Envie a planilha preenchida</Label>
+            <Input
+              id={`file-${type}`}
+              name="file"
+              type="file"
+              accept=".xlsx,.csv,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet,text/csv"
+              required
+            />
+            <p className="text-xs text-muted-foreground">
+              Aceita Excel (.xlsx) ou CSV. Telefone, CPF, datas e valores entram no padrão do
+              sistema mesmo se estiverem formatados de outro jeito na planilha.
+            </p>
           </div>
           <Button type="submit" size="sm" disabled={pending}>
             <Upload className="size-4" />

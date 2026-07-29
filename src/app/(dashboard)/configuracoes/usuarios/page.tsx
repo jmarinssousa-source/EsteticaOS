@@ -6,7 +6,9 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { MemberActions } from "@/components/users/MemberActions";
 import { MemberColorPicker } from "@/components/users/MemberColorPicker";
+import { MemberProfession } from "@/components/users/MemberProfession";
 import { ROLE_LABELS, type ClinicRole, type Permissions } from "@/lib/auth/permissions";
+import { SettingsBackLink } from "@/components/settings/SettingsBackLink";
 
 export const metadata = { title: "Usuários e permissões — EstéticaOS" };
 
@@ -17,12 +19,13 @@ export default async function UsuariosPage() {
   const supabase = await createClient();
   const { data: members } = await supabase
     .from("clinic_members")
-    .select("user_id, full_name, email, role, permissions, status, color")
+    .select("user_id, full_name, email, role, profession, permissions, status, color")
     .eq("clinic_id", member.clinicId)
     .order("created_at", { ascending: true });
 
   return (
     <div className="space-y-4">
+      <SettingsBackLink />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-bold tracking-tight">Usuários e permissões</h1>
         {isOwner && <CreateUserDialog />}
@@ -44,6 +47,7 @@ export default async function UsuariosPage() {
                 <TableHead>Nome</TableHead>
                 <TableHead>E-mail</TableHead>
                 <TableHead>Perfil</TableHead>
+                <TableHead>Profissão</TableHead>
                 <TableHead>Cor na agenda</TableHead>
                 <TableHead>Status</TableHead>
                 {isOwner && <TableHead className="text-right">Ações</TableHead>}
@@ -60,6 +64,13 @@ export default async function UsuariosPage() {
                     ) : (
                       <Badge variant="secondary">{ROLE_LABELS[m.role as ClinicRole]}</Badge>
                     )}
+                  </TableCell>
+                  <TableCell>
+                    <MemberProfession
+                      userId={m.user_id}
+                      profession={(m.profession as string | null) ?? null}
+                      canEdit={isOwner}
+                    />
                   </TableCell>
                   <TableCell>
                     <MemberColorPicker

@@ -12,6 +12,8 @@ import { BudgetItemsTable } from "@/components/orcamentos/BudgetItemsTable";
 import { BudgetStatusActions } from "@/components/orcamentos/BudgetStatusActions";
 import { BudgetNotesForm } from "@/components/orcamentos/BudgetNotesForm";
 import { BudgetPdfActions } from "@/components/orcamentos/BudgetPdfActions";
+import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
+import { Wordmark } from "@/components/brand/Logo";
 
 export const metadata = { title: "Orçamento — EstéticaOS" };
 
@@ -54,7 +56,11 @@ export default async function BudgetDetailPage({
       .eq("clinic_id", member.clinicId)
       .eq("status", "active")
       .order("full_name"),
-    supabase.from("clinics").select("name").eq("id", member.clinicId).single(),
+    supabase
+      .from("clinics")
+      .select("name, cnpj, phone, address")
+      .eq("id", member.clinicId)
+      .single(),
   ]);
 
   const patient = budget.patients as unknown as { id: string; name: string; phone: string | null } | null;
@@ -64,11 +70,23 @@ export default async function BudgetDetailPage({
     <div className="space-y-4">
       <Link
         href="/orcamentos"
-        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground"
+        className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground print:hidden"
       >
         <ArrowLeft className="size-3.5" />
         Orçamentos
       </Link>
+
+      {/* Cabeçalho só do impresso: na tela a clínica já está na barra
+          lateral, mas o papel que vai para o paciente precisa dela. */}
+      <div className="hidden border-b pb-3 print:block">
+        <p className="text-base font-semibold">{clinic?.name}</p>
+        {clinic?.address && <p className="text-xs text-muted-foreground">{clinic.address}</p>}
+        {[clinic?.phone, clinic?.cnpj ? `CNPJ: ${clinic.cnpj}` : null].filter(Boolean).length > 0 && (
+          <p className="text-xs text-muted-foreground">
+            {[clinic?.phone, clinic?.cnpj ? `CNPJ: ${clinic.cnpj}` : null].filter(Boolean).join("  ·  ")}
+          </p>
+        )}
+      </div>
 
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
@@ -125,6 +143,13 @@ export default async function BudgetDetailPage({
           <p className="text-xl font-bold">Total: {formatCurrency(Number(budget.total_value))}</p>
         </CardContent>
       </Card>
+
+      <footer className="hidden flex-wrap items-end justify-between gap-2 border-t pt-3 print:flex">
+        <span className="text-[10px] text-muted-foreground">
+          Documento gerado por <Wordmark className="text-[10px]" />
+        </span>
+        <OrbyniqBadge className="items-end text-right" />
+      </footer>
     </div>
   );
 }

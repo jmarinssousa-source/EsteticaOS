@@ -1,10 +1,9 @@
-// Zero-dependency exports: CSV is plain text; "Excel" is an HTML table
-// served with an .xls extension and the ms-excel MIME type, a well
-// known trick that Excel opens natively with real cells/columns —
-// avoids pulling in a spreadsheet library (xlsx/sheetjs) for what the
-// PRD only asks as a secondary export format. PDF export is out of
-// MVP scope entirely (PRD 10.14) except the recibo, which uses the
-// print-to-PDF pattern instead (see [[project-estheticaos-stack]]).
+// Exportações do lado do navegador. CSV é texto puro; o Excel é um
+// .xlsx de verdade, montado em src/lib/spreadsheet/xlsx.ts sobre o
+// JSZip — antes era uma tabela HTML renomeada para .xls, que abria mas
+// fazia o Excel reclamar de "formato diferente da extensão" e não
+// preservava tipo de célula. O JSZip entra por import dinâmico para não
+// pesar no pacote de quem nunca exporta.
 
 function toCsvValue(value: string | number) {
   const str = String(value);
@@ -32,15 +31,18 @@ export function downloadCsv(filename: string, headers: string[], rows: (string |
   triggerDownload(new Blob([csv], { type: "text/csv;charset=utf-8;" }), `${filename}.csv`);
 }
 
-function escapeHtml(value: string) {
-  return value.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;");
-}
+export async function downloadExcel(
+  filename: string,
+  headers: string[],
+  rows: (string | number)[][],
+) {
+  const { buildXlsx } = await import("@/lib/spreadsheet/xlsx");
+  const bytes = await buildXlsx({ headers, rows });
 
-export function downloadExcel(filename: string, headers: string[], rows: (string | number)[][]) {
-  const headerHtml = `<tr>${headers.map((h) => `<th>${escapeHtml(String(h))}</th>`).join("")}</tr>`;
-  const rowsHtml = rows
-    .map((row) => `<tr>${row.map((cell) => `<td>${escapeHtml(String(cell))}</td>`).join("")}</tr>`)
-    .join("");
-  const html = `<html><head><meta charset="UTF-8" /></head><body><table>${headerHtml}${rowsHtml}</table></body></html>`;
-  triggerDownload(new Blob([html], { type: "application/vnd.ms-excel;charset=utf-8;" }), `${filename}.xls`);
+  triggerDownload(
+    new Blob([bytes], {
+      type: "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet",
+    }),
+    `${filename}.xlsx`,
+  );
 }
