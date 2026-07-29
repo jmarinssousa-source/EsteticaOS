@@ -72,7 +72,7 @@ export function RecordFormDialog({
 
   function handleSave() {
     if (mapType && !mapImageDataUrl) {
-      setError('Desenhe e clique em "Salvar marcação" antes de concluir a evolução.');
+      setError('Desenhe e clique em "Salvar marcação" antes de concluir o registro.');
       return;
     }
     startTransition(async () => {
@@ -97,13 +97,14 @@ export function RecordFormDialog({
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={<Button size="sm" />}>
         <Plus className="size-4" />
-        Nova evolução
+        Novo registro
       </DialogTrigger>
       <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
-          <DialogTitle>Nova evolução</DialogTitle>
+          <DialogTitle>Novo registro clínico</DialogTitle>
           <DialogDescription>
-            Registre observações e, se quiser, marque no mapa facial ou corporal.
+            O que foi conversado, planejado e executado no atendimento — com marcação no mapa
+            facial ou corporal, se quiser.
           </DialogDescription>
         </DialogHeader>
 
@@ -214,13 +215,13 @@ export function RecordFormDialog({
             />
           )}
           {mapType && mapImageDataUrl && (
-            <p className="text-sm text-emerald-600">Marcação salva. Pronto para concluir a evolução.</p>
+            <p className="text-sm text-emerald-600">Marcação salva. Pronto para concluir o registro.</p>
           )}
         </div>
 
         <DialogFooter>
           <Button onClick={handleSave} disabled={isPending}>
-            {isPending ? "Salvando..." : "Salvar evolução"}
+            {isPending ? "Salvando..." : "Salvar registro"}
           </Button>
         </DialogFooter>
       </DialogContent>

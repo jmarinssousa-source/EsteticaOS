@@ -21,8 +21,8 @@ import { PatientResumeForm } from "@/components/patients/PatientResumeForm";
 import { AnamnesisTab } from "@/components/anamnesis/AnamnesisTab";
 import { SessionFormDialog } from "@/components/sessions/SessionFormDialog";
 import { SessionRow } from "@/components/sessions/SessionRow";
-import { ConsentTab } from "@/components/consent/ConsentTab";
-import { getConsentTemplate } from "@/actions/consent";
+import { ConsentTab, type PatientConsentForm } from "@/components/consent/ConsentTab";
+import { listSignableConsentTemplates } from "@/actions/consent";
 import { RecordFormDialog } from "@/components/prontuario/RecordFormDialog";
 import { RecordHistory } from "@/components/prontuario/RecordHistory";
 import { PhotoUploadDialog } from "@/components/prontuario/PhotoUploadDialog";
@@ -70,7 +70,7 @@ export default async function PatientDetailPage({
     { data: sessions },
     { data: professionals },
     { data: procedures },
-    { data: consent },
+    { data: consentForms },
     { data: records },
     { data: photos },
     { data: financialEntries },
@@ -128,12 +128,10 @@ export default async function PatientDetailPage({
     supabase.from("procedures").select("id, name, price").eq("clinic_id", member.clinicId).order("name"),
     supabase
       .from("consent_forms")
-      .select("patient_signature, signed_at")
+      .select("id, title, status, patient_signature, signed_at, access_token, created_at")
       .eq("patient_id", id)
       .eq("clinic_id", member.clinicId)
-      .order("signed_at", { ascending: false })
-      .limit(1)
-      .maybeSingle(),
+      .order("created_at", { ascending: false }),
     canViewRecords
       ? supabase
           .from("patient_records")
@@ -164,7 +162,17 @@ export default async function PatientDetailPage({
       : Promise.resolve({ data: null }),
   ]);
 
-  const consentTemplate = await getConsentTemplate();
+  const consentTemplates = await listSignableConsentTemplates();
+
+  const patientConsentForms: PatientConsentForm[] = (consentForms ?? []).map((form) => ({
+    id: form.id,
+    title: form.title,
+    status: (form.status ?? "signed") as PatientConsentForm["status"],
+    signature: form.patient_signature,
+    signedAt: form.signed_at,
+    createdAt: form.created_at,
+    token: form.access_token,
+  }));
 
   const signedMediaUrls = canViewRecords
     ? await getSignedMediaUrls(supabase, [
@@ -202,12 +210,12 @@ export default async function PatientDetailPage({
           {canViewCrm && <TabsTrigger value="crm">CRM</TabsTrigger>}
           {canViewAgenda && <TabsTrigger value="agenda">Agenda</TabsTrigger>}
           <TabsTrigger value="anamnese">Anamnese</TabsTrigger>
-          {canViewRecords && <TabsTrigger value="prontuario">Prontuário</TabsTrigger>}
+          {canViewRecords && <TabsTrigger value="prontuario">Registros clínicos</TabsTrigger>}
           {canViewBudgets && <TabsTrigger value="orcamentos">Orçamentos</TabsTrigger>}
           {canViewSessions && <TabsTrigger value="sessoes">Sessões</TabsTrigger>}
           {canViewFinance && <TabsTrigger value="financeiro">Financeiro</TabsTrigger>}
           {canViewRecords && <TabsTrigger value="fotos">Fotos</TabsTrigger>}
-          <TabsTrigger value="assinaturas">Assinaturas</TabsTrigger>
+          <TabsTrigger value="assinaturas">Termos e assinaturas</TabsTrigger>
         </TabsList>
 
         <TabsContent value="resumo" className="pt-4">
@@ -452,8 +460,7 @@ export default async function PatientDetailPage({
         {canViewRecords && (
           <TabsContent value="fotos" className="space-y-4 pt-4">
             {canEditRecords && (
-              <div className="flex flex-wrap justify-end gap-2">
-                <PhotoUploadDialog patientId={patient.id} mode="camera" />
+              <div className="flex justify-end">
                 <PhotoUploadDialog patientId={patient.id} />
               </div>
             )}
@@ -470,10 +477,11 @@ export default async function PatientDetailPage({
         <TabsContent value="assinaturas" className="pt-4">
           <ConsentTab
             patientId={patient.id}
-            latestConsent={
-              consent ? { signature: consent.patient_signature, signedAt: consent.signed_at } : null
-            }
-            templateContent={consentTemplate}
+            patientName={patient.name}
+            patientPhone={patient.phone}
+            clinicName={member.clinicName}
+            forms={patientConsentForms}
+            templates={consentTemplates}
             canEdit={canEditPatient}
           />
         </TabsContent>

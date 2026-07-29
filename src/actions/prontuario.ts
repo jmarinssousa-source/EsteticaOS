@@ -66,7 +66,7 @@ export async function createPatientRecord(
     complication: parsed.data.complication,
   });
 
-  if (error) return { error: "Não foi possível salvar a evolução." };
+  if (error) return { error: "Não foi possível salvar o registro." };
 
   revalidatePatient(patientId);
   return { success: true };
@@ -83,7 +83,7 @@ export async function deletePatientRecord(recordId: string, patientId: string): 
     .eq("clinic_id", member.clinicId)
     .maybeSingle();
 
-  if (!record) return { error: "Evolução não encontrada." };
+  if (!record) return { error: "Registro não encontrado." };
 
   if (record.map_image_path) {
     await supabase.storage.from(PATIENT_MEDIA_BUCKET).remove([record.map_image_path]);
@@ -95,7 +95,7 @@ export async function deletePatientRecord(recordId: string, patientId: string): 
     .eq("id", recordId)
     .eq("clinic_id", member.clinicId);
 
-  if (error) return { error: "Não foi possível excluir a evolução." };
+  if (error) return { error: "Não foi possível excluir o registro." };
 
   revalidatePatient(patientId);
   return { success: true };

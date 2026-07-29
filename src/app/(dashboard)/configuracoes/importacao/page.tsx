@@ -11,6 +11,7 @@ import {
 import { ImportCard } from "@/components/importacao/ImportCard";
 import { ExportCard } from "@/components/importacao/ExportCard";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { SettingsBackLink } from "@/components/settings/SettingsBackLink";
 
 export const metadata = { title: "Importação/Exportação — EstéticaOS" };
 
@@ -19,6 +20,7 @@ export default async function ImportacaoPage() {
 
   return (
     <div className="space-y-4">
+      <SettingsBackLink />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Importação/Exportação</h1>
         <p className="text-sm text-muted-foreground">

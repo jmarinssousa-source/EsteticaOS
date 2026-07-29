@@ -43,7 +43,7 @@ export function CreateUserDialog() {
   const [prevState, setPrevState] = useState(state);
   if (state !== prevState) {
     setPrevState(state);
-    if (state.success) setOpen(false);
+    if (state.success && !state.info) setOpen(false);
   }
 
   return (
@@ -64,6 +64,12 @@ export function CreateUserDialog() {
           {state.error && (
             <Alert variant="destructive">
               <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
+          )}
+
+          {state.info && (
+            <Alert>
+              <AlertDescription className="break-all">{state.info}</AlertDescription>
             </Alert>
           )}
 
@@ -101,6 +107,19 @@ export function CreateUserDialog() {
                 ))}
               </SelectContent>
             </Select>
+          </div>
+
+          <div className="space-y-2">
+            <Label htmlFor="profession">Profissão (opcional)</Label>
+            <Input
+              id="profession"
+              name="profession"
+              placeholder="Ex.: biomédica, fisioterapeuta, nutricionista"
+            />
+            <p className="text-xs text-muted-foreground">
+              O perfil acima define o que a pessoa acessa; a profissão é só como ela aparece para a
+              equipe e para o paciente.
+            </p>
           </div>
 
           <DialogFooter>

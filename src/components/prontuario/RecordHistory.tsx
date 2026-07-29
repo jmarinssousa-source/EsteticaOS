@@ -20,7 +20,7 @@ export function RecordHistory({
   canEdit?: boolean;
 }) {
   if (records.length === 0) {
-    return <p className="py-6 text-center text-sm text-muted-foreground">Nenhuma evolução registrada ainda.</p>;
+    return <p className="py-6 text-center text-sm text-muted-foreground">Nenhum registro clínico ainda.</p>;
   }
 
   return (
@@ -49,7 +49,7 @@ export function RecordHistory({
               {mapUrl && (
                 <ImageLightbox
                   src={mapUrl}
-                  alt={record.map_type ? MAP_TYPE_LABELS[record.map_type] : "Mapa da evolução"}
+                  alt={record.map_type ? MAP_TYPE_LABELS[record.map_type] : "Mapa do registro"}
                   title={`${MAP_TYPE_LABELS[record.map_type ?? "body"]} · ${new Date(
                     record.record_date,
                   ).toLocaleDateString("pt-BR")}`}

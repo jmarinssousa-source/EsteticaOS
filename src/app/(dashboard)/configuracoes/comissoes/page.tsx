@@ -4,6 +4,7 @@ import { COMMISSION_BASIS_LABELS, type CommissionBasis } from "@/lib/financeiro/
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { CommissionRuleFormDialog } from "@/components/financeiro/CommissionRuleFormDialog";
 import { DeleteRuleButton } from "@/components/financeiro/DeleteRuleButton";
+import { SettingsBackLink } from "@/components/settings/SettingsBackLink";
 
 export const metadata = { title: "Comissões — EstéticaOS" };
 
@@ -28,6 +29,7 @@ export default async function ComissoesPage() {
 
   return (
     <div className="space-y-4">
+      <SettingsBackLink />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Comissões</h1>

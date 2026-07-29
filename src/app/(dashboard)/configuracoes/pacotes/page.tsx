@@ -7,6 +7,7 @@ import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { PackageFormDialog } from "@/components/packages/PackageFormDialog";
 import { DeletePackageButton } from "@/components/packages/DeletePackageButton";
+import { SettingsBackLink } from "@/components/settings/SettingsBackLink";
 
 export const metadata = { title: "Pacotes — EstéticaOS" };
 
@@ -25,6 +26,7 @@ export default async function PacotesPage() {
 
   return (
     <div className="space-y-4">
+      <SettingsBackLink />
       <div className="flex flex-wrap items-center justify-between gap-2">
         <div>
           <h1 className="text-2xl font-bold tracking-tight">Pacotes</h1>
