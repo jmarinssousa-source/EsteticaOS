@@ -413,11 +413,19 @@ export default async function PatientDetailPage({
 
         {canViewFinance && (
           <TabsContent value="financeiro" className="space-y-4 pt-4">
-            {canEditFinance && (
-              <div className="flex justify-end">
-                <EntryFormDialog patients={[{ id: patient.id, name: patient.name }]} />
-              </div>
-            )}
+            <div className="flex flex-wrap items-start justify-between gap-2">
+              <p className="max-w-xl text-sm text-muted-foreground">
+                Tudo o que este paciente deve ou já pagou: cobranças geradas ao aprovar um
+                orçamento e lançamentos manuais. Não é o caixa da clínica — esse fica em
+                Financeiro, no menu lateral.
+              </p>
+              {canEditFinance && (
+                <EntryFormDialog
+                  patients={[{ id: patient.id, name: patient.name }]}
+                  defaultPatientId={patient.id}
+                />
+              )}
+            </div>
             <Table>
               <TableHeader>
                 <TableRow>

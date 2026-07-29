@@ -80,7 +80,10 @@ export function SessionDetailDialog({
     startTransition(async () => {
       const result = await updateSession(session.id, session.patient_id, form);
       if ("error" in result) toast.error(result.error);
-      else toast.success("Sessão atualizada.");
+      else {
+        toast.success("Sessão atualizada.");
+        onOpenChange(false);
+      }
     });
   }
 
@@ -181,6 +184,13 @@ export function SessionDetailDialog({
                 ))}
               </SelectContent>
             </Select>
+            {availableBalances.length === 0 && (
+              <p className="text-xs text-muted-foreground">
+                Este paciente não tem pacote com saldo. Os pacotes aparecem aqui depois de
+                vendidos ao paciente — crie o pacote em Configurações &gt; Pacotes e inclua-o em um
+                orçamento aprovado.
+              </p>
+            )}
           </div>
 
           <div className="grid grid-cols-2 gap-4">
@@ -228,12 +238,6 @@ export function SessionDetailDialog({
             />
           </div>
 
-          {canEdit && (
-            <Button size="sm" onClick={handleSave} disabled={isPending}>
-              Salvar alterações
-            </Button>
-          )}
-
           <Separator />
 
           <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
@@ -260,7 +264,13 @@ export function SessionDetailDialog({
           </div>
         </div>
 
-        <DialogFooter />
+        {canEdit && (
+          <DialogFooter>
+            <Button onClick={handleSave} disabled={isPending}>
+              {isPending ? "Salvando..." : "Salvar alterações"}
+            </Button>
+          </DialogFooter>
+        )}
       </DialogContent>
     </Dialog>
   );

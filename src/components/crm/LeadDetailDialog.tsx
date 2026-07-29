@@ -325,24 +325,6 @@ export function LeadDetailDialog({
             </p>
           )}
 
-          {canEdit && (
-            <div className="flex flex-wrap gap-2">
-              <Button size="sm" onClick={handleSave} disabled={isPending}>
-                Salvar alterações
-              </Button>
-              {isOpenLead && (
-                <>
-                  <Button size="sm" variant="outline" onClick={handleConvert} disabled={isPending}>
-                    Converter em paciente
-                  </Button>
-                  <Button size="sm" variant="outline" onClick={handleMarkLost} disabled={isPending}>
-                    Marcar como perdido
-                  </Button>
-                </>
-              )}
-            </div>
-          )}
-
           <Separator />
 
           <div className="space-y-2">
@@ -377,6 +359,27 @@ export function LeadDetailDialog({
               })}
             </div>
           </div>
+
+          {canEdit && (
+            <>
+              <Separator />
+              <div className="flex flex-wrap gap-2">
+                <Button size="sm" onClick={handleSave} disabled={isPending}>
+                  Salvar alterações
+                </Button>
+                {isOpenLead && (
+                  <>
+                    <Button size="sm" variant="outline" onClick={handleConvert} disabled={isPending}>
+                      Converter em paciente
+                    </Button>
+                    <Button size="sm" variant="outline" onClick={handleMarkLost} disabled={isPending}>
+                      Marcar como perdido
+                    </Button>
+                  </>
+                )}
+              </div>
+            </>
+          )}
         </div>
 
         <DialogFooter />

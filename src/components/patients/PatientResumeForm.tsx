@@ -7,6 +7,15 @@ import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
+import { MaskedInput } from "@/components/ui/masked-input";
+import { genderOptions } from "@/lib/patients/constants";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
 
 export function PatientResumeForm({
   patientId,
@@ -59,10 +68,11 @@ export function PatientResumeForm({
         </div>
         <div className="space-y-2">
           <Label>Telefone</Label>
-          <Input
+          <MaskedInput
+            mask="phone"
             value={form.phone}
             disabled={!canEdit}
-            onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+            onValueChange={(phone) => setForm((f) => ({ ...f, phone }))}
           />
         </div>
       </div>
@@ -78,10 +88,11 @@ export function PatientResumeForm({
         </div>
         <div className="space-y-2">
           <Label>CPF</Label>
-          <Input
+          <MaskedInput
+            mask="cpf"
             value={form.cpf}
             disabled={!canEdit}
-            onChange={(e) => setForm((f) => ({ ...f, cpf: e.target.value }))}
+            onValueChange={(cpf) => setForm((f) => ({ ...f, cpf }))}
           />
         </div>
       </div>
@@ -98,11 +109,23 @@ export function PatientResumeForm({
         </div>
         <div className="space-y-2">
           <Label>Gênero</Label>
-          <Input
+          <Select
+            items={genderOptions(patient.gender)}
             value={form.gender}
             disabled={!canEdit}
-            onChange={(e) => setForm((f) => ({ ...f, gender: e.target.value }))}
-          />
+            onValueChange={(gender) => setForm((f) => ({ ...f, gender: gender ?? "" }))}
+          >
+            <SelectTrigger className="w-full">
+              <SelectValue placeholder="Selecione" />
+            </SelectTrigger>
+            <SelectContent>
+              {genderOptions(patient.gender).map((option) => (
+                <SelectItem key={option.value} value={option.value}>
+                  {option.label}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
         </div>
       </div>
 

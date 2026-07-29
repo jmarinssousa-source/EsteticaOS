@@ -12,6 +12,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
+import { Combobox } from "@/components/ui/combobox";
+import { TimeField } from "@/components/ui/time-field";
 import {
   Select,
   SelectContent,
@@ -31,6 +33,21 @@ import {
 
 const initialState: ActionState = {};
 
+function toMinutes(time: string) {
+  const [hours, minutes] = time.split(":").map(Number);
+  return Number.isFinite(hours) && Number.isFinite(minutes) ? hours * 60 + minutes : Number.NaN;
+}
+
+function minutesBetween(start: string, end: string) {
+  const diff = toMinutes(end) - toMinutes(start);
+  return Number.isFinite(diff) ? diff : 0;
+}
+
+function addMinutes(time: string, minutes: number) {
+  const total = (toMinutes(time) + minutes) % (24 * 60);
+  return `${String(Math.floor(total / 60)).padStart(2, "0")}:${String(total % 60).padStart(2, "0")}`;
+}
+
 export function AppointmentFormDialog({
   defaultDate,
   patients,
@@ -46,8 +63,8 @@ export function AppointmentFormDialog({
   const [state, formAction, pending] = useActionState(createAppointment, initialState);
   const [procedureList, setProcedureList] = useState(procedures);
   const [procedureId, setProcedureId] = useState("");
-  const [newProcedureOpen, setNewProcedureOpen] = useState(false);
-  const [newProcedureName, setNewProcedureName] = useState("");
+  const [startTime, setStartTime] = useState("09:00");
+  const [endTime, setEndTime] = useState("10:00");
 
   const [prevState, setPrevState] = useState(state);
   if (state !== prevState) {
@@ -55,19 +72,24 @@ export function AppointmentFormDialog({
     if (state.success) setOpen(false);
   }
 
-  function handleCreateProcedure() {
-    const trimmed = newProcedureName.trim();
-    if (!trimmed) return;
-    createProcedure(trimmed).then((result) => {
+  function handleCreateProcedure(name: string) {
+    createProcedure(name).then((result) => {
       if ("error" in result) {
         toast.error(result.error);
         return;
       }
-      setProcedureList((prev) => [...prev, { id: result.id, name: trimmed, price: null }]);
+      setProcedureList((prev) => [...prev, { id: result.id, name, price: null }]);
       setProcedureId(result.id);
-      setNewProcedureName("");
-      setNewProcedureOpen(false);
+      toast.success(`Procedimento “${name}” cadastrado.`);
     });
+  }
+
+  // Mantém a consulta com a mesma duração ao mudar o início, em vez de
+  // deixar um horário final inválido para trás.
+  function handleStartTimeChange(next: string) {
+    const duration = minutesBetween(startTime, endTime);
+    setStartTime(next);
+    if (next && duration > 0) setEndTime(addMinutes(next, duration));
   }
 
   return (
@@ -84,7 +106,6 @@ export function AppointmentFormDialog({
 
         <form action={formAction} className="space-y-4">
           <input type="hidden" name="status" value="scheduled" />
-          <input type="hidden" name="procedureId" value={procedureId} />
 
           {state.error && (
             <Alert variant="destructive">
@@ -94,21 +115,13 @@ export function AppointmentFormDialog({
 
           <div className="space-y-2">
             <Label htmlFor="patientId">Paciente</Label>
-            <Select
+            <Combobox
+              id="patientId"
               name="patientId"
-              items={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
-            >
-              <SelectTrigger id="patientId" className="w-full">
-                <SelectValue placeholder="Selecione o paciente" />
-              </SelectTrigger>
-              <SelectContent>
-                {patients.map((patient) => (
-                  <SelectItem key={patient.id} value={patient.id}>
-                    {patient.name}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
+              placeholder="Digite para buscar o paciente"
+              emptyMessage="Nenhum paciente encontrado."
+              options={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
+            />
             {state.fieldErrors?.patientId && (
               <p className="text-sm text-destructive">{state.fieldErrors.patientId[0]}</p>
             )}
@@ -138,48 +151,20 @@ export function AppointmentFormDialog({
           </div>
 
           <div className="space-y-2">
-            <Label>Procedimento</Label>
-            {newProcedureOpen ? (
-              <div className="flex items-center gap-2">
-                <Input
-                  autoFocus
-                  placeholder="Nome do procedimento"
-                  value={newProcedureName}
-                  onChange={(e) => setNewProcedureName(e.target.value)}
-                  onKeyDown={(e) => {
-                    if (e.key === "Enter") {
-                      e.preventDefault();
-                      handleCreateProcedure();
-                    }
-                  }}
-                />
-                <Button type="button" size="sm" onClick={handleCreateProcedure}>
-                  Adicionar
-                </Button>
-              </div>
-            ) : (
-              <div className="flex items-center gap-2">
-                <Select
-                  items={procedureList.map((procedure) => ({ value: procedure.id, label: procedure.name }))}
-                  value={procedureId}
-                  onValueChange={(v) => setProcedureId(v ?? "")}
-                >
-                  <SelectTrigger className="w-full">
-                    <SelectValue placeholder="Sem procedimento definido" />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {procedureList.map((procedure) => (
-                      <SelectItem key={procedure.id} value={procedure.id}>
-                        {procedure.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-                <Button type="button" variant="outline" size="sm" onClick={() => setNewProcedureOpen(true)}>
-                  <Plus className="size-4" />
-                </Button>
-              </div>
-            )}
+            <Label htmlFor="procedureId">Procedimento</Label>
+            <Combobox
+              id="procedureId"
+              name="procedureId"
+              placeholder="Digite para buscar ou cadastrar"
+              emptyMessage="Nenhum procedimento com esse nome."
+              options={procedureList.map((procedure) => ({ value: procedure.id, label: procedure.name }))}
+              value={procedureId}
+              onValueChange={setProcedureId}
+              onCreate={handleCreateProcedure}
+            />
+            <p className="text-xs text-muted-foreground">
+              Não achou? Digite o nome e escolha “Cadastrar” para incluir no catálogo da clínica.
+            </p>
           </div>
 
           <div className="grid grid-cols-3 gap-4">
@@ -189,11 +174,16 @@ export function AppointmentFormDialog({
             </div>
             <div className="space-y-2">
               <Label htmlFor="startTime">Início</Label>
-              <Input id="startTime" name="startTime" type="time" defaultValue="09:00" required />
+              <TimeField
+                id="startTime"
+                name="startTime"
+                value={startTime}
+                onValueChange={handleStartTimeChange}
+              />
             </div>
             <div className="space-y-2">
               <Label htmlFor="endTime">Fim</Label>
-              <Input id="endTime" name="endTime" type="time" defaultValue="10:00" required />
+              <TimeField id="endTime" name="endTime" value={endTime} onValueChange={setEndTime} />
             </div>
             {state.fieldErrors?.endTime && (
               <p className="col-span-3 text-sm text-destructive">{state.fieldErrors.endTime[0]}</p>
