@@ -255,6 +255,39 @@ export async function updateMemberColor(memberUserId: string, color: string | nu
   return { success: true };
 }
 
+/**
+ * Tira a pessoa da clínica de vez. Diferente de desativar: some da lista
+ * e o histórico perde o nome dela (agendamentos e atendimentos antigos
+ * passam a mostrar "—"), porque o nome vive no vínculo, não no registro.
+ * A conta de acesso em si continua existindo — só deixa de pertencer a
+ * esta clínica.
+ */
+export async function deleteMember(memberUserId: string) {
+  const owner = await requireOwner();
+  if (!owner) return { error: NOT_OWNER_ERROR };
+
+  if (memberUserId === owner.userId) {
+    return { error: "Você não pode remover a própria conta da clínica." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("clinic_members")
+    .delete()
+    .eq("user_id", memberUserId)
+    .eq("clinic_id", owner.clinicId)
+    .neq("role", "owner");
+
+  if (error) {
+    console.error("deleteMember falhou:", error.message);
+    return { error: "Não foi possível remover este usuário." };
+  }
+
+  revalidatePath("/configuracoes/usuarios");
+  revalidatePath("/agenda");
+  return { success: true };
+}
+
 export async function toggleMemberStatus(memberUserId: string, status: "active" | "inactive") {
   const owner = await requireOwner();
   if (!owner) return { error: NOT_OWNER_ERROR };

@@ -2,7 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { updateMemberPermissions, toggleMemberStatus } from "@/actions/users";
+import { Trash2 } from "lucide-react";
+import { deleteMember, updateMemberPermissions, toggleMemberStatus } from "@/actions/users";
 import {
   DEFAULT_PERMISSIONS,
   PERMISSION_GROUPS,
@@ -13,6 +14,17 @@ import {
 } from "@/lib/auth/permissions";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 import {
   Dialog,
   DialogContent,
@@ -25,11 +37,13 @@ import {
 
 export function MemberActions({
   userId,
+  name,
   role,
   permissions,
   status,
 }: {
   userId: string;
+  name: string;
   role: ClinicRole;
   permissions: Partial<Permissions>;
   status: "active" | "inactive";
@@ -44,6 +58,14 @@ export function MemberActions({
       const result = await toggleMemberStatus(userId, next);
       if (result?.error) toast.error(result.error);
       else toast.success(next === "active" ? "Usuário reativado." : "Usuário desativado.");
+    });
+  }
+
+  function handleDelete() {
+    startTransition(async () => {
+      const result = await deleteMember(userId);
+      if (result?.error) toast.error(result.error);
+      else toast.success("Usuário removido da clínica.");
     });
   }
 
@@ -122,6 +144,40 @@ export function MemberActions({
       >
         {status === "active" ? "Desativar" : "Reativar"}
       </Button>
+
+      <AlertDialog>
+        <AlertDialogTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-destructive"
+              aria-label={`Remover ${name} da clínica`}
+            />
+          }
+        >
+          <Trash2 className="size-4" />
+        </AlertDialogTrigger>
+        <AlertDialogContent>
+          <AlertDialogHeader>
+            <AlertDialogTitle>Remover {name} da clínica?</AlertDialogTitle>
+            <AlertDialogDescription>
+              A pessoa perde o acesso na hora e sai desta lista. Os atendimentos e agendamentos
+              que ela fez continuam no sistema, mas deixam de mostrar o nome dela.
+            </AlertDialogDescription>
+          </AlertDialogHeader>
+          <p className="text-sm text-muted-foreground">
+            Se ela saiu da clínica mas você quer manter o histórico com o nome, use
+            &quot;Desativar&quot; — o acesso é bloqueado do mesmo jeito.
+          </p>
+          <AlertDialogFooter>
+            <AlertDialogCancel>Cancelar</AlertDialogCancel>
+            <AlertDialogAction onClick={handleDelete} disabled={isPending}>
+              Remover
+            </AlertDialogAction>
+          </AlertDialogFooter>
+        </AlertDialogContent>
+      </AlertDialog>
     </div>
   );
 }

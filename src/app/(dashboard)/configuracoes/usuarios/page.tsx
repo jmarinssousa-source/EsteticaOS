@@ -101,6 +101,7 @@ export default async function UsuariosPage() {
                       ) : (
                         <MemberActions
                           userId={m.user_id}
+                          name={m.full_name}
                           role={m.role as ClinicRole}
                           permissions={(m.permissions ?? {}) as Partial<Permissions>}
                           status={m.status as "active" | "inactive"}

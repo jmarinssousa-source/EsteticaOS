@@ -75,3 +75,107 @@ export async function updatePatient(
   revalidatePath("/pacientes");
   return { success: true };
 }
+
+/**
+ * Quanto histórico some junto com o paciente. A tela mostra estes
+ * números antes de confirmar, porque um cadastro de teste e um paciente
+ * com dois anos de atendimento são idênticos na lista.
+ */
+export type PatientDeletionSummary = {
+  name: string;
+  appointments: number;
+  sessions: number;
+  records: number;
+  photos: number;
+  budgets: number;
+  anamnesis: number;
+  consents: number;
+  financialEntries: number;
+};
+
+async function countFor(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  table: string,
+  patientId: string,
+) {
+  const { count } = await supabase
+    .from(table)
+    .select("id", { count: "exact", head: true })
+    .eq("patient_id", patientId);
+  return count ?? 0;
+}
+
+export async function getPatientDeletionSummary(
+  patientId: string,
+): Promise<PatientDeletionSummary | null> {
+  const member = await requirePermission("patients_view");
+  const supabase = await createClient();
+
+  const { data: patient } = await supabase
+    .from("patients")
+    .select("name")
+    .eq("id", patientId)
+    .eq("clinic_id", member.clinicId)
+    .maybeSingle();
+
+  if (!patient) return null;
+
+  const [appointments, sessions, records, photos, budgets, anamnesis, consents, financialEntries] =
+    await Promise.all([
+      countFor(supabase, "appointments", patientId),
+      countFor(supabase, "sessions", patientId),
+      countFor(supabase, "patient_records", patientId),
+      countFor(supabase, "patient_photos", patientId),
+      countFor(supabase, "budgets", patientId),
+      countFor(supabase, "anamnesis_responses", patientId),
+      countFor(supabase, "consent_forms", patientId),
+      countFor(supabase, "financial_entries", patientId),
+    ]);
+
+  return {
+    name: patient.name,
+    appointments,
+    sessions,
+    records,
+    photos,
+    budgets,
+    anamnesis,
+    consents,
+    financialEntries,
+  };
+}
+
+/**
+ * Exclui o paciente e, por cascata do banco, agenda, sessões, prontuário,
+ * fotos, orçamentos, anamneses e termos dele. Os lançamentos financeiros
+ * ficam (só perdem o vínculo), para o caixa da clínica não mudar
+ * retroativamente, e o lead de origem no CRM também sobrevive.
+ *
+ * Restrito a dono e gerente: apagar prontuário é decisão de quem
+ * administra a clínica, não de quem só edita cadastro no dia a dia.
+ */
+export async function deletePatient(patientId: string): Promise<ActionResult> {
+  const member = await requirePermission("patients_edit");
+
+  if (member.role !== "owner" && member.role !== "manager") {
+    return { error: "Só o dono ou o gerente da clínica pode excluir um paciente." };
+  }
+
+  const supabase = await createClient();
+  const { error } = await supabase
+    .from("patients")
+    .delete()
+    .eq("id", patientId)
+    .eq("clinic_id", member.clinicId);
+
+  if (error) {
+    console.error("deletePatient falhou:", error.message);
+    return { error: "Não foi possível excluir o paciente." };
+  }
+
+  revalidatePath("/pacientes");
+  revalidatePath("/crm");
+  revalidatePath("/agenda");
+  revalidatePath("/financeiro");
+  return { success: true };
+}
