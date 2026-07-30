@@ -97,7 +97,7 @@ export function SessionDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+      <DialogContent className="max-h-[85dvh] max-w-lg overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{patient?.name ?? "Sessão"}</DialogTitle>
           <DialogDescription>Edite a sessão, mude o status ou colete as assinaturas.</DialogDescription>

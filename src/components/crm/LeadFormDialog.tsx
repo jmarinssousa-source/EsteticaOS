@@ -47,7 +47,7 @@ export function LeadFormDialog({ members }: { members: { user_id: string; full_n
         <Plus className="size-4" />
         Novo lead
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Novo lead</DialogTitle>
           <DialogDescription>Cadastre um novo contato no funil.</DialogDescription>

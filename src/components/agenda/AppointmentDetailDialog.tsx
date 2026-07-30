@@ -81,7 +81,7 @@ export function AppointmentDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>{patientName}</DialogTitle>
           <DialogDescription>Edite o agendamento, mude o status ou reagende.</DialogDescription>
@@ -141,8 +141,8 @@ export function AppointmentDetailDialog({
             </div>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            <div className="col-span-2 space-y-2 sm:col-span-1">
               <Label>Data</Label>
               <Input
                 type="date"

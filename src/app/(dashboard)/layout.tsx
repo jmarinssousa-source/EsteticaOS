@@ -32,11 +32,15 @@ export default async function DashboardLayout({
 
   return (
     <TooltipProvider>
-      <div className="flex min-h-screen">
+      {/* `dvh` em vez de `vh`: no Safari do iPhone a barra de endereço entra
+          na conta do `100vh` e a tela fica sempre um pouco mais alta que o
+          visível. `min-w-0` impede que uma tabela larga estique a coluna de
+          conteúdo e, com ela, a página inteira para os lados. */}
+      <div className="flex min-h-dvh">
         <div className="print:hidden">
           <Sidebar clinicName={member.clinicName} role={member.role} permissions={member.permissions} />
         </div>
-        <div className="flex min-h-screen flex-1 flex-col">
+        <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
           <div className="print:hidden">
             <Topbar
               clinicName={member.clinicName}
