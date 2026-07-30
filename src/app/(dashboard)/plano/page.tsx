@@ -5,7 +5,6 @@ import { supportWhatsAppUrl } from "@/lib/brand";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { SettingsBackLink } from "@/components/settings/SettingsBackLink";
 
 export const metadata = { title: "Plano — EstéticaOS" };
 
@@ -36,7 +35,6 @@ export default async function PlanoPage() {
 
   return (
     <div className="space-y-4">
-      <SettingsBackLink />
       <div>
         <h1 className="text-2xl font-bold tracking-tight">Plano</h1>
         <p className="text-sm text-muted-foreground">

@@ -63,11 +63,24 @@ export function resolveClinicPlan(row: {
   };
 }
 
-/** Dias inteiros até a data, contando o dia de hoje como 0. */
+/**
+ * Dias de calendário até a data, contando hoje como 0.
+ *
+ * A conta é feita entre as meias-noites, não entre os instantes. Dividir
+ * a diferença bruta em milissegundos deslocava tudo em um dia: um teste
+ * criado às 14h e vencendo daqui a 7 dias dava 6,99 dias, virava 6 no
+ * arredondamento para baixo, e o último dia era anunciado como vencido
+ * enquanto ainda valia. Assim quem assina hoje vê "faltam 7 dias", e no
+ * dia do vencimento vê "termina hoje" — com o dia inteiro ainda liberado.
+ *
+ * `round` em vez de `floor` porque dia de mudança de horário de verão
+ * tem 23 ou 25 horas.
+ */
 export function daysUntil(iso: string, now = new Date()): number {
   const end = new Date(iso);
-  const diff = end.getTime() - now.getTime();
-  return Math.floor(diff / (1000 * 60 * 60 * 24));
+  const endMidnight = new Date(end.getFullYear(), end.getMonth(), end.getDate());
+  const todayMidnight = new Date(now.getFullYear(), now.getMonth(), now.getDate());
+  return Math.round((endMidnight.getTime() - todayMidnight.getTime()) / (1000 * 60 * 60 * 24));
 }
 
 export function describeTrial(plan: ClinicPlan): string {
