@@ -33,7 +33,10 @@ export function MonthView({
     <div className="overflow-hidden rounded-lg border">
       <div className="grid grid-cols-7 border-b bg-muted/40">
         {WEEKDAY_HEADERS.map((label) => (
-          <div key={label} className="p-2 text-center text-xs font-medium text-muted-foreground">
+          <div
+            key={label}
+            className="p-1 text-center text-[10px] font-medium text-muted-foreground sm:p-2 sm:text-xs"
+          >
             {label}
           </div>
         ))}
@@ -50,7 +53,7 @@ export function MonthView({
               key={toISODate(day)}
               href={hrefFor(day)}
               className={cn(
-                "flex min-h-24 flex-col gap-1 border-b border-r p-1.5 text-left transition-colors last:border-r-0 hover:bg-accent/50",
+                "flex min-h-16 flex-col gap-1 border-b border-r p-1 text-left transition-colors last:border-r-0 hover:bg-accent/50 sm:min-h-24 sm:p-1.5",
                 !isCurrentMonth && "bg-muted/20 text-muted-foreground",
               )}
             >
@@ -62,7 +65,31 @@ export function MonthView({
               >
                 {day.getDate()}
               </span>
-              <div className="space-y-0.5">
+              {/* Sete colunas num celular deixam cada dia com ~45px: nome do
+                  paciente e horário viram um borrão cortado. Até `sm` o dia
+                  mostra só uma bolinha por agendamento, com a cor do
+                  profissional; a lista escrita volta no tablet/desktop. */}
+              <div className="flex flex-wrap gap-0.5 sm:hidden">
+                {dayAppointments.slice(0, 6).map((appointment) => {
+                  const professional = professionals.find(
+                    (p) => p.user_id === appointment.professional_id,
+                  );
+                  const color = getProfessionalColor(
+                    appointment.professional_id,
+                    professional?.color,
+                  );
+                  return (
+                    <span
+                      key={appointment.id}
+                      className={cn(
+                        "size-1.5 rounded-full",
+                        color ? color.dot : "bg-muted-foreground/50",
+                      )}
+                    />
+                  );
+                })}
+              </div>
+              <div className="hidden space-y-0.5 sm:block">
                 {dayAppointments.slice(0, 3).map((appointment) => {
                   const patient = patients.find((p) => p.id === appointment.patient_id);
                   const professional = professionals.find(

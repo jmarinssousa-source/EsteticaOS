@@ -1,10 +1,11 @@
 "use server";
 
-import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { resolveSiteUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_ANAMNESIS_TEMPLATES } from "@/lib/anamnesis/default-templates";
+import { trialEndDate } from "@/lib/plan/trial";
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -59,13 +60,6 @@ function safeInternalPath(value: unknown, fallback = "/hoje") {
   return value;
 }
 
-async function getSiteUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  const headersList = await headers();
-  const host = headersList.get("host");
-  const protocol = host?.startsWith("localhost") ? "http" : "https";
-  return `${protocol}://${host}`;
-}
 
 export async function signUp(
   _prevState: ActionState,
@@ -85,7 +79,7 @@ export async function signUp(
   }
 
   const { responsibleName, clinicName, email, phone, password } = parsed.data;
-  const siteUrl = await getSiteUrl();
+  const siteUrl = await resolveSiteUrl();
   const supabase = await createClient();
 
   const { data: signUpData, error: signUpError } = await supabase.auth.signUp({
@@ -146,9 +140,18 @@ export async function signUp(
     redirect(`/verificar-email?email=${encodeURIComponent(email)}`);
   }
 
+  // O teste de 7 dias começa a contar da criação da clínica, não do
+  // primeiro acesso: assim a data já existe mesmo se a pessoa demorar
+  // para confirmar o e-mail.
   const { data: clinic, error: clinicError } = await admin
     .from("clinics")
-    .insert({ name: clinicName, phone, email })
+    .insert({
+      name: clinicName,
+      phone,
+      email,
+      plan_status: "trial",
+      trial_ends_at: trialEndDate(),
+    })
     .select("id")
     .single();
 
@@ -180,7 +183,7 @@ export async function signUp(
 export async function resendVerificationEmail(email: string): Promise<ActionState> {
   if (!email) return { error: "E-mail inválido." };
 
-  const siteUrl = await getSiteUrl();
+  const siteUrl = await resolveSiteUrl();
   const supabase = await createClient();
 
   const { error } = await supabase.auth.resend({
@@ -243,7 +246,7 @@ export async function requestPasswordReset(
     return { fieldErrors: parsed.error.flatten().fieldErrors };
   }
 
-  const siteUrl = await getSiteUrl();
+  const siteUrl = await resolveSiteUrl();
   const supabase = await createClient();
 
   // Always return success, whether or not the e-mail exists, to avoid
@@ -258,7 +261,7 @@ export async function requestPasswordReset(
 export async function requestOwnPasswordReset(email: string): Promise<ActionState> {
   if (!email) return { error: "E-mail inválido." };
 
-  const siteUrl = await getSiteUrl();
+  const siteUrl = await resolveSiteUrl();
   const supabase = await createClient();
 
   const { error } = await supabase.auth.resetPasswordForEmail(email, {

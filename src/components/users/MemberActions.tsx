@@ -14,6 +14,7 @@ import {
 } from "@/lib/auth/permissions";
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
+import { TooltipHint } from "@/components/ui/tooltip-hint";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -88,7 +89,7 @@ export function MemberActions({
         >
           Permissões
         </DialogTrigger>
-        <DialogContent className="max-h-[85vh] max-w-lg overflow-y-auto">
+        <DialogContent className="max-h-[85dvh] max-w-lg overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Permissões</DialogTitle>
             <DialogDescription>
@@ -146,18 +147,20 @@ export function MemberActions({
       </Button>
 
       <AlertDialog>
-        <AlertDialogTrigger
-          render={
-            <Button
-              variant="ghost"
-              size="icon"
-              className="size-8 text-muted-foreground hover:text-destructive"
-              aria-label={`Remover ${name} da clínica`}
-            />
-          }
-        >
-          <Trash2 className="size-4" />
-        </AlertDialogTrigger>
+        <TooltipHint label={`Remover ${name} da clínica`}>
+          <AlertDialogTrigger
+            render={
+              <Button
+                variant="ghost"
+                size="icon"
+                className="size-8 text-muted-foreground hover:text-destructive"
+                aria-label={`Remover ${name} da clínica`}
+              />
+            }
+          >
+            <Trash2 className="size-4" />
+          </AlertDialogTrigger>
+        </TooltipHint>
         <AlertDialogContent>
           <AlertDialogHeader>
             <AlertDialogTitle>Remover {name} da clínica?</AlertDialogTitle>

@@ -1,9 +1,10 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentMember } from "@/lib/auth/session";
+import { getClinicPlan, getCurrentMember } from "@/lib/auth/session";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TrialBanner } from "@/components/plan/TrialBanner";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 export default async function DashboardLayout({
   children,
@@ -30,13 +31,19 @@ export default async function DashboardLayout({
     redirect("/conta-desativada");
   }
 
+  const plan = await getClinicPlan();
+
   return (
-    <TooltipProvider>
-      <div className="flex min-h-screen">
+    <>
+      {/* `dvh` em vez de `vh`: no Safari do iPhone a barra de endereço entra
+          na conta do `100vh` e a tela fica sempre um pouco mais alta que o
+          visível. `min-w-0` impede que uma tabela larga estique a coluna de
+          conteúdo e, com ela, a página inteira para os lados. */}
+      <div className="flex min-h-dvh">
         <div className="print:hidden">
           <Sidebar clinicName={member.clinicName} role={member.role} permissions={member.permissions} />
         </div>
-        <div className="flex min-h-screen flex-1 flex-col">
+        <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
           <div className="print:hidden">
             <Topbar
               clinicName={member.clinicName}
@@ -47,10 +54,12 @@ export default async function DashboardLayout({
             />
           </div>
           <main className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-6 print:overflow-visible print:bg-white print:p-0">
+            <TrialBanner plan={plan} canManage={member.role === "owner"} />
             {children}
+            <InstallPrompt />
           </main>
         </div>
       </div>
-    </TooltipProvider>
+    </>
   );
 }

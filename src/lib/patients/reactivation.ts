@@ -1,4 +1,5 @@
 import type { SupabaseClient } from "@supabase/supabase-js";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 
 export const DEFAULT_INACTIVE_PATIENT_DAYS = 90;
 
@@ -62,13 +63,21 @@ export async function getInactivePatients(
   clinicId: string,
   inactiveDays: number,
 ): Promise<InactivePatient[]> {
-  const [{ data: patients }, { data: activity }] = await Promise.all([
-    supabase.from("patients").select("id, name, phone").eq("clinic_id", clinicId),
-    supabase
-      .from("patient_activity")
-      .select("patient_id, created_at, last_appointment, last_session, next_appointment")
-      .eq("clinic_id", clinicId),
+  // Varredura completa de propósito: com o corte de mil linhas do
+  // PostgREST, uma clínica com base grande veria só um pedaço da lista de
+  // quem sumiu — e justamente os nomes do começo do alfabeto.
+  const [patients, activity] = await Promise.all([
+    fetchAllRows<{ id: string; name: string; phone: string | null }>(() =>
+      supabase.from("patients").select("id, name, phone").eq("clinic_id", clinicId).order("id"),
+    ),
+    fetchAllRows<PatientActivity>(() =>
+      supabase
+        .from("patient_activity")
+        .select("patient_id, created_at, last_appointment, last_session, next_appointment")
+        .eq("clinic_id", clinicId)
+        .order("patient_id"),
+    ),
   ]);
 
-  return findInactivePatients(patients ?? [], (activity ?? []) as PatientActivity[], inactiveDays);
+  return findInactivePatients(patients, activity, inactiveDays);
 }

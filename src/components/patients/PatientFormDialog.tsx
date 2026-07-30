@@ -40,7 +40,7 @@ export function PatientFormDialog() {
         <Plus className="size-4" />
         Novo paciente
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>Novo paciente</DialogTitle>
           <DialogDescription>Cadastre um paciente diretamente, sem passar pelo CRM.</DialogDescription>

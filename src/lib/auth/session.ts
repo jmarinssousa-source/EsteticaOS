@@ -3,6 +3,7 @@ import { cache } from "react";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission, type ClinicRole, type Permissions, type PermissionKey } from "@/lib/auth/permissions";
+import { resolveClinicPlan, type ClinicPlan } from "@/lib/plan/trial";
 
 export type CurrentMember = {
   userId: string;
@@ -49,6 +50,29 @@ export const getCurrentMember = cache(
     };
   },
 );
+
+/**
+ * Situação do plano da clínica atual.
+ *
+ * Tolera o banco sem as colunas de teste (migração 0017 ainda não
+ * aplicada): nesse caso devolve "assinatura ativa", que é o
+ * comportamento de antes — ninguém fica trancado do lado de fora porque
+ * um SQL não rodou.
+ */
+export const getClinicPlan = cache(async (): Promise<ClinicPlan> => {
+  const member = await getCurrentMember();
+  if (!member) return resolveClinicPlan(null);
+
+  const supabase = await createClient();
+  const { data, error } = await supabase
+    .from("clinics")
+    .select("plan_status, trial_ends_at, never_expires")
+    .eq("id", member.clinicId)
+    .maybeSingle();
+
+  if (error) return resolveClinicPlan(null);
+  return resolveClinicPlan(data);
+});
 
 /**
  * Use at the top of a page/action to enforce a granular permission. Assumes

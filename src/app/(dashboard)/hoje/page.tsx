@@ -25,6 +25,8 @@ import {
   DEFAULT_INACTIVE_PATIENT_DAYS,
   getInactivePatients,
 } from "@/lib/patients/reactivation";
+import { getTodaysBirthdays } from "@/lib/patients/birthdays";
+import { BirthdaysCard } from "@/components/dashboard/BirthdaysCard";
 
 export const metadata = { title: "Hoje — EstéticaOS" };
 
@@ -157,9 +159,12 @@ export default async function HojePage({
   // Reativação depende da lista de pacientes + agenda, então roda depois
   // de saber o prazo configurado pela clínica.
   const inactiveDays = clinic?.inactive_patient_days ?? DEFAULT_INACTIVE_PATIENT_DAYS;
-  const inactivePatients = canViewPatients
-    ? await getInactivePatients(supabase, member.clinicId, inactiveDays)
-    : [];
+  const [inactivePatients, birthdays] = canViewPatients
+    ? await Promise.all([
+        getInactivePatients(supabase, member.clinicId, inactiveDays),
+        getTodaysBirthdays(supabase, member.clinicId),
+      ])
+    : [[], []];
 
   const staleLeadDays = clinic?.stale_lead_days ?? 3;
   const openLeads = leads ?? [];
@@ -231,6 +236,10 @@ export default async function HojePage({
         </h1>
         <p className="text-muted-foreground">{member.clinicName}</p>
       </div>
+
+      {canViewPatients && (
+        <BirthdaysCard birthdays={birthdays} clinicName={member.clinicName} />
+      )}
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {canViewGoal && (

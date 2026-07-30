@@ -281,7 +281,7 @@ export function ProductFormDialog({ product }: { product: Product | null }) {
           </>
         )}
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{product ? "Editar produto" : "Novo produto"}</DialogTitle>
           <DialogDescription>

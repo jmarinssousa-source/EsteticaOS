@@ -6,6 +6,7 @@ import { usePathname } from "next/navigation";
 import { Menu } from "lucide-react";
 import { cn } from "@/lib/utils";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip-hint";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
 import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { hasPermission, type ClinicRole, type Permissions } from "@/lib/auth/permissions";
@@ -25,11 +26,15 @@ export function MobileNav({
 
   return (
     <Sheet open={open} onOpenChange={setOpen}>
-      <SheetTrigger
-        render={<Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir menu" />}
-      >
-        <Menu className="size-5" />
-      </SheetTrigger>
+      <TooltipHint label="Abrir o menu do sistema">
+        <SheetTrigger
+          render={
+            <Button variant="ghost" size="icon" className="md:hidden" aria-label="Abrir menu" />
+          }
+        >
+          <Menu className="size-5" />
+        </SheetTrigger>
+      </TooltipHint>
       <SheetContent side="left" className="w-64 p-0">
         <SheetHeader className="border-b px-6 py-4">
           <SheetTitle>EstéticaOS</SheetTitle>

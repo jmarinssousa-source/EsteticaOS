@@ -115,7 +115,7 @@ export function PackageFormDialog({
   return (
     <Dialog open={open} onOpenChange={setOpen}>
       <DialogTrigger render={trigger} />
-      <DialogContent className="max-h-[85vh] overflow-y-auto">
+      <DialogContent className="max-h-[85dvh] overflow-y-auto">
         <DialogHeader>
           <DialogTitle>{pkg ? "Editar pacote" : "Novo pacote"}</DialogTitle>
           <DialogDescription>
@@ -135,7 +135,7 @@ export function PackageFormDialog({
             <Input value={form.name} onChange={(e) => setForm((f) => ({ ...f, name: e.target.value }))} />
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
             <div className="space-y-2">
               <Label>Sessões</Label>
               <Input
@@ -152,7 +152,7 @@ export function PackageFormDialog({
                 onValueChange={(price) => setForm((f) => ({ ...f, price }))}
               />
             </div>
-            <div className="space-y-2">
+            <div className="col-span-2 space-y-2 sm:col-span-1">
               <Label>Validade (dias)</Label>
               <Input
                 type="number"

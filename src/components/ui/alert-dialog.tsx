@@ -52,7 +52,11 @@ function AlertDialogContent({
         data-slot="alert-dialog-content"
         data-size={size}
         className={cn(
-          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid w-full -translate-x-1/2 -translate-y-1/2 gap-4 rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-xs data-[size=sm]:max-w-xs data-[size=default]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
+          // `max-w-[calc(100%-2rem)]` e `max-h-[calc(100dvh-2rem)]` seguram o
+          // card dentro da tela do celular: sem eles um texto de confirmação
+          // longo vaza para fora da área visível e não há como rolar até os
+          // botões.
+          "group/alert-dialog-content fixed top-1/2 left-1/2 z-50 grid max-h-[calc(100dvh-2rem)] w-full -translate-x-1/2 -translate-y-1/2 gap-4 overflow-y-auto rounded-xl bg-popover p-4 text-popover-foreground ring-1 ring-foreground/10 duration-100 outline-none data-[size=default]:max-w-[min(20rem,calc(100%-2rem))] data-[size=sm]:max-w-[min(20rem,calc(100%-2rem))] data-[size=default]:sm:max-w-sm data-open:animate-in data-open:fade-in-0 data-open:zoom-in-95 data-closed:animate-out data-closed:fade-out-0 data-closed:zoom-out-95",
           className
         )}
         {...props}
@@ -141,14 +145,22 @@ function AlertDialogDescription({
   )
 }
 
+// Confirmar precisa fechar o diálogo, igual ao Cancelar — por isso o botão
+// é um `Close` do Base UI, e não um `Button` solto. Com um `Button` solto o
+// `onClick` rodava mas o popup ficava aberto sobre a tela já atualizada.
+// O `onClick` de quem usa continua sendo chamado antes do fechamento.
 function AlertDialogAction({
   className,
+  variant,
+  size,
   ...props
-}: React.ComponentProps<typeof Button>) {
+}: AlertDialogPrimitive.Close.Props &
+  Pick<React.ComponentProps<typeof Button>, "variant" | "size">) {
   return (
-    <Button
+    <AlertDialogPrimitive.Close
       data-slot="alert-dialog-action"
       className={cn(className)}
+      render={<Button variant={variant} size={size} />}
       {...props}
     />
   )

@@ -13,7 +13,7 @@ Escopo implementado: cadastro de clínica com verificação de e-mail, login, re
 3. Copie `.env.local.example` para `.env.local` e preencha os três valores.
 4. Em **Authentication > URL Configuration**, adicione `http://localhost:3000/auth/callback` (e a URL de produção, quando houver) às Redirect URLs.
 5. Confirme que **Authentication > Providers > Email > Confirm email** está habilitado (obrigatório para o fluxo de verificação de e-mail).
-6. Rode, em ordem, o SQL de cada arquivo em `supabase/migrations/` (0001 a 0015) no **SQL Editor** do Supabase — ou via Supabase CLI, se o projeto estiver linkado. A migração `0008_prontuario.sql` cria também o bucket de Storage `patient-media` (privado); confirme em **Storage** que ele existe após rodar essa migração.
+6. Rode, em ordem, o SQL de cada arquivo em `supabase/migrations/` (0001 até a última) no **SQL Editor** do Supabase — ou via Supabase CLI, se o projeto estiver linkado. A migração `0008_prontuario.sql` cria também o bucket de Storage `patient-media` (privado); confirme em **Storage** que ele existe após rodar essa migração.
 7. Instale as dependências e suba o servidor:
 
 ```bash
@@ -37,9 +37,45 @@ Abra [http://localhost:3000](http://localhost:3000). O cadastro em `/cadastro` c
    - `NEXT_PUBLIC_SUPABASE_URL`
    - `NEXT_PUBLIC_SUPABASE_ANON_KEY`
    - `SUPABASE_SERVICE_ROLE_KEY` — **nunca** prefixe com `NEXT_PUBLIC_`; sem esse prefixo o Next.js não inclui a variável no bundle enviado ao navegador, mantendo-a só no servidor.
-   - `NEXT_PUBLIC_SITE_URL` — a URL final do deploy (ex.: `https://esteticaos.vercel.app` ou o domínio próprio), usada para montar os links de confirmação de e-mail/redefinição de senha.
+   - `NEXT_PUBLIC_SITE_URL` — `https://esteticaos.com` em produção, usada para montar os links de confirmação de e-mail e redefinição de senha.
 4. Clique em **Deploy**.
-5. Depois do primeiro deploy, no Supabase em **Authentication > URL Configuration**, adicione `https://<seu-domínio>/auth/callback` às Redirect URLs (mantendo a de `localhost` para continuar testando localmente).
-6. Se usar um domínio próprio na Vercel, atualize `NEXT_PUBLIC_SITE_URL` no projeto da Vercel e refaça o deploy (ou redeploy) para o valor entrar em vigor.
+
+## Domínio próprio (esteticaos.com)
+
+O endereço oficial é `https://esteticaos.com`, sem `www` — o `www` só
+redireciona para ele. O domínio está registrado na Hostinger e apontado
+para a Vercel.
+
+Nenhum domínio está escrito no código: tudo sai de `NEXT_PUBLIC_SITE_URL`
+(veja `src/lib/site-url.ts`). Trocar de endereço é mudar essa variável e
+refazer o deploy.
+
+1. **Vercel > Settings > Domains**: adicione `esteticaos.com` e
+   `www.esteticaos.com`, deixando o `www` como redirecionamento para o
+   domínio sem `www`. A Vercel mostra os registros de DNS a criar.
+2. **Hostinger > DNS**: crie os registros que a Vercel indicou e remova
+   os registros `A`/`CNAME` que a Hostinger cria sozinha para a página de
+   parking — eles conflitam e o domínio fica intermitente.
+3. **Vercel > Settings > Environment Variables**: defina
+   `NEXT_PUBLIC_SITE_URL=https://esteticaos.com`, sem barra no fim.
+   Variável nova só vale em build novo: faça um **redeploy**.
+4. **Supabase > Authentication > URL Configuration**:
+   - **Site URL**: `https://esteticaos.com`
+   - **Redirect URLs**: acrescente `https://esteticaos.com/auth/callback`
+
+   Mantenha na lista a URL antiga da Vercel e a de `localhost`. Se
+   removê-las, os links de redefinição de senha já enviados param de
+   funcionar e o ambiente local deixa de autenticar.
+
+Sem o passo 4 o sintoma é traiçoeiro: cadastro e login seguem
+funcionando, mas todo e-mail de confirmação, convite e redefinição de
+senha leva o usuário para o endereço antigo.
+
+## E-mails (SMTP)
+
+Configuração do envio e os textos dos três e-mails de autenticação estão
+em [`docs/smtp.md`](docs/smtp.md), com os modelos prontos em
+`docs/emails/`. Faça depois do domínio: o provedor só libera o envio com
+o domínio já verificado.
 
 Nenhuma chave sensível fica no código-fonte: o `.env.local` é ignorado pelo Git (`.gitignore`) e a `service_role key` só é lida em código que roda no servidor (`src/lib/supabase/admin.ts`, marcado com `server-only` — se algum dia for importada sem querer num componente de cliente, o build quebra em vez de vazar a chave).

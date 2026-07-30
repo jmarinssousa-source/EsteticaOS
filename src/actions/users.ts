@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { resolveSiteUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentMember } from "@/lib/auth/session";
 import {
@@ -64,14 +64,6 @@ async function findAuthUserByEmail(
   return null;
 }
 
-async function getSiteUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  const headersList = await headers();
-  const host = headersList.get("host");
-  const protocol = host?.startsWith("localhost") ? "http" : "https";
-  return `${protocol}://${host}`;
-}
-
 export async function createUser(
   _prevState: InviteState,
   formData: FormData,
@@ -91,7 +83,7 @@ export async function createUser(
   }
 
   const { fullName, email, role, profession } = parsed.data;
-  const siteUrl = await getSiteUrl();
+  const siteUrl = await resolveSiteUrl();
   const admin = createAdminClient();
 
   // Quem já tem conta no EstéticaOS (outra clínica, ou um cadastro
@@ -270,17 +262,29 @@ export async function deleteMember(memberUserId: string) {
     return { error: "Você não pode remover a própria conta da clínica." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  // `clinic_members` só tem policy de select e update no RLS: um delete pela
+  // sessão do usuário não dá erro, ele simplesmente não apaga linha nenhuma
+  // (o Postgres filtra as linhas em vez de recusar). Por isso a remoção usa a
+  // service role — o escopo já está garantido acima: só o dono chega aqui, e
+  // o filtro prende a operação à clínica dele, nunca no próprio dono.
+  const admin = createAdminClient();
+  const { data: removed, error } = await admin
     .from("clinic_members")
     .delete()
     .eq("user_id", memberUserId)
     .eq("clinic_id", owner.clinicId)
-    .neq("role", "owner");
+    .neq("role", "owner")
+    .select("user_id");
 
   if (error) {
     console.error("deleteMember falhou:", error.message);
     return { error: "Não foi possível remover este usuário." };
+  }
+
+  // Sem linha apagada não houve remoção — avisar sucesso aqui era o que fazia
+  // a pessoa continuar na lista depois do toast de confirmação.
+  if (!removed?.length) {
+    return { error: "Este usuário não faz mais parte da clínica." };
   }
 
   revalidatePath("/configuracoes/usuarios");

@@ -3,7 +3,11 @@ import { Plus_Jakarta_Sans, Fraunces, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
-import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { TooltipProvider } from "@/components/ui/tooltip";
+import { siteUrl } from "@/lib/site-url";
+// O convite para instalar o app mora no layout do painel, não aqui: na
+// página de vendas ele cobria o botão principal para quem ainda nem tem
+// conta — só faz sentido oferecer o atalho a quem já usa o sistema.
 
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -21,22 +25,11 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
-/**
- * Base para as URLs absolutas do Open Graph — sem ela o WhatsApp não
- * consegue baixar a imagem de pré-visualização dos links enviados aos
- * pacientes. Em produção o Vercel já expõe o domínio; localmente cai no
- * localhost.
- */
-const siteUrl =
-  process.env.NEXT_PUBLIC_SITE_URL ??
-  (process.env.VERCEL_PROJECT_PRODUCTION_URL
-    ? `https://${process.env.VERCEL_PROJECT_PRODUCTION_URL}`
-    : process.env.VERCEL_URL
-      ? `https://${process.env.VERCEL_URL}`
-      : "http://localhost:3000");
-
 export const metadata: Metadata = {
-  metadataBase: new URL(siteUrl),
+  // Base para as URLs absolutas do Open Graph — sem ela o WhatsApp não
+  // consegue baixar a imagem de pré-visualização dos links enviados aos
+  // pacientes.
+  metadataBase: new URL(siteUrl()),
   title: "EstéticaOS — Gestão completa para clínicas de estética",
   description:
     "Agenda, prontuário, financeiro e CRM de leads num só sistema, feito para o dia a dia de clínicas de estética.",
@@ -71,9 +64,13 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster />
-          <InstallPrompt />
+          {/* Na raiz para as legendas de ícone funcionarem em qualquer
+              tela — inclusive login e página inicial, que ficam fora do
+              layout do painel. */}
+          <TooltipProvider>
+            {children}
+            <Toaster />
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

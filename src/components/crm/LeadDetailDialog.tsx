@@ -167,7 +167,7 @@ export function LeadDetailDialog({
 
   return (
     <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogContent className="max-h-[85vh] max-w-xl overflow-y-auto">
+      <DialogContent className="max-h-[85dvh] max-w-xl overflow-y-auto">
         <DialogHeader>
           <div className="flex flex-wrap items-center gap-2">
             <DialogTitle>{lead.name}</DialogTitle>

@@ -98,7 +98,7 @@ export function AppointmentFormDialog({
         <Plus className="size-4" />
         Novo agendamento
       </DialogTrigger>
-      <DialogContent className="max-h-[85vh] overflow-y-auto sm:max-w-lg">
+      <DialogContent className="max-h-[85dvh] overflow-y-auto sm:max-w-lg">
         <DialogHeader>
           <DialogTitle>Novo agendamento</DialogTitle>
           <DialogDescription>Marque uma avaliação, procedimento ou retorno.</DialogDescription>
@@ -167,8 +167,11 @@ export function AppointmentFormDialog({
             </p>
           </div>
 
-          <div className="grid grid-cols-3 gap-4">
-            <div className="space-y-2">
+          {/* No celular a data ocupa a linha inteira e início/fim dividem a
+              seguinte: três campos lado a lado deixam cada um com ~90px, e a
+              data não cabe. */}
+          <div className="grid grid-cols-2 gap-3 sm:grid-cols-3 sm:gap-4">
+            <div className="col-span-2 space-y-2 sm:col-span-1">
               <Label htmlFor="appointmentDate">Data</Label>
               <Input id="appointmentDate" name="appointmentDate" type="date" defaultValue={defaultDate} required />
             </div>
@@ -186,7 +189,9 @@ export function AppointmentFormDialog({
               <TimeField id="endTime" name="endTime" value={endTime} onValueChange={setEndTime} />
             </div>
             {state.fieldErrors?.endTime && (
-              <p className="col-span-3 text-sm text-destructive">{state.fieldErrors.endTime[0]}</p>
+              <p className="col-span-2 text-sm text-destructive sm:col-span-3">
+                {state.fieldErrors.endTime[0]}
+              </p>
             )}
           </div>
 
