@@ -4,6 +4,7 @@ import { useSyncExternalStore } from "react";
 import { useTheme } from "next-themes";
 import { Moon, Sun } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip-hint";
 
 function subscribe() {
   return () => {};
@@ -24,15 +25,18 @@ export function ThemeToggle() {
   }
 
   const isDark = resolvedTheme === "dark";
+  const label = isDark ? "Mudar para tema claro" : "Mudar para tema escuro";
 
   return (
-    <Button
-      variant="ghost"
-      size="icon-sm"
-      aria-label={isDark ? "Mudar para tema claro" : "Mudar para tema escuro"}
-      onClick={() => setTheme(isDark ? "light" : "dark")}
-    >
-      {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
-    </Button>
+    <TooltipHint label={label}>
+      <Button
+        variant="ghost"
+        size="icon-sm"
+        aria-label={label}
+        onClick={() => setTheme(isDark ? "light" : "dark")}
+      >
+        {isDark ? <Sun className="size-4" /> : <Moon className="size-4" />}
+      </Button>
+    </TooltipHint>
   );
 }

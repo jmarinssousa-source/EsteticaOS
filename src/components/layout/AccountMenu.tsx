@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { logout, requestOwnPasswordReset } from "@/actions/auth";
 import { Avatar, AvatarFallback } from "@/components/ui/avatar";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip-hint";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -63,12 +64,16 @@ export function AccountMenu({
 
   return (
     <DropdownMenu>
-      <DropdownMenuTrigger render={<Button variant="ghost" className="flex items-center gap-2 px-2" />}>
-        <Avatar className="size-8">
-          <AvatarFallback>{initials(fullName) || "?"}</AvatarFallback>
-        </Avatar>
-        <span className="hidden text-sm font-medium sm:inline">{fullName}</span>
-      </DropdownMenuTrigger>
+      <TooltipHint label="Sua conta: trocar senha, suporte e sair">
+        <DropdownMenuTrigger
+          render={<Button variant="ghost" className="flex items-center gap-2 px-2" />}
+        >
+          <Avatar className="size-8">
+            <AvatarFallback>{initials(fullName) || "?"}</AvatarFallback>
+          </Avatar>
+          <span className="hidden text-sm font-medium sm:inline">{fullName}</span>
+        </DropdownMenuTrigger>
+      </TooltipHint>
       <DropdownMenuContent align="end">
         <DropdownMenuGroup>
           <DropdownMenuLabel>

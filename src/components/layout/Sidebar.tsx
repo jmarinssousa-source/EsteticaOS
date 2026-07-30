@@ -9,6 +9,7 @@ import { NAV_ITEMS } from "@/components/layout/nav-items";
 import { hasPermission, type ClinicRole, type Permissions } from "@/lib/auth/permissions";
 import { Button } from "@/components/ui/button";
 import { Tooltip, TooltipContent, TooltipTrigger } from "@/components/ui/tooltip";
+import { TooltipHint } from "@/components/ui/tooltip-hint";
 import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
 import { LogoMark } from "@/components/brand/Logo";
 
@@ -70,15 +71,24 @@ export function Sidebar({
             </div>
           </div>
         )}
-        <Button
-          variant="ghost"
-          size="icon-sm"
-          onClick={toggleCollapsed}
-          aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
-          className={collapsed ? "mx-auto" : "shrink-0"}
+        <TooltipHint
+          label={collapsed ? "Abrir o menu e mostrar os nomes" : "Recolher o menu e deixar só os ícones"}
+          side="right"
         >
-          {collapsed ? <PanelLeftOpen className="size-4" /> : <PanelLeftClose className="size-4" />}
-        </Button>
+          <Button
+            variant="ghost"
+            size="icon-sm"
+            onClick={toggleCollapsed}
+            aria-label={collapsed ? "Expandir menu" : "Recolher menu"}
+            className={collapsed ? "mx-auto" : "shrink-0"}
+          >
+            {collapsed ? (
+              <PanelLeftOpen className="size-4" />
+            ) : (
+              <PanelLeftClose className="size-4" />
+            )}
+          </Button>
+        </TooltipHint>
       </div>
       <nav className="flex flex-1 flex-col gap-1 overflow-y-auto p-3">
         {items.map((item) => {

@@ -1,9 +1,9 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
-import { getCurrentMember } from "@/lib/auth/session";
+import { getClinicPlan, getCurrentMember } from "@/lib/auth/session";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
-import { TooltipProvider } from "@/components/ui/tooltip";
+import { TrialBanner } from "@/components/plan/TrialBanner";
 
 export default async function DashboardLayout({
   children,
@@ -30,8 +30,10 @@ export default async function DashboardLayout({
     redirect("/conta-desativada");
   }
 
+  const plan = await getClinicPlan();
+
   return (
-    <TooltipProvider>
+    <>
       {/* `dvh` em vez de `vh`: no Safari do iPhone a barra de endereço entra
           na conta do `100vh` e a tela fica sempre um pouco mais alta que o
           visível. `min-w-0` impede que uma tabela larga estique a coluna de
@@ -51,10 +53,11 @@ export default async function DashboardLayout({
             />
           </div>
           <main className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-6 print:overflow-visible print:bg-white print:p-0">
+            <TrialBanner plan={plan} canManage={member.role === "owner"} />
             {children}
           </main>
         </div>
       </div>
-    </TooltipProvider>
+    </>
   );
 }

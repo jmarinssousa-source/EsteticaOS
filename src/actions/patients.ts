@@ -5,6 +5,7 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/session";
 import { patientSchema } from "@/lib/validations/patients";
+import { buildPatientSearchFilter } from "@/lib/patients/search";
 import type { ActionState } from "@/actions/auth";
 
 type ActionResult = { error?: string } | { success: true };
@@ -173,9 +174,54 @@ export async function deletePatient(patientId: string): Promise<ActionResult> {
     return { error: "Não foi possível excluir o paciente." };
   }
 
+  revalidatePathsAfterPatientChange();
+  return { success: true };
+}
+
+function revalidatePathsAfterPatientChange() {
   revalidatePath("/pacientes");
   revalidatePath("/crm");
   revalidatePath("/agenda");
   revalidatePath("/financeiro");
-  return { success: true };
+}
+
+/**
+ * Exclusão em lote, para limpar uma importação que veio errada sem ter de
+ * apagar de um em um. Dois modos:
+ *
+ * - `ids`: só os pacientes marcados na tela.
+ * - `allMatching`: tudo que a busca atual encontra, inclusive o que está
+ *   nas outras páginas — é a diferença entre "marquei os 25 desta tela" e
+ *   "quero fora os 3275". O filtro é remontado aqui no servidor a partir
+ *   do texto buscado, nunca de uma lista vinda do navegador.
+ */
+export async function deletePatients(
+  input: { ids: string[] } | { allMatching: true; search: string },
+): Promise<{ error: string } | { success: true; removed: number }> {
+  const member = await requirePermission("patients_edit");
+
+  if (member.role !== "owner" && member.role !== "manager") {
+    return { error: "Só o dono ou o gerente da clínica pode excluir pacientes." };
+  }
+
+  const supabase = await createClient();
+  let query = supabase.from("patients").delete().eq("clinic_id", member.clinicId);
+
+  if ("allMatching" in input) {
+    const filter = buildPatientSearchFilter(input.search);
+    if (filter) query = query.or(filter);
+  } else {
+    if (input.ids.length === 0) return { error: "Nenhum paciente selecionado." };
+    query = query.in("id", input.ids);
+  }
+
+  const { data, error } = await query.select("id");
+
+  if (error) {
+    console.error("deletePatients falhou:", error.message);
+    return { error: "Não foi possível excluir os pacientes selecionados." };
+  }
+
+  revalidatePathsAfterPatientChange();
+  return { success: true, removed: data?.length ?? 0 };
 }

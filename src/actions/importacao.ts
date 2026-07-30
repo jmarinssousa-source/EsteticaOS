@@ -1,6 +1,7 @@
 "use server";
 
 import { createClient } from "@/lib/supabase/server";
+import { fetchAllRows } from "@/lib/supabase/fetch-all";
 import { requirePermission } from "@/lib/auth/session";
 import { indexColumns, parseCsv } from "@/lib/importacao/csv";
 import { readXlsx } from "@/lib/spreadsheet/xlsx";
@@ -59,7 +60,17 @@ export async function importPatients(_prevState: ImportResult | null, formData: 
   }
 
   const supabase = await createClient();
-  const { data: existing } = await supabase.from("patients").select("name, phone, cpf").eq("clinic_id", member.clinicId);
+  // Precisa da base inteira, não das primeiras mil: é com esta lista que
+  // se decide quem já está cadastrado. Truncada, a segunda importação
+  // recriaria como novo todo mundo que ficou fora do primeiro bloco.
+  const existing = await fetchAllRows<{ name: string; phone: string | null; cpf: string | null }>(
+    () =>
+      supabase
+        .from("patients")
+        .select("name, phone, cpf")
+        .eq("clinic_id", member.clinicId)
+        .order("id"),
+  );
 
   const errors: ImportRowError[] = [];
   const toInsert: Record<string, string | null>[] = [];
@@ -194,12 +205,23 @@ export async function importAppointments(_prevState: ImportResult | null, formDa
   }
 
   const supabase = await createClient();
-  const [{ data: patients }, { data: professionals }, { data: procedures }, { data: existingAppointments }] =
+  // Pacientes e agendamentos passam fácil de mil numa clínica com alguns
+  // anos de casa; sem varrer tudo, o vínculo por nome/CPF falharia para
+  // quem ficasse fora do primeiro bloco.
+  const [patients, { data: professionals }, { data: procedures }, existingAppointments] =
     await Promise.all([
-      supabase.from("patients").select("id, name, cpf").eq("clinic_id", member.clinicId),
+      fetchAllRows<{ id: string; name: string; cpf: string | null }>(() =>
+        supabase.from("patients").select("id, name, cpf").eq("clinic_id", member.clinicId).order("id"),
+      ),
       supabase.from("clinic_members").select("user_id, full_name").eq("clinic_id", member.clinicId),
       supabase.from("procedures").select("id, name").eq("clinic_id", member.clinicId),
-      supabase.from("appointments").select("patient_id, appointment_date, start_time").eq("clinic_id", member.clinicId),
+      fetchAllRows<{ patient_id: string; appointment_date: string; start_time: string }>(() =>
+        supabase
+          .from("appointments")
+          .select("patient_id, appointment_date, start_time")
+          .eq("clinic_id", member.clinicId)
+          .order("id"),
+      ),
     ]);
 
   const errors: ImportRowError[] = [];
@@ -304,9 +326,17 @@ export async function importFinancialEntries(
   }
 
   const supabase = await createClient();
-  const [{ data: patients }, { data: existingEntries }] = await Promise.all([
-    supabase.from("patients").select("id, name").eq("clinic_id", member.clinicId),
-    supabase.from("financial_entries").select("description, amount, due_date").eq("clinic_id", member.clinicId),
+  const [patients, existingEntries] = await Promise.all([
+    fetchAllRows<{ id: string; name: string }>(() =>
+      supabase.from("patients").select("id, name").eq("clinic_id", member.clinicId).order("id"),
+    ),
+    fetchAllRows<{ description: string; amount: number; due_date: string }>(() =>
+      supabase
+        .from("financial_entries")
+        .select("description, amount, due_date")
+        .eq("clinic_id", member.clinicId)
+        .order("id"),
+    ),
   ]);
 
   const errors: ImportRowError[] = [];

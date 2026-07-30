@@ -3,6 +3,7 @@ import { Plus_Jakarta_Sans, Fraunces, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
+import { TooltipProvider } from "@/components/ui/tooltip";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 const fontSans = Plus_Jakarta_Sans({
@@ -71,9 +72,14 @@ export default function RootLayout({
     >
       <body className="min-h-full flex flex-col">
         <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
-          {children}
-          <Toaster />
-          <InstallPrompt />
+          {/* Na raiz para as legendas de ícone funcionarem em qualquer
+              tela — inclusive login e página inicial, que ficam fora do
+              layout do painel. */}
+          <TooltipProvider>
+            {children}
+            <Toaster />
+            <InstallPrompt />
+          </TooltipProvider>
         </ThemeProvider>
       </body>
     </html>

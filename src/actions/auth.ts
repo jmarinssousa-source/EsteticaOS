@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_ANAMNESIS_TEMPLATES } from "@/lib/anamnesis/default-templates";
+import { trialEndDate } from "@/lib/plan/trial";
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -146,9 +147,18 @@ export async function signUp(
     redirect(`/verificar-email?email=${encodeURIComponent(email)}`);
   }
 
+  // O teste de 7 dias começa a contar da criação da clínica, não do
+  // primeiro acesso: assim a data já existe mesmo se a pessoa demorar
+  // para confirmar o e-mail.
   const { data: clinic, error: clinicError } = await admin
     .from("clinics")
-    .insert({ name: clinicName, phone, email })
+    .insert({
+      name: clinicName,
+      phone,
+      email,
+      plan_status: "trial",
+      trial_ends_at: trialEndDate(),
+    })
     .select("id")
     .single();
 

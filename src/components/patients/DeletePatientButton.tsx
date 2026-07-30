@@ -9,6 +9,7 @@ import {
   type PatientDeletionSummary,
 } from "@/actions/patients";
 import { Button } from "@/components/ui/button";
+import { TooltipHint } from "@/components/ui/tooltip-hint";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -64,18 +65,20 @@ export function DeletePatientButton({ patientId }: { patientId: string }) {
 
   return (
     <AlertDialog open={open} onOpenChange={handleOpenChange}>
-      <AlertDialogTrigger
-        render={
-          <Button
-            variant="ghost"
-            size="icon"
-            className="size-8 text-muted-foreground hover:text-destructive"
-            aria-label="Excluir paciente"
-          />
-        }
-      >
-        <Trash2 className="size-4" />
-      </AlertDialogTrigger>
+      <TooltipHint label="Excluir este paciente e todo o histórico dele">
+        <AlertDialogTrigger
+          render={
+            <Button
+              variant="ghost"
+              size="icon"
+              className="size-8 text-muted-foreground hover:text-destructive"
+              aria-label="Excluir paciente"
+            />
+          }
+        >
+          <Trash2 className="size-4" />
+        </AlertDialogTrigger>
+      </TooltipHint>
 
       <AlertDialogContent>
         <AlertDialogHeader>

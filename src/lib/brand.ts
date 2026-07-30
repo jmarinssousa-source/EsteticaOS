@@ -7,3 +7,9 @@ export const SUPPORT_WHATSAPP_LABEL = "(21) 97192-5107";
 
 /** Rodapé discreto usado nos PDFs (orçamento, recibo). */
 export const VENDOR_FOOTER = `${VENDOR_LINE} · ${SUPPORT_WHATSAPP_LABEL}`;
+
+/** Link do suporte já com a mensagem escrita, para a pessoa só apertar
+ *  enviar em vez de ter de explicar do zero de onde veio. */
+export function supportWhatsAppUrl(message: string) {
+  return `${SUPPORT_WHATSAPP_URL}?text=${encodeURIComponent(message)}`;
+}
