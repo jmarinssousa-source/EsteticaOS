@@ -4,7 +4,9 @@ import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+// O convite para instalar o app mora no layout do painel, não aqui: na
+// página de vendas ele cobria o botão principal para quem ainda nem tem
+// conta — só faz sentido oferecer o atalho a quem já usa o sistema.
 
 const fontSans = Plus_Jakarta_Sans({
   variable: "--font-sans",
@@ -78,7 +80,6 @@ export default function RootLayout({
           <TooltipProvider>
             {children}
             <Toaster />
-            <InstallPrompt />
           </TooltipProvider>
         </ThemeProvider>
       </body>

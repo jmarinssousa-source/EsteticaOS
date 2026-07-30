@@ -4,6 +4,7 @@ import { getClinicPlan, getCurrentMember } from "@/lib/auth/session";
 import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { TrialBanner } from "@/components/plan/TrialBanner";
+import { InstallPrompt } from "@/components/pwa/InstallPrompt";
 
 export default async function DashboardLayout({
   children,
@@ -55,6 +56,7 @@ export default async function DashboardLayout({
           <main className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-6 print:overflow-visible print:bg-white print:p-0">
             <TrialBanner plan={plan} canManage={member.role === "owner"} />
             {children}
+            <InstallPrompt />
           </main>
         </div>
       </div>
