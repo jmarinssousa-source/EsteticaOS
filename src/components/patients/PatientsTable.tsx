@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { DeletePatientButton } from "@/components/patients/DeletePatientButton";
 
 type Patient = {
   id: string;
@@ -18,7 +19,13 @@ type Patient = {
 
 const PAGE_SIZE_OPTIONS = [10, 20] as const;
 
-export function PatientsTable({ patients }: { patients: Patient[] }) {
+export function PatientsTable({
+  patients,
+  canDelete = false,
+}: {
+  patients: Patient[];
+  canDelete?: boolean;
+}) {
   const [search, setSearch] = useState("");
   const [pageSize, setPageSize] = useState<number>(10);
   const [page, setPage] = useState(1);
@@ -85,6 +92,7 @@ export function PatientsTable({ patients }: { patients: Patient[] }) {
                 <TableHead>Telefone</TableHead>
                 <TableHead>E-mail</TableHead>
                 <TableHead>CPF</TableHead>
+                {canDelete && <TableHead className="w-12" />}
               </TableRow>
             </TableHeader>
             <TableBody>
@@ -110,11 +118,19 @@ export function PatientsTable({ patients }: { patients: Patient[] }) {
                       {patient.cpf ?? "—"}
                     </Link>
                   </TableCell>
+                  {canDelete && (
+                    <TableCell className="text-right">
+                      <DeletePatientButton patientId={patient.id} />
+                    </TableCell>
+                  )}
                 </TableRow>
               ))}
               {paginated.length === 0 && (
                 <TableRow>
-                  <TableCell colSpan={4} className="text-center text-sm text-muted-foreground">
+                  <TableCell
+                    colSpan={canDelete ? 5 : 4}
+                    className="text-center text-sm text-muted-foreground"
+                  >
                     Nenhum paciente encontrado.
                   </TableCell>
                 </TableRow>

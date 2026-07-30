@@ -12,6 +12,8 @@ export const metadata = { title: "Pacientes — EstéticaOS" };
 export default async function PacientesPage() {
   const member = await requirePermission("patients_view");
   const canEdit = hasPermission(member, "patients_edit");
+  // Apagar prontuário é decisão de quem administra a clínica.
+  const canDelete = canEdit && (member.role === "owner" || member.role === "manager");
 
   const supabase = await createClient();
   const { data: patients } = await supabase
@@ -41,7 +43,7 @@ export default async function PacientesPage() {
         </div>
       </div>
 
-      <PatientsTable patients={patients ?? []} />
+      <PatientsTable patients={patients ?? []} canDelete={canDelete} />
     </div>
   );
 }
