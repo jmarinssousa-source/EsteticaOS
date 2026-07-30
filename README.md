@@ -71,4 +71,11 @@ Sem o passo 4 o sintoma é traiçoeiro: cadastro e login seguem
 funcionando, mas todo e-mail de confirmação, convite e redefinição de
 senha leva o usuário para o endereço antigo.
 
+## E-mails (SMTP)
+
+Configuração do envio e os textos dos três e-mails de autenticação estão
+em [`docs/smtp.md`](docs/smtp.md), com os modelos prontos em
+`docs/emails/`. Faça depois do domínio: o provedor só libera o envio com
+o domínio já verificado.
+
 Nenhuma chave sensível fica no código-fonte: o `.env.local` é ignorado pelo Git (`.gitignore`) e a `service_role key` só é lida em código que roda no servidor (`src/lib/supabase/admin.ts`, marcado com `server-only` — se algum dia for importada sem querer num componente de cliente, o build quebra em vez de vazar a chave).
