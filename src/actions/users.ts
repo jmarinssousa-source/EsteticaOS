@@ -13,6 +13,10 @@ import {
   type Permissions,
 } from "@/lib/auth/permissions";
 import type { ActionState } from "@/actions/auth";
+
+/** Convite com um extra: quando o e-mail não sai, devolve o link de
+ *  acesso para o dono repassar por outro canal. */
+export type InviteState = ActionState & { inviteLink?: string };
 import { PROFESSIONAL_COLOR_KEYS } from "@/lib/agenda/professional-colors";
 
 const ASSIGNABLE_ROLES = CLINIC_ROLES.filter((role) => role !== "owner") as Exclude<
@@ -69,9 +73,9 @@ async function getSiteUrl() {
 }
 
 export async function createUser(
-  _prevState: ActionState,
+  _prevState: InviteState,
   formData: FormData,
-): Promise<ActionState> {
+): Promise<InviteState> {
   const owner = await requireOwner();
   if (!owner) return { error: NOT_OWNER_ERROR };
 
@@ -97,6 +101,7 @@ export async function createUser(
 
   let userId = existingUser?.id ?? null;
   let info: string | undefined;
+  let inviteLink: string | undefined;
 
   if (!userId) {
     const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
@@ -125,9 +130,8 @@ export async function createUser(
       }
 
       userId = link.user.id;
-      info =
-        `Cadastro criado, mas o e-mail de convite não saiu (${inviteError?.message ?? "envio indisponível"}). ` +
-        `Mande este link para a pessoa definir a senha: ${link.properties.action_link}`;
+      inviteLink = link.properties.action_link;
+      info = `O e-mail de convite não pôde ser enviado (${inviteError?.message ?? "envio indisponível"}).`;
     }
   }
 
@@ -162,7 +166,7 @@ export async function createUser(
   }
 
   revalidatePath("/configuracoes/usuarios");
-  return info ? { success: true, info } : { success: true };
+  return info ? { success: true, info, inviteLink } : { success: true };
 }
 
 export async function updateMemberProfession(memberUserId: string, profession: string) {

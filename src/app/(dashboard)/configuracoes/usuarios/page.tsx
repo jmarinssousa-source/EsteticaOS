@@ -7,7 +7,8 @@ import { CreateUserDialog } from "@/components/users/CreateUserDialog";
 import { MemberActions } from "@/components/users/MemberActions";
 import { MemberColorPicker } from "@/components/users/MemberColorPicker";
 import { MemberProfession } from "@/components/users/MemberProfession";
-import { ROLE_LABELS, type ClinicRole, type Permissions } from "@/lib/auth/permissions";
+import { MemberRoleSelect } from "@/components/users/MemberRoleSelect";
+import { type ClinicRole, type Permissions } from "@/lib/auth/permissions";
 import { SettingsBackLink } from "@/components/settings/SettingsBackLink";
 
 export const metadata = { title: "Usuários e permissões — EstéticaOS" };
@@ -45,7 +46,7 @@ export default async function UsuariosPage() {
             <TableHeader>
               <TableRow>
                 <TableHead>Nome</TableHead>
-                <TableHead>E-mail</TableHead>
+                <TableHead className="hidden lg:table-cell">E-mail</TableHead>
                 <TableHead>Perfil</TableHead>
                 <TableHead>Profissão</TableHead>
                 <TableHead>Cor na agenda</TableHead>
@@ -56,14 +57,23 @@ export default async function UsuariosPage() {
             <TableBody>
               {members?.map((m) => (
                 <TableRow key={m.user_id}>
-                  <TableCell className="font-medium">{m.full_name}</TableCell>
-                  <TableCell className="text-muted-foreground">{m.email}</TableCell>
+                  <TableCell className="font-medium whitespace-nowrap">
+                    {m.full_name}
+                    {/* Em telas estreitas o e-mail vem embaixo do nome em vez
+                        de espremer mais uma coluna. */}
+                    <span className="block text-xs font-normal text-muted-foreground lg:hidden">
+                      {m.email}
+                    </span>
+                  </TableCell>
+                  <TableCell className="hidden text-muted-foreground lg:table-cell">
+                    {m.email}
+                  </TableCell>
                   <TableCell>
-                    {m.role === "owner" ? (
-                      ROLE_LABELS.owner
-                    ) : (
-                      <Badge variant="secondary">{ROLE_LABELS[m.role as ClinicRole]}</Badge>
-                    )}
+                    <MemberRoleSelect
+                      userId={m.user_id}
+                      role={m.role as ClinicRole}
+                      canEdit={isOwner}
+                    />
                   </TableCell>
                   <TableCell>
                     <MemberProfession
@@ -85,7 +95,7 @@ export default async function UsuariosPage() {
                     </Badge>
                   </TableCell>
                   {isOwner && (
-                    <TableCell className="text-right">
+                    <TableCell className="text-right whitespace-nowrap">
                       {m.role === "owner" ? (
                         <span className="text-sm text-muted-foreground">—</span>
                       ) : (

@@ -1,6 +1,8 @@
 "use client";
 
 import { useActionState, useState } from "react";
+import { useRouter } from "next/navigation";
+import { toast } from "sonner";
 import { Plus } from "lucide-react";
 import { createFinancialEntry } from "@/actions/financeiro";
 import type { ActionState } from "@/actions/auth";
@@ -33,13 +35,14 @@ const initialState: ActionState = {};
 
 export function EntryFormDialog({
   patients,
-  defaultPatientId,
+  lockedPatient,
 }: {
   patients: PatientOption[];
-  /** Pré-seleciona o paciente — usado na aba Financeiro de um paciente,
-   *  onde o lançamento nasce ligado a ele. */
-  defaultPatientId?: string;
+  /** Na aba Financeiro de um paciente o lançamento é sempre dele: o campo
+   *  de paciente some, para não parecer que dali se lança conta de luz. */
+  lockedPatient?: PatientOption;
 }) {
+  const router = useRouter();
   const [open, setOpen] = useState(false);
   const [type, setType] = useState<EntryType>("revenue");
   const [state, formAction, pending] = useActionState(createFinancialEntry, initialState);
@@ -47,7 +50,14 @@ export function EntryFormDialog({
   const [prevState, setPrevState] = useState(state);
   if (state !== prevState) {
     setPrevState(state);
-    if (state.success) setOpen(false);
+    if (state.success) {
+      setOpen(false);
+      toast.success("Lançamento criado.");
+      // A revalidação do servidor sozinha não estava trazendo a lista
+      // nova na aba do paciente; o refresh garante que o que acabou de
+      // ser lançado apareça na hora.
+      router.refresh();
+    }
   }
 
   return (
@@ -59,7 +69,11 @@ export function EntryFormDialog({
       <DialogContent>
         <DialogHeader>
           <DialogTitle>Novo lançamento</DialogTitle>
-          <DialogDescription>Registre uma receita ou despesa da clínica.</DialogDescription>
+          <DialogDescription>
+            {lockedPatient
+              ? `Cobrança ou pagamento de ${lockedPatient.name}.`
+              : "Registre uma receita ou despesa da clínica."}
+          </DialogDescription>
         </DialogHeader>
 
         <form action={formAction} className="space-y-4">
@@ -112,21 +126,24 @@ export function EntryFormDialog({
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="patientId">Paciente (opcional)</Label>
-            <Combobox
-              id="patientId"
-              name="patientId"
-              placeholder="Sem paciente vinculado"
-              emptyMessage="Nenhum paciente encontrado."
-              options={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
-              defaultValue={defaultPatientId}
-            />
-            <p className="text-xs text-muted-foreground">
-              Despesas da clínica (aluguel, luz, material) podem ficar sem paciente — use o × para
-              desvincular.
-            </p>
-          </div>
+          {lockedPatient ? (
+            <input type="hidden" name="patientId" value={lockedPatient.id} />
+          ) : (
+            <div className="space-y-2">
+              <Label htmlFor="patientId">Paciente (opcional)</Label>
+              <Combobox
+                id="patientId"
+                name="patientId"
+                placeholder="Sem paciente vinculado"
+                emptyMessage="Nenhum paciente encontrado."
+                options={patients.map((patient) => ({ value: patient.id, label: patient.name }))}
+              />
+              <p className="text-xs text-muted-foreground">
+                Despesas da clínica (aluguel, luz, material) podem ficar sem paciente — use o × para
+                desvincular.
+              </p>
+            </div>
+          )}
 
           <DialogFooter>
             <Button type="submit" disabled={pending}>

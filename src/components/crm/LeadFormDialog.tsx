@@ -8,6 +8,7 @@ import { LEAD_ORIGINS, LEAD_ORIGIN_LABELS, type LeadOrigin } from "@/lib/crm/con
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { MaskedInput } from "@/components/ui/masked-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Alert, AlertDescription } from "@/components/ui/alert";
@@ -70,7 +71,7 @@ export function LeadFormDialog({ members }: { members: { user_id: string; full_n
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label htmlFor="phone">Telefone</Label>
-              <Input id="phone" name="phone" type="tel" />
+              <MaskedInput id="phone" name="phone" type="tel" mask="phone" />
             </div>
             <div className="space-y-2">
               <Label htmlFor="email">E-mail</Label>

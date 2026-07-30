@@ -2,9 +2,8 @@
 
 import { useState, useTransition } from "react";
 import { toast } from "sonner";
-import { updateMemberPermissions, updateMemberRole, toggleMemberStatus } from "@/actions/users";
+import { updateMemberPermissions, toggleMemberStatus } from "@/actions/users";
 import {
-  CLINIC_ROLES,
   DEFAULT_PERMISSIONS,
   PERMISSION_GROUPS,
   PERMISSION_LABELS,
@@ -15,13 +14,6 @@ import {
 import { Button } from "@/components/ui/button";
 import { Switch } from "@/components/ui/switch";
 import {
-  Select,
-  SelectContent,
-  SelectItem,
-  SelectTrigger,
-  SelectValue,
-} from "@/components/ui/select";
-import {
   Dialog,
   DialogContent,
   DialogDescription,
@@ -30,11 +22,6 @@ import {
   DialogTitle,
   DialogTrigger,
 } from "@/components/ui/dialog";
-
-const ASSIGNABLE_ROLES = CLINIC_ROLES.filter((role) => role !== "owner") as Exclude<
-  ClinicRole,
-  "owner"
->[];
 
 export function MemberActions({
   userId,
@@ -50,15 +37,6 @@ export function MemberActions({
   const [isPending, startTransition] = useTransition();
   const [permissionsOpen, setPermissionsOpen] = useState(false);
   const [draft, setDraft] = useState<Partial<Permissions>>(permissions);
-
-  function handleRoleChange(newRole: string | null) {
-    if (!newRole) return;
-    startTransition(async () => {
-      const result = await updateMemberRole(userId, newRole);
-      if (result?.error) toast.error(result.error);
-      else toast.success("Perfil atualizado.");
-    });
-  }
 
   function handleStatusToggle() {
     const next = status === "active" ? "inactive" : "active";
@@ -81,25 +59,7 @@ export function MemberActions({
   }
 
   return (
-    <div className="flex flex-wrap items-center justify-end gap-2">
-      <Select
-        items={ASSIGNABLE_ROLES.map((r) => ({ value: r, label: ROLE_LABELS[r] }))}
-        value={role}
-        onValueChange={handleRoleChange}
-        disabled={isPending}
-      >
-        <SelectTrigger className="h-8 w-40">
-          <SelectValue />
-        </SelectTrigger>
-        <SelectContent>
-          {ASSIGNABLE_ROLES.map((r) => (
-            <SelectItem key={r} value={r}>
-              {ROLE_LABELS[r]}
-            </SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-
+    <div className="flex items-center justify-end gap-2">
       <Dialog open={permissionsOpen} onOpenChange={setPermissionsOpen}>
         <DialogTrigger
           render={<Button variant="outline" size="sm" onClick={() => setDraft(permissions)} />}

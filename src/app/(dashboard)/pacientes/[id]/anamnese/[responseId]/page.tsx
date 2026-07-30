@@ -99,12 +99,6 @@ export default async function AnamnesePrintPage({
         ))}
       </div>
 
-      <div className="pt-10 break-inside-avoid">
-        <div className="mx-auto w-64 border-t pt-1 text-center text-xs text-muted-foreground">
-          Assinatura do paciente
-        </div>
-      </div>
-
       <footer className="flex flex-wrap items-end justify-between gap-2 border-t pt-4">
         <span className="text-[10px] text-muted-foreground">
           Documento gerado por <Wordmark className="text-[10px]" />

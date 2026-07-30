@@ -9,6 +9,36 @@ import type { ActionState } from "@/actions/auth";
 
 type ActionResult = { error?: string } | { success: true };
 
+/**
+ * Traduz o lead validado para os nomes de coluna do banco. Sem isso o
+ * insert/update ia com `nextAction`, `followUpDate` e `potentialValue`,
+ * que não existem em `leads` — o Postgres recusava e a tela só dizia
+ * "Não foi possível criar o lead".
+ */
+function toLeadRow(data: {
+  name: string;
+  phone: string | null;
+  email: string | null;
+  origin: string;
+  assignedTo: string | null;
+  nextAction: string | null;
+  followUpDate: string | null;
+  potentialValue: number | null;
+  notes: string | null;
+}) {
+  return {
+    name: data.name,
+    phone: data.phone,
+    email: data.email,
+    origin: data.origin,
+    assigned_to: data.assignedTo,
+    next_action: data.nextAction,
+    follow_up_date: data.followUpDate,
+    potential_value: data.potentialValue,
+    notes: data.notes,
+  };
+}
+
 function revalidateCrm() {
   revalidatePath("/crm");
 }
@@ -168,16 +198,16 @@ export async function createLead(
 
   if (!firstStage) return { error: "Nenhuma coluna encontrada. Recarregue a página." };
 
-  const { assignedTo, ...rest } = parsed.data;
-
   const { error } = await supabase.from("leads").insert({
     clinic_id: member.clinicId,
     stage_id: firstStage.id,
-    assigned_to: assignedTo,
-    ...rest,
+    ...toLeadRow(parsed.data),
   });
 
-  if (error) return { error: "Não foi possível criar o lead." };
+  if (error) {
+    console.error("createLead falhou:", error.message);
+    return { error: "Não foi possível criar o lead." };
+  }
 
   revalidateCrm();
   return { success: true };
@@ -201,15 +231,17 @@ export async function updateLead(
   const parsed = leadSchema.safeParse(patch);
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
 
-  const { assignedTo, ...rest } = parsed.data;
   const supabase = await createClient();
   const { error } = await supabase
     .from("leads")
-    .update({ ...rest, assigned_to: assignedTo })
+    .update(toLeadRow(parsed.data))
     .eq("id", leadId)
     .eq("clinic_id", member.clinicId);
 
-  if (error) return { error: "Não foi possível salvar o lead." };
+  if (error) {
+    console.error("updateLead falhou:", error.message);
+    return { error: "Não foi possível salvar o lead." };
+  }
   revalidateCrm();
   return { success: true };
 }
