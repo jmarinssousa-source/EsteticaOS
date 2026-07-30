@@ -2,8 +2,8 @@
 
 import { z } from "zod";
 import { revalidatePath } from "next/cache";
-import { headers } from "next/headers";
 import { createClient } from "@/lib/supabase/server";
+import { resolveSiteUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentMember } from "@/lib/auth/session";
 import {
@@ -64,14 +64,6 @@ async function findAuthUserByEmail(
   return null;
 }
 
-async function getSiteUrl() {
-  if (process.env.NEXT_PUBLIC_SITE_URL) return process.env.NEXT_PUBLIC_SITE_URL;
-  const headersList = await headers();
-  const host = headersList.get("host");
-  const protocol = host?.startsWith("localhost") ? "http" : "https";
-  return `${protocol}://${host}`;
-}
-
 export async function createUser(
   _prevState: InviteState,
   formData: FormData,
@@ -91,7 +83,7 @@ export async function createUser(
   }
 
   const { fullName, email, role, profession } = parsed.data;
-  const siteUrl = await getSiteUrl();
+  const siteUrl = await resolveSiteUrl();
   const admin = createAdminClient();
 
   // Quem já tem conta no EstéticaOS (outra clínica, ou um cadastro

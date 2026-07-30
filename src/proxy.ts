@@ -16,6 +16,12 @@ const PUBLIC_PATHS = [
   // Imagem de pré-visualização dos links: quem busca é o robô do
   // WhatsApp/rede social, sempre sem sessão.
   "/opengraph-image",
+  // Arquivos que buscador nenhum consegue pedir com sessão. Sem isto o
+  // Google recebe um redirect para /login no lugar do robots.txt — e o
+  // robots.txt é justamente o que mantém as páginas de token do paciente
+  // fora do índice.
+  "/robots.txt",
+  "/sitemap.xml",
 ];
 
 function isPublicPath(pathname: string) {
