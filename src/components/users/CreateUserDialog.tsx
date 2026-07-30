@@ -1,9 +1,9 @@
 "use client";
 
 import { useActionState, useState } from "react";
-import { UserPlus } from "lucide-react";
-import { createUser } from "@/actions/users";
-import type { ActionState } from "@/actions/auth";
+import { toast } from "sonner";
+import { Copy, UserPlus } from "lucide-react";
+import { createUser, type InviteState } from "@/actions/users";
 import { CLINIC_ROLES, ROLE_LABELS, type ClinicRole } from "@/lib/auth/permissions";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -31,45 +31,84 @@ const ASSIGNABLE_ROLES = CLINIC_ROLES.filter((role) => role !== "owner") as Excl
   "owner"
 >[];
 
-const initialState: ActionState = {};
+const initialState: InviteState = {};
 
 export function CreateUserDialog() {
   const [open, setOpen] = useState(false);
   const [state, formAction, pending] = useActionState(createUser, initialState);
 
-  // Close the dialog once the invite succeeds. Derived during render
-  // (guarded by the prevState comparison) instead of in an effect, to
-  // avoid an extra render pass — see https://react.dev/learn/you-might-not-need-an-effect.
+  // Fecha sozinho quando o convite saiu por e-mail. Se o e-mail falhou,
+  // a janela fica aberta mostrando o link — mas em tela própria, não com
+  // o formulário repetido embaixo.
   const [prevState, setPrevState] = useState(state);
   if (state !== prevState) {
     setPrevState(state);
-    if (state.success && !state.info) setOpen(false);
+    if (state.success && !state.inviteLink) setOpen(false);
   }
 
+  function handleOpenChange(next: boolean) {
+    setOpen(next);
+    // Ao reabrir, volta para o formulário em vez do link antigo.
+    if (!next) setPrevState(initialState);
+  }
+
+  const showLink = Boolean(state.success && state.inviteLink);
+
   return (
-    <Dialog open={open} onOpenChange={setOpen}>
+    <Dialog open={open} onOpenChange={handleOpenChange}>
       <DialogTrigger render={<Button size="sm" />}>
         <UserPlus className="size-4" />
         Convidar usuário
       </DialogTrigger>
       <DialogContent>
         <DialogHeader>
-          <DialogTitle>Convidar usuário</DialogTitle>
+          <DialogTitle>{showLink ? "Usuário cadastrado" : "Convidar usuário"}</DialogTitle>
           <DialogDescription>
-            Enviaremos um e-mail para essa pessoa definir a própria senha e acessar a clínica.
+            {showLink
+              ? "A conta já existe na clínica. Falta a pessoa definir a senha pelo link abaixo."
+              : "Enviaremos um e-mail para essa pessoa definir a própria senha e acessar a clínica."}
           </DialogDescription>
         </DialogHeader>
 
+        {showLink ? (
+          <div className="space-y-4">
+            <Alert>
+              <AlertDescription>{state.info}</AlertDescription>
+            </Alert>
+
+            <div className="space-y-2">
+              <Label>Link de acesso</Label>
+              <div className="flex items-center gap-2">
+                <code className="flex-1 truncate rounded-md border bg-muted px-2 py-1.5 text-xs">
+                  {state.inviteLink}
+                </code>
+                <Button
+                  type="button"
+                  variant="outline"
+                  size="icon"
+                  onClick={() => {
+                    navigator.clipboard.writeText(state.inviteLink ?? "");
+                    toast.success("Link copiado.");
+                  }}
+                >
+                  <Copy className="size-4" />
+                </Button>
+              </div>
+              <p className="text-xs text-muted-foreground">
+                O link vale uma vez só. Para os convites saírem por e-mail sozinhos, configure um
+                servidor de envio (SMTP) no Supabase.
+              </p>
+            </div>
+
+            <DialogFooter>
+              <Button onClick={() => handleOpenChange(false)}>Fechar</Button>
+            </DialogFooter>
+          </div>
+        ) : (
         <form action={formAction} className="space-y-4">
           {state.error && (
             <Alert variant="destructive">
               <AlertDescription>{state.error}</AlertDescription>
-            </Alert>
-          )}
-
-          {state.info && (
-            <Alert>
-              <AlertDescription className="break-all">{state.info}</AlertDescription>
             </Alert>
           )}
 
@@ -128,6 +167,7 @@ export function CreateUserDialog() {
             </Button>
           </DialogFooter>
         </form>
+        )}
       </DialogContent>
     </Dialog>
   );

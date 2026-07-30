@@ -10,7 +10,8 @@ const BLACK = rgb(0.1, 0.1, 0.1);
 const FAINT = rgb(0.62, 0.62, 0.62);
 
 const PAGE_WIDTH = 420;
-const PAGE_HEIGHT = 560;
+/** Altura mínima; cresce se a descrição quebrar em muitas linhas. */
+const MIN_PAGE_HEIGHT = 420;
 const MARGIN = 40;
 const CONTENT_WIDTH = PAGE_WIDTH - MARGIN * 2;
 
@@ -70,11 +71,19 @@ export type ReceiptPdfData = {
 
 export async function generateReceiptPdf(data: ReceiptPdfData): Promise<Uint8Array> {
   const doc = await PDFDocument.create();
-  const page = doc.addPage([PAGE_WIDTH, PAGE_HEIGHT]);
   const font = await doc.embedFont(StandardFonts.Helvetica);
   const bold = await doc.embedFont(StandardFonts.HelveticaBold);
 
-  let y = PAGE_HEIGHT - 50;
+  const bodyText = data.patient
+    ? `Recebemos de ${data.patient.name}${data.patient.cpf ? ` (CPF ${data.patient.cpf})` : ""} a importância de ${formatCurrency(data.amount)} referente a: ${data.description}.`
+    : `Recebemos a importância de ${formatCurrency(data.amount)} referente a: ${data.description}.`;
+  const bodyLines = wrapText(bodyText, font, 11, CONTENT_WIDTH);
+
+  // Cabeçalho + título + corpo + duas linhas de pagamento + rodapé.
+  const pageHeight = Math.max(MIN_PAGE_HEIGHT, 260 + bodyLines.length * 16);
+  const page = doc.addPage([PAGE_WIDTH, pageHeight]);
+
+  let y = pageHeight - 50;
 
   page.drawText(data.clinic.name, { x: MARGIN, y, size: 18, font: bold, color: BLACK });
   y -= 20;
@@ -109,11 +118,7 @@ export async function generateReceiptPdf(data: ReceiptPdfData): Promise<Uint8Arr
   });
   y -= 34;
 
-  const bodyText = data.patient
-    ? `Recebemos de ${data.patient.name}${data.patient.cpf ? ` (CPF ${data.patient.cpf})` : ""} a importância de ${formatCurrency(data.amount)} referente a: ${data.description}.`
-    : `Recebemos a importância de ${formatCurrency(data.amount)} referente a: ${data.description}.`;
-
-  for (const line of wrapText(bodyText, font, 11, CONTENT_WIDTH)) {
+  for (const line of bodyLines) {
     page.drawText(line, { x: MARGIN, y, size: 11, font, color: BLACK });
     y -= 16;
   }

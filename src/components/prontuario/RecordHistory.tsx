@@ -24,13 +24,15 @@ export function RecordHistory({
   }
 
   return (
-    <div className="space-y-3">
+    // Grade em vez de lista: cada registro é curto, e um embaixo do outro
+    // fazia rolar muito. Quebra sozinho quando a linha enche.
+    <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
       {records.map((record) => {
         const procedure = procedures.find((p) => p.id === record.procedure_id);
         const mapUrl = record.map_image_path ? signedMapUrls[record.map_image_path] : null;
 
         return (
-          <Card key={record.id}>
+          <Card key={record.id} className="h-full">
             <CardHeader className="flex-row items-center justify-between space-y-0">
               <CardTitle className="text-sm font-medium">
                 {new Date(record.record_date).toLocaleDateString("pt-BR")}

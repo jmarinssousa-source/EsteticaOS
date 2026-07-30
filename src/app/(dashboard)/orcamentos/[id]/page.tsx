@@ -19,10 +19,13 @@ export const metadata = { title: "Orçamento — EstéticaOS" };
 
 export default async function BudgetDetailPage({
   params,
+  searchParams,
 }: {
   params: Promise<{ id: string }>;
+  searchParams: Promise<{ de?: string }>;
 }) {
   const { id } = await params;
+  const { de } = await searchParams;
   const member = await requirePermission("budgets_view");
   const canEdit = hasPermission(member, "budgets_edit");
 
@@ -66,14 +69,20 @@ export default async function BudgetDetailPage({
   const patient = budget.patients as unknown as { id: string; name: string; phone: string | null } | null;
   const status = budget.status as BudgetStatus;
 
+  // Quem chegou pela ficha do paciente volta para ela; o resto volta para
+  // a lista de orçamentos.
+  const cameFromPatient = de === "paciente" && patient != null;
+  const backHref = cameFromPatient ? `/pacientes/${patient.id}` : "/orcamentos";
+  const backLabel = cameFromPatient ? patient.name : "Orçamentos";
+
   return (
     <div className="space-y-4">
       <Link
-        href="/orcamentos"
+        href={backHref}
         className="inline-flex items-center gap-1 text-sm text-muted-foreground hover:text-foreground print:hidden"
       >
         <ArrowLeft className="size-3.5" />
-        Orçamentos
+        {backLabel}
       </Link>
 
       {/* Cabeçalho só do impresso: na tela a clínica já está na barra

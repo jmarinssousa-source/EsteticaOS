@@ -336,25 +336,30 @@ export default async function PatientDetailPage({
                 </TableRow>
               </TableHeader>
               <TableBody>
-                {budgets?.map((budget) => (
-                  <TableRow key={budget.id} className="cursor-pointer">
-                    <TableCell>
-                      <Link href={`/orcamentos/${budget.id}`} className="block">
-                        <Badge variant="secondary">{BUDGET_STATUS_LABELS[budget.status as BudgetStatus]}</Badge>
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/orcamentos/${budget.id}`} className="block">
-                        {formatCurrency(Number(budget.total_value))}
-                      </Link>
-                    </TableCell>
-                    <TableCell>
-                      <Link href={`/orcamentos/${budget.id}`} className="block">
-                        {new Date(budget.created_at).toLocaleDateString("pt-BR")}
-                      </Link>
-                    </TableCell>
-                  </TableRow>
-                ))}
+                {budgets?.map((budget) => {
+                  // `?de=paciente` faz o orçamento saber para onde voltar:
+                  // sem isso, quem abria daqui caía na lista geral.
+                  const href = `/orcamentos/${budget.id}?de=paciente`;
+                  return (
+                    <TableRow key={budget.id} className="cursor-pointer">
+                      <TableCell>
+                        <Link href={href} className="block">
+                          <Badge variant="secondary">{BUDGET_STATUS_LABELS[budget.status as BudgetStatus]}</Badge>
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link href={href} className="block">
+                          {formatCurrency(Number(budget.total_value))}
+                        </Link>
+                      </TableCell>
+                      <TableCell>
+                        <Link href={href} className="block">
+                          {new Date(budget.created_at).toLocaleDateString("pt-BR")}
+                        </Link>
+                      </TableCell>
+                    </TableRow>
+                  );
+                })}
               </TableBody>
             </Table>
             {(!budgets || budgets.length === 0) && (
@@ -424,13 +429,13 @@ export default async function PatientDetailPage({
             <div className="flex flex-wrap items-start justify-between gap-2">
               <p className="max-w-xl text-sm text-muted-foreground">
                 Tudo o que este paciente deve ou já pagou: cobranças geradas ao aprovar um
-                orçamento e lançamentos manuais. Não é o caixa da clínica — esse fica em
-                Financeiro, no menu lateral.
+                orçamento e lançamentos manuais. Despesas da clínica (aluguel, luz, material) são
+                lançadas em Financeiro, no menu lateral.
               </p>
               {canEditFinance && (
                 <EntryFormDialog
                   patients={[{ id: patient.id, name: patient.name }]}
-                  defaultPatientId={patient.id}
+                  lockedPatient={{ id: patient.id, name: patient.name }}
                 />
               )}
             </div>

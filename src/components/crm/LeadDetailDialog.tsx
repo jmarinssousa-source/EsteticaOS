@@ -17,6 +17,7 @@ import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { CurrencyInput } from "@/components/ui/currency-input";
+import { MaskedInput } from "@/components/ui/masked-input";
 import { Label } from "@/components/ui/label";
 import { Textarea } from "@/components/ui/textarea";
 import { Badge } from "@/components/ui/badge";
@@ -217,10 +218,11 @@ export function LeadDetailDialog({
           <div className="grid grid-cols-2 gap-4">
             <div className="space-y-2">
               <Label>Telefone</Label>
-              <Input
+              <MaskedInput
+                mask="phone"
                 value={form.phone}
                 disabled={!canEdit}
-                onChange={(e) => setForm((f) => ({ ...f, phone: e.target.value }))}
+                onValueChange={(phone) => setForm((f) => ({ ...f, phone }))}
               />
             </div>
             <div className="space-y-2">
