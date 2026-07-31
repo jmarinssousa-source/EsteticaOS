@@ -505,6 +505,21 @@ export const FAQ_ENTRIES: FaqEntry[] = [
     keywords: ["aniversário", "aniversariante", "parabéns", "whatsapp", "mensagem"],
   },
   {
+    id: "trocar-senha",
+    category: "Primeiros passos",
+    question: "Como troco a minha senha?",
+    steps: [
+      'Clique no seu nome, no canto superior direito, e escolha "Redefinir senha".',
+      "Um e-mail chega no endereço da sua conta com um link. Se não aparecer em alguns minutos, olhe a caixa de spam e, no Gmail, a aba Promoções.",
+      "Abra o link, escolha a senha nova, repita e salve. Você continua dentro do sistema, sem precisar entrar de novo.",
+      "Se você esqueceu a senha e nem consegue entrar, use o \"Esqueceu a senha?\" na tela de login. É o mesmo caminho.",
+      "Ao salvar, todas as outras sessões da sua conta são encerradas. Quem estiver conectado no seu nome em outro computador ou celular cai e vai precisar da senha nova.",
+      "Por isso, se você desconfia que alguém entrou na sua conta, trocar a senha resolve: a pessoa perde o acesso na hora.",
+      "O link do e-mail vale uma vez só. Pedindo outro em menos de um minuto, o sistema avisa que já mandou um há pouco.",
+    ],
+    keywords: ["senha", "trocar senha", "redefinir", "esqueci", "acesso", "segurança"],
+  },
+  {
     id: "instalar-aplicativo",
     category: "Primeiros passos",
     question: "Como instalo o EstéticaOS como aplicativo no celular ou no computador?",
