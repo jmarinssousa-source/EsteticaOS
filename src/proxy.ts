@@ -30,8 +30,21 @@ function isPublicPath(pathname: string) {
   );
 }
 
+/**
+ * Cabeçalho com o caminho pedido.
+ *
+ * Layout de servidor não enxerga a rota atual, e o bloqueio por teste
+ * vencido precisa saber disso para deixar /plano passar enquanto tranca
+ * o resto do painel. O proxy é o único lugar que tem o caminho antes da
+ * renderização, então ele carimba aqui e o layout lê com `headers()`.
+ */
+export const PATHNAME_HEADER = "x-esteticaos-pathname";
+
 export default async function proxy(request: NextRequest) {
-  let response = NextResponse.next({ request });
+  const requestHeaders = new Headers(request.headers);
+  requestHeaders.set(PATHNAME_HEADER, request.nextUrl.pathname);
+
+  let response = NextResponse.next({ request: { headers: requestHeaders } });
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -45,7 +58,13 @@ export default async function proxy(request: NextRequest) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          response = NextResponse.next({ request });
+          // A resposta é refeita com os cookies novos, então o cabeçalho
+          // do caminho precisa ser carimbado de novo: sem isto, toda
+          // requisição que renova a sessão chegaria ao layout sem rota e
+          // o bloqueio de plano não saberia onde a pessoa está.
+          const refreshed = new Headers(request.headers);
+          refreshed.set(PATHNAME_HEADER, request.nextUrl.pathname);
+          response = NextResponse.next({ request: { headers: refreshed } });
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }

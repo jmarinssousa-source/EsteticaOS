@@ -149,7 +149,7 @@ export async function signUp(
       name: clinicName,
       phone,
       email,
-      plan_status: "trial",
+      plan_status: "trialing",
       trial_ends_at: trialEndDate(),
     })
     .select("id")

@@ -29,7 +29,7 @@ const geistMono = Geist_Mono({
  *  para fora: busca, Open Graph, Twitter e manifest do aplicativo.
  *  Sem travessão, porque parte disto vai para prévia de link. */
 const SITE_DESCRIPTION =
-  "Agenda, prontuário, fotos de evolução, anamnese, CRM, financeiro e estoque num sistema só, feito para a rotina de clínicas de estética. Teste grátis por 7 dias, sem cartão.";
+  "Agenda, prontuário, fotos de evolução, anamnese, CRM, financeiro e estoque num sistema só, feito para a rotina de clínicas de estética. Profissionais e pacientes ilimitados por R$ 217 por mês. Teste grátis por 7 dias, sem cartão.";
 
 export const metadata: Metadata = {
   // Base para as URLs absolutas do Open Graph — sem ela o WhatsApp não
