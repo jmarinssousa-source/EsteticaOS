@@ -5,7 +5,19 @@ import Image from "next/image";
 import { Download, X } from "lucide-react";
 import { Button } from "@/components/ui/button";
 
-const DISMISS_KEY = "esteticaos:install-prompt-dismissed";
+/**
+ * O "agora não" vale só até fechar o navegador.
+ *
+ * Antes ficava no localStorage e uma recusa calava o convite para
+ * sempre, o que na prática significava que quase ninguém descobria que o
+ * EstéticaOS instala como aplicativo. Em sessionStorage o convite
+ * reaparece a cada vez que a pessoa entra no sistema, e some de vez
+ * quando ela instala: `isStandalone` cuida disso.
+ */
+const DISMISS_KEY = "esteticaos:install-prompt-dismissed-session";
+/** Chave antiga, no localStorage. Apagada na entrada para que quem
+ *  recusou uma vez lá atrás volte a ver o convite. */
+const LEGACY_DISMISS_KEY = "esteticaos:install-prompt-dismissed";
 
 type BeforeInstallPromptEvent = Event & {
   prompt: () => Promise<void>;
@@ -30,7 +42,7 @@ function subscribeNever() {
 type Visibility = "hidden" | "ios-hint" | "none";
 
 function getVisibilitySnapshot(): Visibility {
-  if (isStandalone() || localStorage.getItem(DISMISS_KEY) === "true") return "hidden";
+  if (isStandalone() || sessionStorage.getItem(DISMISS_KEY) === "true") return "hidden";
   if (isIos()) return "ios-hint";
   return "none";
 }
@@ -45,6 +57,8 @@ export function InstallPrompt() {
   const visibility = useSyncExternalStore(subscribeNever, getVisibilitySnapshot, getServerVisibilitySnapshot);
 
   useEffect(() => {
+    localStorage.removeItem(LEGACY_DISMISS_KEY);
+
     if ("serviceWorker" in navigator) {
       navigator.serviceWorker.register("/sw.js").catch(() => {});
     }
@@ -59,7 +73,7 @@ export function InstallPrompt() {
   }, []);
 
   function dismiss() {
-    localStorage.setItem(DISMISS_KEY, "true");
+    sessionStorage.setItem(DISMISS_KEY, "true");
     setDismissedManually(true);
   }
 

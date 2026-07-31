@@ -1,7 +1,7 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { DndContext, PointerSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { DndContext, MouseSensor, TouchSensor, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
 import { SortableContext, horizontalListSortingStrategy } from "@dnd-kit/sortable";
 import { toast } from "sonner";
 import { moveLeadToStage, reorderStages } from "@/actions/crm";
@@ -9,6 +9,7 @@ import { cn } from "@/lib/utils";
 import type { ClinicMemberOption, Lead, Stage } from "@/lib/crm/types";
 import { StageColumn } from "@/components/crm/StageColumn";
 import { NewStageButton } from "@/components/crm/NewStageButton";
+import { ScrollAreaX } from "@/components/ui/scroll-area-x";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -39,8 +40,13 @@ export function CrmBoard({
     stage: Stage;
   } | null>(null);
 
+  // Mouse e toque separados de propósito. Com um sensor de ponteiro só,
+  // o arrastar começava aos 6px de movimento também no celular, e o dedo
+  // que queria rolar o quadro para o lado saía carregando o lead junto.
+  // Assim o mouse arrasta na hora e o dedo precisa segurar meio segundo,
+  // deixando a rolagem livre.
   const sensors = useSensors(
-    useSensor(PointerSensor, { activationConstraint: { distance: 6 } }),
+    useSensor(MouseSensor, { activationConstraint: { distance: 6 } }),
     useSensor(TouchSensor, { activationConstraint: { delay: 200, tolerance: 8 } }),
   );
 
@@ -108,7 +114,11 @@ export function CrmBoard({
     // id fixo: sem ele o dnd-kit gera um aria-describedby diferente no
     // servidor e no cliente, o que quebra a hidratação da página.
     <DndContext id="crm-board" sensors={sensors} onDragEnd={handleDragEnd}>
-      <div className={cn("flex items-start gap-4 overflow-x-auto pb-4", isPending && "opacity-70")}>
+      <ScrollAreaX
+        label="Etapas do funil"
+        className={cn("pb-2", isPending && "opacity-70")}
+        viewportClassName="flex items-start gap-4 pb-1"
+      >
         <SortableContext items={stageIds} strategy={horizontalListSortingStrategy}>
           {stages.map((stage) => (
             <StageColumn
@@ -123,7 +133,7 @@ export function CrmBoard({
           ))}
         </SortableContext>
         {canEdit && <NewStageButton />}
-      </div>
+      </ScrollAreaX>
 
       <AlertDialog
         open={pendingConversion !== null}

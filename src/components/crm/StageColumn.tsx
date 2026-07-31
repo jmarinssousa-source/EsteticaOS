@@ -14,6 +14,7 @@ import { formatCurrency } from "@/lib/format";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { LeadCard } from "@/components/crm/LeadCard";
+import { TooltipHint } from "@/components/ui/tooltip-hint";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -95,15 +96,17 @@ export function StageColumn({
     >
       <div className="flex items-center gap-1 border-b p-2">
         {canEdit && !editing && (
-          <button
-            type="button"
-            className="touch-none text-muted-foreground hover:text-foreground"
-            aria-label="Arrastar para reordenar coluna"
-            {...listeners}
-            {...attributes}
-          >
-            <GripVertical className="size-4" />
-          </button>
+          <TooltipHint label="Arrastar para mudar a coluna de lugar">
+            <button
+              type="button"
+              className="touch-none text-muted-foreground hover:text-foreground"
+              aria-label="Arrastar para reordenar coluna"
+              {...listeners}
+              {...attributes}
+            >
+              <GripVertical className="size-4" />
+            </button>
+          </TooltipHint>
         )}
         {editing ? (
           <Input
@@ -149,9 +152,20 @@ export function StageColumn({
         {canEdit && !editing && (
           <div className="flex items-center">
             <AlertDialog>
-              <AlertDialogTrigger render={<Button variant="ghost" size="icon" className="size-6" />}>
-                <Trash2 className="size-3.5" />
-              </AlertDialogTrigger>
+              <TooltipHint label="Excluir coluna">
+                <AlertDialogTrigger
+                  render={
+                    <Button
+                      variant="ghost"
+                      size="icon"
+                      className="size-6"
+                      aria-label={`Excluir coluna ${stage.name}`}
+                    />
+                  }
+                >
+                  <Trash2 className="size-3.5" />
+                </AlertDialogTrigger>
+              </TooltipHint>
               <AlertDialogContent>
                 <AlertDialogHeader>
                   <AlertDialogTitle>Excluir coluna &quot;{stage.name}&quot;?</AlertDialogTitle>

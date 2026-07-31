@@ -201,3 +201,18 @@
     margin-inline-start: auto;
   }
 }
+
+/**
+ * Esconde a barra de rolagem nativa.
+ *
+ * Só para containers que trazem a própria barra desenhada (ver
+ * ScrollAreaX). No macOS a barra nativa fica escondida até alguém rolar,
+ * e no Windows ela aparece; sem isto, o Windows mostraria duas.
+ */
+.hide-native-scrollbar {
+  scrollbar-width: none;
+  -ms-overflow-style: none;
+}
+.hide-native-scrollbar::-webkit-scrollbar {
+  display: none;
+}

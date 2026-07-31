@@ -14,6 +14,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { LeadDetailDialog } from "@/components/crm/LeadDetailDialog";
+import { TooltipHint } from "@/components/ui/tooltip-hint";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -66,7 +67,11 @@ export function LeadCard({
         ref={setNodeRef}
         style={style}
         className={cn(
-          "touch-none gap-1.5 p-3 shadow-sm transition-shadow hover:shadow-md",
+          // `touch-manipulation` e não `touch-none`: o navegador precisa
+          // continuar dono do gesto de rolar, senão o dedo apoiado em um
+          // card trava o quadro inteiro. Quem segura por meio segundo cai
+          // no sensor de toque e arrasta.
+          "touch-manipulation gap-1.5 p-3 shadow-sm transition-shadow hover:shadow-md",
           canEdit && "cursor-grab active:cursor-grabbing",
           isDragging && "z-10 opacity-60",
           stale && "border-amber-500",
@@ -85,40 +90,45 @@ export function LeadCard({
               </span>
             )}
             {lead.phone && (
-              <Button
-                variant="ghost"
-                size="icon"
-                className="size-5 text-muted-foreground hover:text-emerald-600"
-                aria-label={`Chamar ${lead.name} no WhatsApp`}
-                nativeButton={false}
-                render={
-                  <a
-                    href={buildWhatsAppUrl(lead.phone, `Olá, ${lead.name.split(" ")[0]}! `)}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                    onPointerDown={(e) => e.stopPropagation()}
-                    onClick={(e) => e.stopPropagation()}
-                  />
-                }
-              >
-                <MessageCircle className="size-3" />
-              </Button>
-            )}
-            {canEdit && (
-              <AlertDialog>
-                <AlertDialogTrigger
+              <TooltipHint label="Enviar mensagem no WhatsApp">
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="size-5 text-muted-foreground hover:text-emerald-600"
+                  aria-label={`Chamar ${lead.name} no WhatsApp`}
+                  nativeButton={false}
                   render={
-                    <Button
-                      variant="ghost"
-                      size="icon"
-                      className="size-5 text-muted-foreground hover:text-destructive"
+                    <a
+                      href={buildWhatsAppUrl(lead.phone, `Olá, ${lead.name.split(" ")[0]}! `)}
+                      target="_blank"
+                      rel="noopener noreferrer"
                       onPointerDown={(e) => e.stopPropagation()}
                       onClick={(e) => e.stopPropagation()}
                     />
                   }
                 >
-                  <Trash2 className="size-3" />
-                </AlertDialogTrigger>
+                  <MessageCircle className="size-3" />
+                </Button>
+              </TooltipHint>
+            )}
+            {canEdit && (
+              <AlertDialog>
+                <TooltipHint label="Excluir lead">
+                  <AlertDialogTrigger
+                    render={
+                      <Button
+                        variant="ghost"
+                        size="icon"
+                        className="size-5 text-muted-foreground hover:text-destructive"
+                        aria-label={`Excluir lead ${lead.name}`}
+                        onPointerDown={(e) => e.stopPropagation()}
+                        onClick={(e) => e.stopPropagation()}
+                      />
+                    }
+                  >
+                    <Trash2 className="size-3" />
+                  </AlertDialogTrigger>
+                </TooltipHint>
                 <AlertDialogContent onClick={(e) => e.stopPropagation()}>
                   <AlertDialogHeader>
                     <AlertDialogTitle>Excluir lead &quot;{lead.name}&quot;?</AlertDialogTitle>
