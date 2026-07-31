@@ -310,8 +310,10 @@ export async function updatePassword(
     data: { user },
   } = await supabase.auth.getUser();
 
+  // A tela já barra quem chega sem sessão; isto cobre a sessão que
+  // vence entre abrir a página e enviar o formulário.
   if (!user) {
-    return { error: "Sua sessão de recuperação expirou. Solicite um novo link." };
+    return { error: "Este link expirou ou já foi usado. Peça um novo convite." };
   }
 
   const { error } = await supabase.auth.updateUser({
@@ -319,8 +321,12 @@ export async function updatePassword(
   });
 
   if (error) {
+    console.error("updatePassword falhou:", error.code, error.status);
     return { error: "Não foi possível atualizar sua senha. Tente novamente." };
   }
 
+  // Senha criada, sessão de pé: a pessoa entra direto, sem passar pelo
+  // login de novo. Vale para o convite recém-aceito e para quem estava
+  // recuperando a senha.
   redirect("/hoje");
 }
