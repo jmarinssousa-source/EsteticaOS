@@ -84,18 +84,48 @@ comissões, agenda, sessões, pacientes, estoque, anamneses) com filtro de
 período e exportação; receita por profissional; usuários e permissões;
 importação e exportação em Excel ou CSV.
 
-**Conta:** teste de 7 dias (`TRIAL_DAYS`), cadastro sem cartão,
-ativação da assinatura por conversa no WhatsApp.
+**Conta:** teste de 7 dias (`TRIAL_DAYS`), cadastro sem cartão, bloqueio
+das telas internas quando o teste vence, ativação do plano na tela
+`/plano` por Pix ou cartão de crédito recorrente.
+
+## Preço público
+
+Decidido e publicado. Fonte única no código: `lib/plan/pricing.ts`.
+**Nunca escreva o valor à mão em componente, texto ou metadata**, importe
+das constantes: preço repetido em cinco arquivos fica desatualizado em
+quatro.
+
+| Item | Valor | Constante |
+|---|---|---|
+| Plano mensal | R$ 217 por mês | `PLAN_MONTHLY_PRICE_CENTS` |
+| Plano anual | R$ 1.997 por ano | `PLAN_YEARLY_PRICE_CENTS` |
+| Equivalente mensal no anual | R$ 167 por mês | `PLAN_YEARLY_EQUIVALENT_CENTS` |
+| Economia do anual | R$ 607 por ano | `PLAN_YEARLY_SAVINGS_CENTS` |
+| Teste grátis | 7 dias, sem cartão | `TRIAL_DAYS` |
+
+Nome do plano: **EstéticaOS Completo** (`PLAN_NAME`). Um plano só, sem
+níveis, sem módulo cobrado à parte e sem cobrança por profissional ou por
+paciente.
+
+Formas de pagamento anunciáveis: **Pix** e **cartão de crédito com
+renovação automática**. Nunca citar o nome do provedor de pagamento em
+texto público.
 
 ## Claims permitidos
 
 - "7 dias com todos os recursos liberados. Sem cartão de crédito."
+- "Profissionais e pacientes ilimitados." (não há cap em lugar nenhum do
+  código; nenhuma tela cobra ou limita por quantidade)
+- "R$ 217 por mês, ou R$ 1.997 por ano, equivalente a R$ 167 por mês."
 - "Nada é apagado quando o teste termina." (não há rotina de exclusão)
-- "O sistema avisa na tela alguns dias antes do teste acabar."
-  (`TRIAL_WARNING_DAYS = 3`, `components/plan/TrialBanner.tsx`)
+- "Desde o primeiro dia, a tela mostra quantos dias faltam para o teste
+  terminar." (`components/plan/TrialBanner.tsx`, visível o teste inteiro)
+- "Quando o teste vence, as telas da clínica ficam pausadas até a
+  ativação do plano." (`lib/plan/gate.ts` + layout de `(dashboard)`)
+- "Ative no Pix ou no cartão, dentro do sistema." (a tela existe; ver a
+  ressalva de provedor na tabela de pendências)
 - "Cada clínica só enxerga os próprios dados, por regra no banco."
 - "As fotos de prontuário ficam em armazenamento privado."
-- "O sistema não limita a quantidade de usuários." (não há cap no código)
 - "A recepção marca horário sem enxergar o caixa." (padrão do perfil
   `reception` não inclui `finance_view`)
 - "Importe pacientes, procedimentos, agenda e lançamentos financeiros de
@@ -122,12 +152,29 @@ Estes já apareceram em versões anteriores da landing e foram removidos.
 | "Exporte todos os seus dados" | **Parcial.** A exportação não cobre prontuário, fotos nem anamneses. |
 | "Cadastro só com nome da clínica e e-mail" | **Falso.** Pede nome, clínica, e-mail, telefone, senha e confirmação de e-mail. |
 | "Pronto em 2 / 10 / 5 minutos" | **Não medido.** Nunca cronometrado. Não prometer tempo. |
-| "O acesso é bloqueado quando o teste vence" | **Falso.** Hoje só aparece aviso; não há bloqueio automático. |
-| "Cancele quando quiser" | **Sem fluxo.** Não existe cancelamento no produto. |
-| "Um preço só", "a partir de R$ X" | **Sem preço público.** Não há preço nem cobrança no repositório. |
-| "Suporte sempre humano", "resposta em X horas" | **Decisão comercial não confirmada.** Pode-se dizer que o WhatsApp fala com quem faz o sistema, sem prometer prazo. |
+| "Cancele quando quiser" | **Sem fluxo.** Não existe cancelamento self-service no produto. O estado `canceled` existe no banco, mas quem cancela ainda é uma pessoa, na mão. |
+| "Pagamento automático", "cobrança recorrente já funcionando" | **Ainda não.** A UI de checkout existe e é honesta, mas nenhum provedor está ligado. Ver a tabela de pendências. |
+| "Emitimos nota fiscal" | **Não existe.** Nenhuma emissão de NF no sistema. |
+| Citar o nome do provedor de pagamento na landing | **Proibido.** Detalhe de implementação, não argumento de venda. |
+| "Suporte sempre humano", "resposta em X horas" | **Decisão comercial não confirmada.** Pode-se oferecer o WhatsApp como canal, sem prometer prazo nem quem atende. |
 | LGPD, criptografia específica, backup, certificação | **Sem prova documental.** Falar só de RLS e bucket privado. |
 | Depoimentos, número de clínicas, nota, selo | **Não existem.** Nunca inventar. |
+
+### Pendências de cobrança, e o que já pode ser dito
+
+A tela de Plano mostra o preço, o estado da conta e os botões de Pix e
+cartão. O que ainda não existe é o provedor ligado do outro lado.
+
+| Item | Estado | O que a interface faz hoje |
+|---|---|---|
+| Cartão recorrente | Estrutura pronta, chaves ausentes | `startCheckout` devolve `not_configured` e a tela avisa que a forma está sendo liberada |
+| Pix | Sem provedor escolhido | Mesmo comportamento. **Nunca gerar QR Code de exemplo** |
+| Webhook de confirmação | Não implementado | Nenhum caminho no código marca clínica como paga |
+| Ativação da assinatura | Manual | Só a service role escreve `plan_status`, no servidor |
+
+Regra que não se negocia: **assinatura só vira `active` por confirmação
+do provedor**. Nenhum botão, nenhuma action e nenhuma tela pode marcar
+pagamento aprovado por conta própria.
 
 ## Voz da marca
 
@@ -161,6 +208,13 @@ três"; três frases curtas seguidas em sequência.
 - **"Entrar"** aparece só no cabeçalho, nunca como CTA de seção.
 - Redução de risco que acompanha o CTA: "7 dias com todos os recursos
   liberados. Sem cartão de crédito."
+- Na seção de preço: "Teste por 7 dias. Se fizer sentido para a sua
+  rotina, ative o plano no Pix ou cartão."
+
+O preço é público e fica na própria página, na seção `#preco`. **Não
+mandar ninguém para o WhatsApp para saber quanto custa**: preço escondido
+atrás de conversa é o que faz a leitora fechar a aba. O WhatsApp continua
+sendo canal de dúvida, nunca de negociação de valor.
 
 ## Regras de pontuação
 

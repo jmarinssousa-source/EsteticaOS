@@ -11,17 +11,22 @@ export function Topbar({
   email,
   role,
   permissions,
+  showNav = true,
 }: {
   clinicName: string;
   fullName: string;
   email: string;
   role: ClinicRole;
   permissions: Partial<Permissions>;
+  /** Falso quando o plano está bloqueado: sem menu, porque todo item
+   *  levaria a uma tela barrada. O menu da conta continua, para dar
+   *  saída pelo "Sair". */
+  showNav?: boolean;
 }) {
   return (
     <header className="flex h-16 shrink-0 items-center justify-between border-b bg-background px-4 md:px-6">
       <div className="flex items-center gap-2">
-        <MobileNav role={role} permissions={permissions} />
+        {showNav && <MobileNav role={role} permissions={permissions} />}
         <div className="flex items-center gap-2 md:hidden">
           <LogoMark className="size-7" />
           <div className="flex flex-col">

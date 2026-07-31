@@ -5,6 +5,7 @@ import { Sidebar } from "@/components/layout/Sidebar";
 import { Topbar } from "@/components/layout/Topbar";
 import { TrialBanner } from "@/components/plan/TrialBanner";
 import { InstallPrompt } from "@/components/pwa/InstallPrompt";
+import { shouldBlock } from "@/lib/plan/gate";
 
 export default async function DashboardLayout({
   children,
@@ -33,6 +34,17 @@ export default async function DashboardLayout({
 
   const plan = await getClinicPlan();
 
+  // Teste vencido ou assinatura encerrada: o painel fecha e sobra o
+  // caminho para resolver. Nada é apagado, e /plano continua de pé.
+  if (await shouldBlock(plan)) {
+    redirect("/plano?acesso=bloqueado");
+  }
+
+  // Sem o menu lateral quando está bloqueado: cada item levaria a uma
+  // tela que o redirecionamento acima vai barrar, e oferecer porta
+  // trancada é pior do que não oferecer porta.
+  const showNav = !plan.blocked;
+
   return (
     <>
       {/* `dvh` em vez de `vh`: no Safari do iPhone a barra de endereço entra
@@ -41,7 +53,13 @@ export default async function DashboardLayout({
           conteúdo e, com ela, a página inteira para os lados. */}
       <div className="flex min-h-dvh">
         <div className="print:hidden">
-          <Sidebar clinicName={member.clinicName} role={member.role} permissions={member.permissions} />
+          {showNav && (
+            <Sidebar
+              clinicName={member.clinicName}
+              role={member.role}
+              permissions={member.permissions}
+            />
+          )}
         </div>
         <div className="flex min-h-dvh min-w-0 flex-1 flex-col">
           <div className="print:hidden">
@@ -51,6 +69,7 @@ export default async function DashboardLayout({
               email={member.email}
               role={member.role}
               permissions={member.permissions}
+              showNav={showNav}
             />
           </div>
           <main className="flex-1 overflow-y-auto bg-muted/20 p-4 md:p-6 print:overflow-visible print:bg-white print:p-0">

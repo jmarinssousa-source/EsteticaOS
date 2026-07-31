@@ -22,6 +22,15 @@ import { Logo, LogoMark } from "@/components/brand/Logo";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
 import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
 import { TRIAL_DAYS } from "@/lib/plan/trial";
+import {
+  formatPrice,
+  PLAN_FEATURES,
+  PLAN_MONTHLY_PRICE_CENTS,
+  PLAN_NAME,
+  PLAN_YEARLY_EQUIVALENT_CENTS,
+  PLAN_YEARLY_PRICE_CENTS,
+  PLAN_YEARLY_SAVINGS_CENTS,
+} from "@/lib/plan/pricing";
 import { supportWhatsAppUrl } from "@/lib/brand";
 import { ClinicJourney } from "@/components/marketing/ClinicJourney";
 import { HojeScreen } from "@/components/marketing/JourneyScreens";
@@ -50,11 +59,17 @@ import { HojeScreen } from "@/components/marketing/JourneyScreens";
 const CTA_LABEL = "Testar grátis";
 const RISK_LINE = `${TRIAL_DAYS} dias com todos os recursos liberados. Sem cartão de crédito.`;
 
-/** Fatos que a leitora pode conferir na primeira sessão de uso. */
+/**
+ * Fatos que a leitora confere sozinha na primeira sessão de uso.
+ *
+ * "Profissionais e pacientes ilimitados" entrou aqui porque, com preço
+ * público, a primeira dúvida deixa de ser "quanto custa" e passa a ser
+ * "quanto vai custar quando eu crescer".
+ */
 const TRUST = [
+  "Profissionais e pacientes ilimitados",
   "Anamnese e termo assinados pela paciente",
   "Fotos de evolução em armazenamento privado",
-  "Os dados da sua clínica separados dos de qualquer outra",
   "Abre no celular e instala como aplicativo",
 ];
 
@@ -167,24 +182,32 @@ const STEPS = [
 
 export const FAQ = [
   {
-    question: `O que acontece quando os ${TRIAL_DAYS} dias terminam?`,
-    answer:
-      "Nada é apagado. Seus dados continuam guardados do jeito que estão. O sistema avisa na tela alguns dias antes do prazo acabar e, para continuar usando, é só falar com a gente pelo WhatsApp.",
+    question: "Quanto custa o EstéticaOS?",
+    answer: `O plano completo custa ${formatPrice(PLAN_MONTHLY_PRICE_CENTS)} por mês. No anual, fica ${formatPrice(PLAN_YEARLY_PRICE_CENTS)} por ano, equivalente a ${formatPrice(PLAN_YEARLY_EQUIVALENT_CENTS)} por mês. O plano inclui profissionais e pacientes ilimitados.`,
   },
   {
-    question: "Preciso cadastrar cartão para testar?",
+    question: "Preciso colocar cartão para testar?",
+    answer: `Não. O teste dura ${TRIAL_DAYS} dias e não pede cartão. Quando o teste terminar, o acesso ao sistema fica pausado até a ativação do plano.`,
+  },
+  {
+    question: "O que acontece quando o teste termina?",
     answer:
-      "Não. O cadastro pede o seu nome, o nome da clínica, e-mail, telefone e uma senha. Cartão não entra em nenhum momento do teste.",
+      "Os dados da clínica continuam guardados, mas o acesso às áreas internas fica bloqueado até a ativação do plano.",
+  },
+  {
+    question: "Tem limite de profissionais ou pacientes?",
+    answer:
+      "Não. O EstéticaOS tem profissionais e pacientes ilimitados no plano completo.",
+  },
+  {
+    question: "Como faço para pagar?",
+    answer:
+      "Pelo Pix ou por cartão de crédito com renovação automática. A ativação é feita na tela Plano, dentro do sistema, depois que você cria a conta.",
   },
   {
     question: "Já uso outro sistema. Consigo trazer meus dados?",
     answer:
       "Sim. Exporte de onde você está hoje em Excel ou CSV e importe em Configurações, na aba Importação e exportação. O sistema aceita telefone e CPF com ou sem máscara, entende data nos dois formatos e mostra, linha por linha, o que entrou e o motivo do que ficou de fora.",
-  },
-  {
-    question: "Quantas pessoas da equipe podem usar?",
-    answer:
-      "O sistema não limita a quantidade de usuários. Você convida cada pessoa em Configurações e define, permissão por permissão, o que ela vê e o que ela edita.",
   },
   {
     question: "Funciona no celular?",
@@ -263,7 +286,7 @@ export function Landing() {
             <ul className="flex items-center gap-6 text-sm">
               {[
                 { href: "#por-dentro", label: "Por dentro" },
-                { href: "#comecar", label: "Como começar" },
+                { href: "#preco", label: "Preço" },
                 { href: "#perguntas", label: "Perguntas" },
               ].map((link) => (
                 <li key={link.href}>
@@ -560,30 +583,78 @@ export function Landing() {
         </section>
 
         {/* ============================================================
-            A oferta, dita inteira. O que acontece depois do teste é a
-            pergunta que trava a decisão, então ela vem antes do FAQ. */}
-        <section className="border-t border-border/70 px-4 py-20 md:px-6">
-          <div className="mx-auto max-w-3xl">
-            <Eyebrow>O teste</Eyebrow>
-            <SectionTitle>Como funciona o teste, e o que vem depois</SectionTitle>
+            O preço, dito inteiro e sem asterisco. Vem antes do FAQ
+            porque é a pergunta que trava a decisão.
 
-            <div className="mt-8 space-y-4 text-muted-foreground">
-              <p>
-                São {TRIAL_DAYS} dias com todos os recursos liberados, sem cadastrar cartão. O que
-                você fizer no teste continua ali depois.
-              </p>
-              <p>
-                Quando o prazo termina, nada é apagado. O sistema avisa na tela alguns dias antes e
-                seus dados ficam guardados do jeito que estão.
-              </p>
-              <p>
-                Para continuar, é uma conversa no WhatsApp com quem faz o sistema. A assinatura da
-                sua clínica é ativada ali, e o valor a gente combina nessa mesma conversa.
-              </p>
-            </div>
+            Um card só, porque existe um plano só. Nada de três colunas
+            fingindo escolha quando a escolha real é mensal ou anual. */}
+        <section id="preco" className="scroll-mt-20 border-t border-border/70 px-4 py-20 md:px-6">
+          <div className="mx-auto max-w-5xl">
+            <Eyebrow>Preço</Eyebrow>
+            <SectionTitle>Um plano só. Sem surpresa quando a clínica cresce.</SectionTitle>
+            <p className="mt-4 max-w-3xl text-muted-foreground">
+              Use agenda, prontuário, anamnese, termos, fotos de evolução, CRM, financeiro,
+              comissões, estoque e relatórios em uma única assinatura. Profissionais e pacientes
+              ilimitados.
+            </p>
 
-            <div className="mt-8">
-              <CtaButton href="/cadastro">{CTA_LABEL}</CtaButton>
+            <div className="mt-12 overflow-hidden rounded-2xl border border-border">
+              <div className="grid lg:grid-cols-[minmax(0,22rem)_1fr]">
+                {/* Coluna do preço. Primeira no DOM, então no celular a
+                    leitora vê quanto custa antes da lista. */}
+                <div className="border-b border-border bg-muted/40 p-6 sm:p-8 lg:border-r lg:border-b-0">
+                  <p className="font-medium">{PLAN_NAME}</p>
+
+                  <p className="mt-5 flex items-baseline gap-1.5">
+                    <span className="font-heading text-5xl font-semibold tracking-tight">
+                      {formatPrice(PLAN_MONTHLY_PRICE_CENTS)}
+                    </span>
+                    <span className="text-muted-foreground">/mês</span>
+                  </p>
+
+                  <div className="mt-5 rounded-xl border border-border bg-background p-4">
+                    <p className="text-sm font-medium">
+                      {formatPrice(PLAN_YEARLY_EQUIVALENT_CENTS)}/mês, pago anualmente
+                    </p>
+                    {/* Sans, não mono: as duas linhas da caixa são frase,
+                        não coluna de dado. A monoespaçada da página fica
+                        reservada para hora, valor e data dentro das
+                        telas recriadas do sistema. */}
+                    <p className="mt-1 text-sm tabular-nums text-muted-foreground">
+                      {formatPrice(PLAN_YEARLY_PRICE_CENTS)} por ano
+                    </p>
+                    <p className="mt-2 inline-block rounded-full bg-sage/15 px-2.5 py-0.5 text-xs font-medium text-[oklch(0.42_0.08_150)] dark:text-sage">
+                      Economize {formatPrice(PLAN_YEARLY_SAVINGS_CENTS)} por ano
+                    </p>
+                  </div>
+
+                  <div className="mt-6">
+                    <CtaButton href="/cadastro">{CTA_LABEL}</CtaButton>
+                  </div>
+
+                  <p className="mt-3 text-base text-muted-foreground sm:text-sm">
+                    {TRIAL_DAYS} dias grátis, sem cartão de crédito.
+                  </p>
+                </div>
+
+                {/* Coluna do que vem junto. */}
+                <div className="p-6 sm:p-8">
+                  <p className="text-sm font-medium">O que está incluído</p>
+                  <ul className="mt-4 grid gap-x-8 gap-y-2.5 sm:grid-cols-2">
+                    {PLAN_FEATURES.map((item) => (
+                      <li key={item} className="flex items-start gap-2 text-base sm:text-sm">
+                        <Check className="mt-0.5 size-4 shrink-0 text-sage" aria-hidden />
+                        {item}
+                      </li>
+                    ))}
+                  </ul>
+
+                  <p className="mt-7 border-t border-border pt-5 text-base text-muted-foreground sm:text-sm">
+                    Teste por {TRIAL_DAYS} dias. Se fizer sentido para a sua rotina, ative o plano no
+                    Pix ou cartão.
+                  </p>
+                </div>
+              </div>
             </div>
           </div>
         </section>
@@ -619,7 +690,7 @@ export function Landing() {
               >
                 Chame no WhatsApp
               </a>
-              , responde quem faz o sistema.
+              .
             </p>
           </div>
         </section>

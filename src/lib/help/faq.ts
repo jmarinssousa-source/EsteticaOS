@@ -384,11 +384,13 @@ export const FAQ_ENTRIES: FaqEntry[] = [
     question: "Como funciona o teste grátis e o plano?",
     steps: [
       "Toda clínica nova começa com 7 dias de teste, com tudo liberado e sem cartão de crédito.",
-      "Quando faltarem 3 dias ou menos, aparece um aviso no topo da tela com quantos dias restam.",
-      "Em Plano, no menu lateral, você vê a data exata em que o teste termina e o que está incluído.",
-      "Se o teste vencer, seus dados continuam guardados — nada é apagado. Basta ativar o plano para voltar a usar.",
+      "Desde o primeiro dia, um aviso no topo da tela mostra quantos dias faltam para o teste terminar.",
+      "Em Plano, no menu lateral, você vê a data exata em que o teste termina, o preço e o que está incluído.",
+      "O plano completo custa R$ 217 por mês. No anual são R$ 1.997 por ano, o equivalente a R$ 167 por mês, com profissionais e pacientes ilimitados.",
+      "Quando o teste vence, as telas da clínica ficam pausadas até a ativação do plano. Nenhum dado é apagado: tudo volta como estava assim que o plano for ativado.",
+      "A ativação é feita na própria tela Plano, no Pix ou no cartão de crédito.",
     ],
-    keywords: ["plano", "teste", "trial", "grátis", "assinatura", "vencer", "pagar"],
+    keywords: ["plano", "teste", "trial", "grátis", "assinatura", "vencer", "pagar", "preço", "pix", "cartão"],
   },
   {
     id: "aniversariantes",
