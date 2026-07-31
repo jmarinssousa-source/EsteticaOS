@@ -251,9 +251,18 @@ export async function requestPasswordReset(
 
   // Always return success, whether or not the e-mail exists, to avoid
   // leaking which e-mails are registered.
-  await supabase.auth.resetPasswordForEmail(parsed.data.email, {
+  //
+  // O erro, porém, vai para o log do servidor. Antes ele era descartado
+  // junto com a resposta, então SMTP caído ou limite de envio estourado
+  // ficavam invisíveis: a tela dizia "verifique seu e-mail" e ninguém
+  // nunca descobria por que o e-mail não chegava.
+  const { error } = await supabase.auth.resetPasswordForEmail(parsed.data.email, {
     redirectTo: `${siteUrl}/auth/callback?next=/redefinir-senha`,
   });
+
+  if (error) {
+    console.error("resetPasswordForEmail falhou:", error.code, error.status, error.message);
+  }
 
   return { success: true };
 }

@@ -71,8 +71,10 @@ export default async function UsuariosPage() {
                   <TableCell>
                     <MemberRoleSelect
                       userId={m.user_id}
+                      name={m.full_name}
                       role={m.role as ClinicRole}
                       canEdit={isOwner}
+                      isSelf={m.user_id === member.userId}
                     />
                   </TableCell>
                   <TableCell>
@@ -94,10 +96,15 @@ export default async function UsuariosPage() {
                       {m.status === "active" ? "Ativo" : "Inativo"}
                     </Badge>
                   </TableCell>
+                  {/* A própria linha não tem ações: desativar ou remover a
+                      si mesmo tranca a pessoa para fora. Linha de outro
+                      dono tem, porque a clínica pode ter dois e um
+                      precisa poder tirar o outro. O servidor recusa se
+                      sobrar apenas um. */}
                   {isOwner && (
                     <TableCell className="text-right whitespace-nowrap">
-                      {m.role === "owner" ? (
-                        <span className="text-sm text-muted-foreground">—</span>
+                      {m.user_id === member.userId ? (
+                        <span className="text-sm text-muted-foreground">Você</span>
                       ) : (
                         <MemberActions
                           userId={m.user_id}
