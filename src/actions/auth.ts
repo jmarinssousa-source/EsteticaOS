@@ -326,11 +326,37 @@ export async function updatePassword(
 
   if (error) {
     console.error("updatePassword falhou:", error.code, error.status);
+    // O Supabase recusa repetir a senha que já está valendo. "Não foi
+    // possível, tente novamente" mandava a pessoa tentar exatamente a
+    // mesma coisa de novo, sem nunca dizer qual era o problema.
+    if (error.code === "same_password") {
+      return { error: "A senha nova precisa ser diferente da que você já usa." };
+    }
+    if (error.code === "weak_password") {
+      return { error: "Senha muito fraca. Use pelo menos 8 caracteres, misturando letras e números." };
+    }
     return { error: "Não foi possível atualizar sua senha. Tente novamente." };
   }
 
-  // Senha criada, sessão de pé: a pessoa entra direto, sem passar pelo
-  // login de novo. Vale para o convite recém-aceito e para quem estava
-  // recuperando a senha.
-  redirect("/hoje");
+  // Derruba a conta em todos os outros aparelhos.
+  //
+  // É o que faz a troca de senha valer alguma coisa. Quem troca a senha
+  // desconfiando de alguém (celular perdido, computador da recepção,
+  // alguém que descobriu a senha antiga) espera que a outra ponta caia
+  // — e sem isto a sessão dela continua de pé com a senha velha, que já
+  // nem serve mais para entrar.
+  //
+  // `scope: "others"` preserva a sessão desta aba de propósito: quem
+  // acabou de escolher a senha não precisa provar nada digitando-a de
+  // novo trinta segundos depois.
+  const { error: erroDeSessoes } = await supabase.auth.signOut({ scope: "others" });
+  if (erroDeSessoes) {
+    // Não impede a entrada: a senha já mudou, e travar aqui deixaria a
+    // pessoa fora do sistema por causa de uma limpeza que falhou.
+    console.error("signOut(others) falhou:", erroDeSessoes.code, erroDeSessoes.status);
+  }
+
+  // Senha no lugar e sessão de pé: a pessoa entra direto. O aviso do que
+  // acabou de acontecer aparece no Hoje.
+  redirect("/hoje?senha=alterada");
 }

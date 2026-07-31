@@ -9,6 +9,7 @@ import {
   Package,
   PenLine,
   ReceiptText,
+  ShieldCheck,
   Wrench,
 } from "lucide-react";
 import { getCurrentMember } from "@/lib/auth/session";
@@ -38,9 +39,9 @@ function isStaleLead(lastMovedAt: string, staleLeadDays: number) {
 export default async function HojePage({
   searchParams,
 }: {
-  searchParams: Promise<{ error?: string }>;
+  searchParams: Promise<{ error?: string; senha?: string }>;
 }) {
-  const [{ error }, member] = await Promise.all([searchParams, getCurrentMember()]);
+  const [{ error, senha }, member] = await Promise.all([searchParams, getCurrentMember()]);
   if (!member) return null;
 
   const canViewAgenda = hasPermission(member, "agenda_view");
@@ -227,6 +228,21 @@ export default async function HojePage({
           <AlertDescription>
             Você não tem permissão para acessar essa área. Fale com quem administra a clínica se
             precisar desse acesso.
+          </AlertDescription>
+        </Alert>
+      )}
+
+      {/* A confirmação por escrito do que acabou de acontecer. Sem ela a
+          troca de senha termina em silêncio e fica a dúvida se pegou. */}
+      {senha === "alterada" && (
+        <Alert>
+          <ShieldCheck className="size-4" />
+          <AlertDescription>
+            <p className="font-medium">Senha alterada.</p>
+            <p className="mt-1 text-sm">
+              É essa que você vai usar da próxima vez que entrar. Se você estava conectada em outro
+              computador ou celular, aquela sessão foi encerrada e vai pedir a senha nova.
+            </p>
           </AlertDescription>
         </Alert>
       )}
