@@ -1,6 +1,7 @@
 import Link from "next/link";
 import { ArrowLeft } from "lucide-react";
 import { requirePermission } from "@/lib/auth/session";
+import { hasPermission } from "@/lib/auth/permissions";
 import { createClient } from "@/lib/supabase/server";
 import {
   DEFAULT_INACTIVE_PATIENT_DAYS,
@@ -31,7 +32,8 @@ export default async function ReativacaoPage() {
           <h1 className="text-2xl font-bold tracking-tight">Reativação de pacientes</h1>
           <p className="text-sm text-muted-foreground">
             Pacientes sem retorno há mais de {inactiveDays} dias e sem horário marcado. Quem já tem
-            agendamento não aparece aqui. Ajuste o prazo em Configurações {">"} Minha clínica.
+            agendamento não aparece aqui. Ajuste o prazo em Configurações {">"} Minha clínica. Quem
+            você tirar da lista some daqui, mas continua cadastrado em Pacientes.
           </p>
         </div>
         <Button variant="outline" size="sm" nativeButton={false} render={<Link href="/pacientes" />}>
@@ -44,6 +46,7 @@ export default async function ReativacaoPage() {
         patients={patients}
         clinicName={clinic?.name ?? member.clinicName}
         inactiveDays={inactiveDays}
+        canEdit={hasPermission(member, "patients_edit")}
       />
     </div>
   );

@@ -237,10 +237,6 @@ export default async function HojePage({
         <p className="text-muted-foreground">{member.clinicName}</p>
       </div>
 
-      {canViewPatients && (
-        <BirthdaysCard birthdays={birthdays} clinicName={member.clinicName} />
-      )}
-
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
         {canViewGoal && (
           <GoalCard
@@ -258,6 +254,10 @@ export default async function HojePage({
             icon={CalendarDays}
             href="/agenda"
           />
+        )}
+
+        {canViewPatients && (
+          <BirthdaysCard birthdays={birthdays} clinicName={member.clinicName} />
         )}
 
         {canViewCrm && (

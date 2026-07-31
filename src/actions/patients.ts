@@ -225,3 +225,51 @@ export async function deletePatients(
   revalidatePathsAfterPatientChange();
   return { success: true, removed: data?.length ?? 0 };
 }
+
+/**
+ * Tira o paciente da lista de reativação, sem tocar no cadastro.
+ *
+ * A agenda, o prontuário e o histórico financeiro continuam iguais: o
+ * que muda é só a clínica parar de ser cobrada a chamar essa pessoa de
+ * volta. Quem quer apagar de vez usa a exclusão na tela de Pacientes.
+ */
+export async function dismissFromReactivation(patientId: string): Promise<ActionResult> {
+  const member = await requirePermission("patients_edit");
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("patients")
+    .update({ reactivation_dismissed_at: new Date().toISOString() })
+    .eq("id", patientId)
+    .eq("clinic_id", member.clinicId);
+
+  if (error) {
+    console.error("dismissFromReactivation falhou:", error.message);
+    return { error: "Não foi possível tirar o paciente da lista." };
+  }
+
+  revalidatePath("/pacientes/reativacao");
+  revalidatePath("/hoje");
+  return { success: true };
+}
+
+/** Desfaz a remoção, para o clique errado. */
+export async function restoreToReactivation(patientId: string): Promise<ActionResult> {
+  const member = await requirePermission("patients_edit");
+  const supabase = await createClient();
+
+  const { error } = await supabase
+    .from("patients")
+    .update({ reactivation_dismissed_at: null })
+    .eq("id", patientId)
+    .eq("clinic_id", member.clinicId);
+
+  if (error) {
+    console.error("restoreToReactivation falhou:", error.message);
+    return { error: "Não foi possível trazer o paciente de volta para a lista." };
+  }
+
+  revalidatePath("/pacientes/reativacao");
+  revalidatePath("/hoje");
+  return { success: true };
+}

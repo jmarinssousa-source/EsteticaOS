@@ -10,7 +10,7 @@ import {
 } from "@/lib/patients/birthdays";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { StatCardBody } from "@/components/dashboard/StatCard";
 import { Textarea } from "@/components/ui/textarea";
 import {
   Dialog,
@@ -33,6 +33,14 @@ function getStoredTemplate() {
   return window.localStorage.getItem(TEMPLATE_KEY);
 }
 
+/**
+ * Aniversariantes do dia como mais um quadradinho da grade do Hoje.
+ *
+ * Antes isto era um painel largo no topo da página, que empurrava os
+ * indicadores para baixo todo dia em que alguém fazia aniversário. Agora
+ * ocupa o mesmo espaço dos vizinhos e a lista abre em uma janela: manda a
+ * mensagem e volta para o Hoje sem trocar de tela.
+ */
 export function BirthdaysCard({
   birthdays,
   clinicName,
@@ -47,10 +55,19 @@ export function BirthdaysCard({
   const [override, setOverride] = useState<string | null>(null);
   const template = override ?? stored ?? DEFAULT_BIRTHDAY_MESSAGE;
 
+  const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
   const [draft, setDraft] = useState(DEFAULT_BIRTHDAY_MESSAGE);
 
-  if (birthdays.length === 0) return null;
+  // Nome de exemplo da prévia: o primeiro da lista quando há alguém, e um
+  // nome qualquer quando a lista está vazia (dá para ajustar o texto com
+  // antecedência, em um dia sem aniversariante).
+  const previewName = birthdays[0]?.name ?? "Maria";
+
+  function openList() {
+    setEditing(false);
+    setOpen(true);
+  }
 
   function openEditor() {
     setDraft(template);
@@ -69,97 +86,129 @@ export function BirthdaysCard({
   }
 
   return (
-    <Card className="border-champagne/40">
-      <CardHeader>
-        <div className="flex flex-wrap items-center justify-between gap-2">
-          <div className="flex items-center gap-2">
-            <Cake className="size-5 text-champagne" aria-hidden />
-            <CardTitle>
-              {birthdays.length === 1
-                ? "1 aniversariante hoje"
-                : `${birthdays.length} aniversariantes hoje`}
-            </CardTitle>
-          </div>
-          <Button size="sm" variant="outline" onClick={openEditor}>
-            <Pencil className="size-4" />
-            Editar mensagem
-          </Button>
-        </div>
-        <CardDescription>
-          A mensagem já vai pronta no WhatsApp — dá para revisar antes de enviar.
-        </CardDescription>
-      </CardHeader>
-      <CardContent className="space-y-2">
-        {birthdays.map((patient) => (
-          <div
-            key={patient.id}
-            className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 px-3 py-2"
-          >
-            <div className="min-w-0 flex-1">
-              <Link href={`/pacientes/${patient.id}`} className="font-medium hover:underline">
-                {patient.name}
-              </Link>
-              {patient.age !== null && (
-                <span className="ml-2 text-sm text-muted-foreground">
-                  faz {patient.age} anos
-                </span>
-              )}
-            </div>
-            {patient.phone ? (
-              <Button
-                size="sm"
-                variant="outline"
-                nativeButton={false}
-                render={
-                  <a
-                    href={buildWhatsAppUrl(
-                      patient.phone,
-                      renderBirthdayMessage(template, patient.name, clinicName),
-                    )}
-                    target="_blank"
-                    rel="noopener noreferrer"
-                  />
-                }
-              >
-                <MessageCircle className="size-4" />
-                Parabenizar
-              </Button>
-            ) : (
-              <span className="text-xs text-muted-foreground">Sem telefone cadastrado</span>
-            )}
-          </div>
-        ))}
-      </CardContent>
+    <>
+      <button type="button" onClick={openList} className="rounded-xl text-left">
+        <StatCardBody
+          title="Aniversariantes de hoje"
+          value={String(birthdays.length)}
+          icon={Cake}
+          emphasis={birthdays.length > 0}
+          subtitle={birthdays.length > 0 ? "Abrir e parabenizar" : undefined}
+        />
+      </button>
 
-      <Dialog open={editing} onOpenChange={setEditing}>
+      <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle>Mensagem de aniversário</DialogTitle>
-            <DialogDescription>
-              Use <code className="font-mono">{"{nome}"}</code> para o primeiro nome do paciente e{" "}
-              <code className="font-mono">{"{clinica}"}</code> para o nome da clínica. O texto fica
-              salvo para os próximos aniversariantes.
-            </DialogDescription>
-          </DialogHeader>
+          {editing ? (
+            <>
+              <DialogHeader>
+                <DialogTitle>Mensagem de aniversário</DialogTitle>
+                <DialogDescription>
+                  Use <code className="font-mono">{"{nome}"}</code> para o primeiro nome do paciente
+                  e <code className="font-mono">{"{clinica}"}</code> para o nome da clínica. O texto
+                  fica salvo para os próximos aniversariantes.
+                </DialogDescription>
+              </DialogHeader>
 
-          <Textarea rows={5} value={draft} onChange={(e) => setDraft(e.target.value)} />
+              <Textarea rows={5} value={draft} onChange={(e) => setDraft(e.target.value)} />
 
-          <div className="rounded-lg border border-border bg-muted/40 p-3">
-            <p className="text-xs font-medium text-muted-foreground">Como vai ficar</p>
-            <p className="mt-1 text-sm">
-              {renderBirthdayMessage(draft, birthdays[0].name, clinicName)}
-            </p>
-          </div>
+              <div className="rounded-lg border border-border bg-muted/40 p-3">
+                <p className="text-xs font-medium text-muted-foreground">Como vai ficar</p>
+                <p className="mt-1 text-sm">
+                  {renderBirthdayMessage(draft, previewName, clinicName)}
+                </p>
+              </div>
 
-          <DialogFooter>
-            <Button variant="ghost" onClick={resetTemplate}>
-              <RotateCcw className="size-4" />
-              Voltar ao texto original
-            </Button>
-            <Button onClick={saveTemplate}>Salvar</Button>
-          </DialogFooter>
+              <DialogFooter>
+                <Button variant="ghost" onClick={resetTemplate}>
+                  <RotateCcw className="size-4" />
+                  Voltar ao texto original
+                </Button>
+                <Button variant="outline" onClick={() => setEditing(false)}>
+                  Cancelar
+                </Button>
+                <Button onClick={saveTemplate}>Salvar</Button>
+              </DialogFooter>
+            </>
+          ) : (
+            <>
+              <DialogHeader>
+                <DialogTitle>
+                  {birthdays.length === 1
+                    ? "1 aniversariante hoje"
+                    : `${birthdays.length} aniversariantes hoje`}
+                </DialogTitle>
+                <DialogDescription>
+                  {birthdays.length > 0
+                    ? "A mensagem já vai pronta no WhatsApp, dá para revisar antes de enviar."
+                    : "Ninguém da sua base faz aniversário hoje."}
+                </DialogDescription>
+              </DialogHeader>
+
+              {birthdays.length > 0 && (
+                <div className="space-y-2">
+                  {birthdays.map((patient) => (
+                    <div
+                      key={patient.id}
+                      className="flex flex-wrap items-center gap-2 rounded-lg border border-border/60 px-3 py-2"
+                    >
+                      <div className="min-w-0 flex-1">
+                        <Link
+                          href={`/pacientes/${patient.id}`}
+                          className="font-medium hover:underline"
+                        >
+                          {patient.name}
+                        </Link>
+                        {patient.age !== null && (
+                          <span className="ml-2 text-sm text-muted-foreground">
+                            faz {patient.age} anos
+                          </span>
+                        )}
+                      </div>
+                      {patient.phone ? (
+                        <Button
+                          size="sm"
+                          variant="outline"
+                          nativeButton={false}
+                          render={
+                            <a
+                              href={buildWhatsAppUrl(
+                                patient.phone,
+                                renderBirthdayMessage(template, patient.name, clinicName),
+                              )}
+                              target="_blank"
+                              rel="noopener noreferrer"
+                              // Enviada a mensagem, a janela fecha e a
+                              // pessoa volta para o Hoje: o WhatsApp abre
+                              // em outra aba, não há por que manter a
+                              // lista aberta por baixo.
+                              onClick={() => setOpen(false)}
+                            />
+                          }
+                        >
+                          <MessageCircle className="size-4" />
+                          Parabenizar
+                        </Button>
+                      ) : (
+                        <span className="text-xs text-muted-foreground">
+                          Sem telefone cadastrado
+                        </span>
+                      )}
+                    </div>
+                  ))}
+                </div>
+              )}
+
+              <DialogFooter>
+                <Button variant="outline" onClick={openEditor}>
+                  <Pencil className="size-4" />
+                  Editar mensagem
+                </Button>
+              </DialogFooter>
+            </>
+          )}
         </DialogContent>
       </Dialog>
-    </Card>
+    </>
   );
 }
