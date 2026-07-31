@@ -85,10 +85,61 @@ Ajuste também o **Subject** de cada um:
 - Reset password: `Criar uma nova senha — EstéticaOS`
 - Invite user: `Seu acesso à clínica está pronto — EstéticaOS`
 
-Os arquivos usam `{{ .ConfirmationURL }}` e `{{ .Email }}`, que o
-Supabase substitui no envio. Mantenha essas marcações como estão.
+Os arquivos usam `{{ .TokenHash }}`, `{{ .SiteURL }}` e `{{ .Email }}`,
+que o Supabase substitui no envio. Mantenha essas marcações como estão.
 
-### 5. Conferir
+**Por que não `{{ .ConfirmationURL }}`.** Essa variável monta um link
+para `/auth/v1/verify` no Supabase, que confere o `redirect_to` contra a
+lista de Redirect URLs e, quando não bate, larga a pessoa na Site URL:
+foi assim que o convidado foi parar na landing em vez da tela de senha.
+E mesmo quando bate, o `verify` devolve a sessão no fragmento da URL
+(`#access_token=...`), que o navegador nunca envia ao servidor — uma
+aplicação com sessão em cookie não enxerga nada ali.
+
+Com `{{ .TokenHash }}` o e-mail aponta direto para o EstéticaOS, sem
+intermediário e sem lista de destinos para casar. Cada template tem o
+seu tipo:
+
+| Template | Link do botão |
+| --- | --- |
+| Confirm signup | `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=signup&next=/hoje` |
+| Reset password | `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=recovery&next=/redefinir-senha` |
+| Invite user | `{{ .SiteURL }}/auth/confirm?token_hash={{ .TokenHash }}&type=invite&next=/redefinir-senha` |
+
+Nos arquivos o `&` aparece como `&amp;`, que é o certo dentro de HTML. O
+cliente de e-mail decodifica sozinho.
+
+### 5. Liberar os destinos com curinga
+
+**Authentication > URL Configuration > Redirect URLs.**
+
+Este é o passo que quebrou o convite na primeira vez que os e-mails
+funcionaram. O link do e-mail não aponta para o EstéticaOS: ele aponta
+para `/auth/v1/verify` no Supabase, que confere o `redirect_to` contra
+esta lista e só então manda a pessoa para cá. **Entrada sem curinga casa
+com a URL inteira, query incluída.** Então `.../auth/callback` não casa
+com `.../auth/callback?next=/redefinir-senha`, o Supabase descarta o
+destino e joga a pessoa na Site URL, ou seja, na landing.
+
+Deixe a lista assim, com o `?**` no fim de cada uma:
+
+```
+https://esteticaos.com/auth/callback?**
+https://www.esteticaos.com/auth/callback?**
+https://estetica-os-plum.vercel.app/auth/callback?**
+```
+
+Pode manter também as versões sem curinga; elas não atrapalham.
+
+O código tem duas redes de segurança para o caso de esta lista sair do
+ar de novo, mas nenhuma substitui o ajuste acima:
+
+1. `/auth/callback` deduz o destino quando o `next` não chega: quem tem
+   `invited_at` e nunca entrou vai para `/redefinir-senha`.
+2. A landing devolve para `/auth/callback` qualquer `?code=` que caia
+   nela, em vez de engolir o código.
+
+### 6. Conferir
 
 1. Cadastre uma clínica com um e-mail seu de verdade e confirme que a
    mensagem chega **na caixa de entrada**, não no spam.

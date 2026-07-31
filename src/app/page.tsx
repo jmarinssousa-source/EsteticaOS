@@ -1,6 +1,7 @@
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { Landing, FAQ } from "@/components/marketing/Landing";
+import { AuthHashCatcher } from "@/components/auth/AuthHashCatcher";
 import {
   PLAN_MONTHLY_PRICE_CENTS,
   PLAN_NAME,
@@ -66,7 +67,28 @@ function structuredData(base: string) {
   ];
 }
 
-export default async function Home() {
+export default async function Home({
+  searchParams,
+}: {
+  searchParams: Promise<{ code?: string; error_code?: string; error?: string }>;
+}) {
+  const params = await searchParams;
+
+  // Rede de segurança do link de e-mail.
+  //
+  // Quando o `redirect_to` do convite não bate com a lista de Redirect
+  // URLs do projeto, o Supabase descarta o destino e larga a pessoa na
+  // Site URL, que é esta página, com o código de autenticação pendurado
+  // na query. Era assim que o convidado caía na landing em vez da tela
+  // de senha. Em vez de perder o código, ele é devolvido ao callback,
+  // que sabe o que fazer com ele.
+  if (params.code) {
+    redirect(`/auth/callback?code=${encodeURIComponent(params.code)}`);
+  }
+  if (params.error_code || params.error) {
+    redirect("/login?error=link-invalido");
+  }
+
   const supabase = await createClient();
   const {
     data: { user },
@@ -86,6 +108,10 @@ export default async function Home() {
           __html: JSON.stringify(structuredData(siteUrl())).replace(/</g, "\\u003c"),
         }}
       />
+      {/* Quando o Supabase recusa o destino do link, ele larga a pessoa
+          aqui — com a sessão no fragmento da URL, que só o navegador
+          enxerga. Sem isto o convidado fica olhando a landing. */}
+      <AuthHashCatcher />
       <Landing />
     </>
   );

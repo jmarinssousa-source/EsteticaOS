@@ -8,7 +8,12 @@ const PUBLIC_PATHS = [
   "/recuperar-senha",
   "/redefinir-senha",
   "/conta-desativada",
+  // Volta dos links de e-mail. Precisa ser pública pela própria
+  // natureza: quem chega por aqui ainda não tem sessão, é justamente o
+  // que essas rotas vão criar. Barrar aqui manda o convidado para o
+  // login e queima o token do convite sem nunca usá-lo.
   "/auth/callback",
+  "/auth/confirm",
   // Links que o paciente abre sem ter conta, autorizados só pela posse
   // do token na URL.
   "/anamnese",

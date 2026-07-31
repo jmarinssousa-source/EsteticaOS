@@ -2,6 +2,7 @@ import Link from "next/link";
 import { Logo } from "@/components/brand/Logo";
 import { OrbyniqBadge } from "@/components/layout/OrbyniqBadge";
 import { ThemeToggle } from "@/components/ui/theme-toggle";
+import { AuthHashCatcher } from "@/components/auth/AuthHashCatcher";
 
 export default function AuthLayout({
   children,
@@ -10,6 +11,10 @@ export default function AuthLayout({
 }) {
   return (
     <div className="relative flex min-h-screen flex-col items-center justify-center overflow-hidden px-4 py-10">
+      {/* O fragmento com a sessão pode cair em qualquer tela daqui: o
+          /auth/callback repassa para o login quando não acha `code`, e o
+          navegador leva o `#` junto no redirecionamento. */}
+      <AuthHashCatcher />
       <div
         aria-hidden
         className="pointer-events-none absolute inset-0 -z-10"
