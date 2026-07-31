@@ -56,17 +56,3 @@ export async function getTodaysBirthdays(
 
   return findBirthdays(patients, today);
 }
-
-export const DEFAULT_BIRTHDAY_MESSAGE =
-  "Oi, {nome}! 🎉 Hoje é seu dia e a equipe da {clinica} queria te desejar muitas felicidades. " +
-  "Que seu ano seja lindo — e sempre que quiser cuidar de você, a gente está por aqui!";
-
-/** Troca as marcações do modelo pelos dados reais. */
-export function renderBirthdayMessage(
-  template: string,
-  patientName: string,
-  clinicName: string,
-): string {
-  const firstName = patientName.trim().split(/\s+/)[0];
-  return template.replaceAll("{nome}", firstName).replaceAll("{clinica}", clinicName);
-}

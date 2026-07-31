@@ -1,17 +1,19 @@
 "use client";
 
-import { useState, useSyncExternalStore } from "react";
+import { useState } from "react";
 import Link from "next/link";
-import { Cake, MessageCircle, Pencil, RotateCcw } from "lucide-react";
+import { Cake, MessageCircle, Pencil } from "lucide-react";
+import type { Birthday } from "@/lib/patients/birthdays";
 import {
+  BIRTHDAY_TEMPLATE_KEY,
   DEFAULT_BIRTHDAY_MESSAGE,
-  renderBirthdayMessage,
-  type Birthday,
-} from "@/lib/patients/birthdays";
+  renderPatientMessage,
+} from "@/lib/patients/messages";
+import { useMessageTemplate } from "@/lib/patients/use-message-template";
 import { buildWhatsAppUrl } from "@/lib/whatsapp";
 import { Button } from "@/components/ui/button";
 import { StatCardBody } from "@/components/dashboard/StatCard";
-import { Textarea } from "@/components/ui/textarea";
+import { MessageTemplateEditor } from "@/components/patients/MessageTemplateEditor";
 import {
   Dialog,
   DialogContent,
@@ -20,18 +22,6 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-
-/** O texto ajustado fica no navegador de quem usa: é preferência de quem
- *  manda a mensagem, não dado da clínica, e assim não exige tabela nova. */
-const TEMPLATE_KEY = "esteticaos:birthday-message";
-
-function subscribeToTemplate() {
-  return () => {};
-}
-
-function getStoredTemplate() {
-  return window.localStorage.getItem(TEMPLATE_KEY);
-}
 
 /**
  * Aniversariantes do dia como mais um quadradinho da grade do Hoje.
@@ -48,12 +38,7 @@ export function BirthdaysCard({
   birthdays: Birthday[];
   clinicName: string;
 }) {
-  // O texto salvo vive no localStorage, que o servidor não enxerga; ler
-  // por useSyncExternalStore mantém o HTML do servidor e o do cliente
-  // iguais na primeira pintura e troca depois da hidratação.
-  const stored = useSyncExternalStore(subscribeToTemplate, getStoredTemplate, () => null);
-  const [override, setOverride] = useState<string | null>(null);
-  const template = override ?? stored ?? DEFAULT_BIRTHDAY_MESSAGE;
+  const { template, save } = useMessageTemplate(BIRTHDAY_TEMPLATE_KEY, DEFAULT_BIRTHDAY_MESSAGE);
 
   const [open, setOpen] = useState(false);
   const [editing, setEditing] = useState(false);
@@ -74,17 +59,6 @@ export function BirthdaysCard({
     setEditing(true);
   }
 
-  function saveTemplate() {
-    const value = draft.trim() || DEFAULT_BIRTHDAY_MESSAGE;
-    window.localStorage.setItem(TEMPLATE_KEY, value);
-    setOverride(value);
-    setEditing(false);
-  }
-
-  function resetTemplate() {
-    setDraft(DEFAULT_BIRTHDAY_MESSAGE);
-  }
-
   return (
     <>
       <button type="button" onClick={openList} className="rounded-xl text-left">
@@ -100,36 +74,19 @@ export function BirthdaysCard({
       <Dialog open={open} onOpenChange={setOpen}>
         <DialogContent className="sm:max-w-lg">
           {editing ? (
-            <>
-              <DialogHeader>
-                <DialogTitle>Mensagem de aniversário</DialogTitle>
-                <DialogDescription>
-                  Use <code className="font-mono">{"{nome}"}</code> para o primeiro nome do paciente
-                  e <code className="font-mono">{"{clinica}"}</code> para o nome da clínica. O texto
-                  fica salvo para os próximos aniversariantes.
-                </DialogDescription>
-              </DialogHeader>
-
-              <Textarea rows={5} value={draft} onChange={(e) => setDraft(e.target.value)} />
-
-              <div className="rounded-lg border border-border bg-muted/40 p-3">
-                <p className="text-xs font-medium text-muted-foreground">Como vai ficar</p>
-                <p className="mt-1 text-sm">
-                  {renderBirthdayMessage(draft, previewName, clinicName)}
-                </p>
-              </div>
-
-              <DialogFooter>
-                <Button variant="ghost" onClick={resetTemplate}>
-                  <RotateCcw className="size-4" />
-                  Voltar ao texto original
-                </Button>
-                <Button variant="outline" onClick={() => setEditing(false)}>
-                  Cancelar
-                </Button>
-                <Button onClick={saveTemplate}>Salvar</Button>
-              </DialogFooter>
-            </>
+            <MessageTemplateEditor
+              title="Mensagem de aniversário"
+              draft={draft}
+              onDraftChange={setDraft}
+              defaultMessage={DEFAULT_BIRTHDAY_MESSAGE}
+              previewName={previewName}
+              clinicName={clinicName}
+              onCancel={() => setEditing(false)}
+              onSave={() => {
+                save(draft);
+                setEditing(false);
+              }}
+            />
           ) : (
             <>
               <DialogHeader>
@@ -174,7 +131,7 @@ export function BirthdaysCard({
                             <a
                               href={buildWhatsAppUrl(
                                 patient.phone,
-                                renderBirthdayMessage(template, patient.name, clinicName),
+                                renderPatientMessage(template, patient.name, clinicName),
                               )}
                               target="_blank"
                               rel="noopener noreferrer"
