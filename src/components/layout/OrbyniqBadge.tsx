@@ -13,7 +13,9 @@ export function OrbyniqBadge({
 }) {
   return (
     <div className={cn("flex flex-col gap-1 text-[11px] text-muted-foreground", className)}>
-      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground/80">
+      {/* Sem o /80: com a opacidade a linha ficava em 3.6:1 sobre o
+          fundo, abaixo do mínimo AA para texto pequeno. */}
+      <span className="text-[10px] font-medium uppercase tracking-wider text-muted-foreground">
         {VENDOR_LINE}
       </span>
       {showSupport && (
@@ -22,7 +24,9 @@ export function OrbyniqBadge({
           target="_blank"
           rel="noopener noreferrer"
           title="Suporte Orbyniq via WhatsApp"
-          className="flex items-center gap-1 hover:text-primary"
+          // `min-h-11` porque é um link solto, não dentro de uma frase:
+          // vale a regra do alvo de toque de 44px.
+          className="flex min-h-11 items-center gap-1 hover:text-primary"
         >
           <MessageCircle className="size-3" />
           Suporte Orbyniq: {SUPPORT_WHATSAPP_LABEL}

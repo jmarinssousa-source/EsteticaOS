@@ -1,6 +1,10 @@
 # EstéticaOS
 
-SaaS de gestão visual para clínicas de estética. Stack: Next.js 16 (App Router) + TypeScript + Tailwind + shadcn/ui, com Supabase (Postgres, Auth, RLS multi-clínica).
+Sistema de gestão desenvolvido para clínicas de estética: agenda, prontuário, fotos de evolução, anamnese, termo de consentimento, CRM de leads, orçamentos, financeiro, comissões, estoque e relatórios no mesmo fluxo, do primeiro contato ao retorno da paciente.
+
+Stack: Next.js 16 (App Router) + TypeScript + Tailwind + shadcn/ui, com Supabase (Postgres, Auth, RLS multi-clínica).
+
+> Texto público (landing, metadata, e-mails, anúncios): o posicionamento, os claims permitidos e os proibidos ficam em [`.agents/product-marketing.md`](.agents/product-marketing.md). Leia antes de escrever qualquer coisa que saia para fora.
 
 ## Fase 1 — Fundação do SaaS
 

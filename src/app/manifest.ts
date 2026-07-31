@@ -2,10 +2,11 @@ import type { MetadataRoute } from "next";
 
 export default function manifest(): MetadataRoute.Manifest {
   return {
-    name: "EstéticaOS — Gestão para clínicas de estética",
+    name: "EstéticaOS: sistema para clínicas de estética",
     short_name: "EstéticaOS",
+    // Mesma frase da metadata do site, sem travessão.
     description:
-      "Agenda, prontuário, financeiro e CRM de leads num só sistema, feito para o dia a dia de clínicas de estética.",
+      "Agenda, prontuário, fotos de evolução, anamnese, CRM, financeiro e estoque num sistema só, feito para a rotina de clínicas de estética.",
     start_url: "/hoje",
     display: "standalone",
     background_color: "#fdfaf7",

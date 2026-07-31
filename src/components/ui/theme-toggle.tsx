@@ -10,7 +10,11 @@ function subscribe() {
   return () => {};
 }
 
-export function ThemeToggle() {
+/**
+ * `className` existe para a página de vendas, onde o alvo precisa dos
+ * 44px do dedo. No painel o padrão compacto continua valendo.
+ */
+export function ThemeToggle({ className }: { className?: string }) {
   const { resolvedTheme, setTheme } = useTheme();
   // Forces a re-render once hydration completes, without setState-in-effect:
   // the server snapshot is always false, the client snapshot always true.
@@ -18,7 +22,7 @@ export function ThemeToggle() {
 
   if (!mounted) {
     return (
-      <Button variant="ghost" size="icon-sm" aria-label="Alternar tema" disabled>
+      <Button variant="ghost" size="icon-sm" className={className} aria-label="Alternar tema" disabled>
         <Sun className="size-4" />
       </Button>
     );
@@ -32,6 +36,7 @@ export function ThemeToggle() {
       <Button
         variant="ghost"
         size="icon-sm"
+        className={className}
         aria-label={label}
         onClick={() => setTheme(isDark ? "light" : "dark")}
       >
