@@ -2,7 +2,16 @@
 
 import { useMemo, useState, useTransition } from "react";
 import Link from "next/link";
-import { ArrowDown, ArrowUp, CalendarPlus, MessageCircle, Pencil, Trash2 } from "lucide-react";
+import {
+  ArrowDown,
+  ArrowUp,
+  ArrowUpDown,
+  CalendarPlus,
+  CheckCheck,
+  MessageCircle,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import { toast } from "sonner";
 import { dismissFromReactivation, restoreToReactivation } from "@/actions/patients";
 import type { InactivePatient } from "@/lib/patients/reactivation";
@@ -32,27 +41,82 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog";
 
-/** Do mais antigo para o mais recente, ou o contrário. */
-type SortDirection = "oldest" | "recent";
+type SortColumn = "name" | "lastVisit";
+type SortDirection = "asc" | "desc";
+type Sort = { column: SortColumn; direction: SortDirection };
 
 /**
- * Ordena pela última visita.
+ * Ordena a lista pela coluna escolhida.
  *
- * Quem nunca veio entra com chave vazia, que ordena antes de qualquer
- * data: na ordem padrão ele aparece no topo, que é onde deve estar, e na
- * ordem invertida vai para o fim. Empate é desfeito por quem está sem
- * voltar há mais tempo, e depois pelo nome, para a lista não dançar entre
- * duas renderizações.
+ * Por última visita, quem nunca veio entra com chave vazia, que ordena
+ * antes de qualquer data: na ordem crescente aparece no topo, que é onde
+ * deve estar, e na decrescente vai para o fim. Empate de data é desfeito
+ * por quem está sem voltar há mais tempo e depois pelo nome, para a
+ * lista não dançar entre duas renderizações.
  */
-function sortByLastVisit(patients: InactivePatient[], direction: SortDirection) {
-  const factor = direction === "oldest" ? 1 : -1;
+function sortPatients(patients: InactivePatient[], sort: Sort) {
+  const factor = sort.direction === "asc" ? 1 : -1;
+
   return [...patients].sort((a, b) => {
+    if (sort.column === "name") {
+      return a.name.localeCompare(b.name, "pt-BR") * factor;
+    }
     const keyA = a.lastVisit ?? "";
     const keyB = b.lastVisit ?? "";
     if (keyA !== keyB) return keyA < keyB ? -factor : factor;
     if (a.daysSince !== b.daysSince) return b.daysSince - a.daysSince;
     return a.name.localeCompare(b.name, "pt-BR");
   });
+}
+
+/** Cabeçalho que ordena a tabela, com a seta do sentido atual. */
+function SortableHead({
+  label,
+  column,
+  sort,
+  onSort,
+  hint,
+  className,
+}: {
+  label: string;
+  column: SortColumn;
+  sort: Sort;
+  onSort: (column: SortColumn) => void;
+  /** Como a ordem é dita em voz alta, para leitor de tela. */
+  hint: { asc: string; desc: string };
+  className?: string;
+}) {
+  const active = sort.column === column;
+  const ascending = active && sort.direction === "asc";
+
+  return (
+    <TableHead
+      className={className}
+      aria-sort={active ? (ascending ? "ascending" : "descending") : "none"}
+    >
+      <button
+        type="button"
+        onClick={() => onSort(column)}
+        className="flex items-center gap-1 font-medium hover:text-foreground"
+      >
+        {label}
+        {active ? (
+          ascending ? (
+            <ArrowUp className="size-3.5" aria-hidden />
+          ) : (
+            <ArrowDown className="size-3.5" aria-hidden />
+          )
+        ) : (
+          <ArrowUpDown className="size-3.5 opacity-40" aria-hidden />
+        )}
+        <span className="sr-only">
+          {active
+            ? `${ascending ? hint.asc : hint.desc} Clique para inverter.`
+            : "Clique para ordenar por esta coluna."}
+        </span>
+      </button>
+    </TableHead>
+  );
 }
 
 export function ReactivationList({
@@ -78,11 +142,11 @@ export function ReactivationList({
 
   // Padrão: quem está sem voltar há mais tempo primeiro, que é a ordem
   // de quem mais precisa de um contato.
-  const [direction, setDirection] = useState<SortDirection>("oldest");
+  const [sort, setSort] = useState<Sort>({ column: "lastVisit", direction: "asc" });
   const [pageSize, setPageSize] = useState<number>(PATIENT_PAGE_SIZES[0]);
   const [page, setPage] = useState(1);
 
-  const ordered = useMemo(() => sortByLastVisit(patients, direction), [patients, direction]);
+  const ordered = useMemo(() => sortPatients(patients, sort), [patients, sort]);
 
   const totalPages = Math.max(1, Math.ceil(ordered.length / pageSize));
   // A página é limitada na renderização, e não num efeito: tirar alguém
@@ -92,25 +156,33 @@ export function ReactivationList({
   const firstOnPage = (currentPage - 1) * pageSize;
   const visible = ordered.slice(firstOnPage, firstOnPage + pageSize);
 
-  function toggleDirection() {
-    setDirection((current) => (current === "oldest" ? "recent" : "oldest"));
+  function handleSort(column: SortColumn) {
+    setSort((current) =>
+      current.column === column
+        ? { column, direction: current.direction === "asc" ? "desc" : "asc" }
+        : // Trocar de coluna começa no sentido mais útil de cada uma:
+          // nome em A-Z, data pela visita mais antiga.
+          { column, direction: "asc" },
+    );
     setPage(1);
   }
 
-  function confirmRemoval() {
-    const patient = pendingRemoval;
-    if (!patient) return;
-    setPendingRemoval(null);
-
+  /**
+   * Tira o paciente da lista.
+   *
+   * Os dois botões acabam aqui: o de "mensagem enviada", que é rotina do
+   * dia, e o da lixeira, que é para quem não é mais paciente. Só muda o
+   * aviso que aparece depois. Os dois trazem "Desfazer", porque nenhuma
+   * das duas é uma decisão que mereça um caminho de volta trabalhoso.
+   */
+  function removeFromList(patient: InactivePatient, message: string) {
     startTransition(async () => {
       const result = await dismissFromReactivation(patient.id);
       if ("error" in result && result.error) {
         toast.error(result.error);
         return;
       }
-      // O cadastro segue lá, então a mensagem diz exatamente o que
-      // aconteceu, e o "Desfazer" cobre o clique na linha errada.
-      toast.success(`${patient.name} saiu da lista de reativação.`, {
+      toast.success(message, {
         description: "O cadastro do paciente continua em Pacientes.",
         action: {
           label: "Desfazer",
@@ -123,6 +195,13 @@ export function ReactivationList({
         },
       });
     });
+  }
+
+  function confirmRemoval() {
+    const patient = pendingRemoval;
+    if (!patient) return;
+    setPendingRemoval(null);
+    removeFromList(patient, `${patient.name} saiu da lista de reativação.`);
   }
 
   const editor = (
@@ -200,26 +279,26 @@ export function ReactivationList({
           <Table>
             <TableHeader>
               <TableRow>
-                <TableHead>Paciente</TableHead>
-                <TableHead aria-sort={direction === "oldest" ? "ascending" : "descending"}>
-                  <button
-                    type="button"
-                    onClick={toggleDirection}
-                    className="flex items-center gap-1 font-medium hover:text-foreground"
-                  >
-                    Última visita
-                    {direction === "oldest" ? (
-                      <ArrowUp className="size-3.5" aria-hidden />
-                    ) : (
-                      <ArrowDown className="size-3.5" aria-hidden />
-                    )}
-                    <span className="sr-only">
-                      {direction === "oldest"
-                        ? "Ordenado da visita mais antiga para a mais recente. Clique para inverter."
-                        : "Ordenado da visita mais recente para a mais antiga. Clique para inverter."}
-                    </span>
-                  </button>
-                </TableHead>
+                <SortableHead
+                  label="Paciente"
+                  column="name"
+                  sort={sort}
+                  onSort={handleSort}
+                  hint={{
+                    asc: "Ordenado de A a Z.",
+                    desc: "Ordenado de Z a A.",
+                  }}
+                />
+                <SortableHead
+                  label="Última visita"
+                  column="lastVisit"
+                  sort={sort}
+                  onSort={handleSort}
+                  hint={{
+                    asc: "Ordenado da visita mais antiga para a mais recente.",
+                    desc: "Ordenado da visita mais recente para a mais antiga.",
+                  }}
+                />
                 <TableHead>Sem voltar há</TableHead>
                 <TableHead className="text-right">Contato</TableHead>
               </TableRow>
@@ -260,6 +339,21 @@ export function ReactivationList({
                           WhatsApp
                         </Button>
                       )}
+                      {canEdit && (
+                        <TooltipHint label="Já mandei a mensagem: tirar da lista">
+                          <Button
+                            size="sm"
+                            variant="ghost"
+                            className="text-muted-foreground hover:text-emerald-600"
+                            aria-label={`Marcar mensagem enviada para ${patient.name}`}
+                            onClick={() =>
+                              removeFromList(patient, `Mensagem marcada como enviada para ${patient.name}.`)
+                            }
+                          >
+                            <CheckCheck className="size-4" />
+                          </Button>
+                        </TooltipHint>
+                      )}
                       <TooltipHint label="Marcar um retorno na agenda">
                         <Button
                           size="sm"
@@ -272,7 +366,7 @@ export function ReactivationList({
                         </Button>
                       </TooltipHint>
                       {canEdit && (
-                        <TooltipHint label="Tirar da lista de reativação">
+                        <TooltipHint label="Não é mais paciente: tirar da lista">
                           <Button
                             size="sm"
                             variant="ghost"

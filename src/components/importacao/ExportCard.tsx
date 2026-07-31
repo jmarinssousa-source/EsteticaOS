@@ -11,11 +11,14 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 export function ExportCard({
   label,
   description,
+  columns,
   filename,
   action,
 }: {
   label: string;
   description: string;
+  /** Colunas que saem no arquivo, para a pessoa saber antes de baixar. */
+  columns: string[];
   filename: string;
   action: () => Promise<ExportData>;
 }) {
@@ -39,15 +42,37 @@ export function ExportCard({
         <CardTitle>{label}</CardTitle>
         <CardDescription>{description}</CardDescription>
       </CardHeader>
-      <CardContent className="flex gap-2">
-        <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleExport("csv")}>
-          <SheetIcon className="size-4" />
-          Exportar CSV
-        </Button>
-        <Button variant="outline" size="sm" disabled={isPending} onClick={() => handleExport("excel")}>
-          <FileSpreadsheet className="size-4" />
-          Exportar Excel
-        </Button>
+      <CardContent className="space-y-3">
+        <div className="flex flex-wrap gap-1">
+          {columns.map((column) => (
+            <span
+              key={column}
+              className="rounded-md bg-muted px-1.5 py-0.5 font-mono text-[11px] text-muted-foreground"
+            >
+              {column}
+            </span>
+          ))}
+        </div>
+        <div className="flex gap-2">
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isPending}
+            onClick={() => handleExport("excel")}
+          >
+            <FileSpreadsheet className="size-4" />
+            Baixar Excel
+          </Button>
+          <Button
+            variant="outline"
+            size="sm"
+            disabled={isPending}
+            onClick={() => handleExport("csv")}
+          >
+            <SheetIcon className="size-4" />
+            Baixar CSV
+          </Button>
+        </div>
       </CardContent>
     </Card>
   );
