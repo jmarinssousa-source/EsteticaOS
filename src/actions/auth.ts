@@ -6,6 +6,7 @@ import { resolveSiteUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { DEFAULT_ANAMNESIS_TEMPLATES } from "@/lib/anamnesis/default-templates";
 import { trialEndDate } from "@/lib/plan/trial";
+import { PASSWORD_SET_METADATA } from "@/lib/auth/must-set-password";
 import {
   forgotPasswordSchema,
   loginSchema,
@@ -318,6 +319,9 @@ export async function updatePassword(
 
   const { error } = await supabase.auth.updateUser({
     password: parsed.data.password,
+    // Apaga a pendência do convite: a partir daqui a pessoa tem senha e
+    // o painel para de mandá-la de volta para cá.
+    data: PASSWORD_SET_METADATA,
   });
 
   if (error) {

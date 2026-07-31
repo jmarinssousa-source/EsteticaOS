@@ -32,6 +32,17 @@ export default async function DashboardLayout({
     redirect("/conta-desativada");
   }
 
+  // Convite aceito mas senha nunca criada: a pessoa entrou pelo link do
+  // e-mail e está com sessão, mas sem senha ela não consegue voltar
+  // quando essa sessão expirar. O painel só abre depois de escolher uma.
+  //
+  // A checagem é aqui, e não no link do e-mail, porque o e-mail tem dois
+  // links (o botão e o endereço de copiar e colar) e nem sempre eles
+  // levam ao mesmo lugar. Aqui vale para qualquer caminho de entrada.
+  if (member.mustSetPassword) {
+    redirect("/redefinir-senha");
+  }
+
   const plan = await getClinicPlan();
 
   // Teste vencido ou assinatura encerrada: o painel fecha e sobra o
