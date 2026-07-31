@@ -6,7 +6,10 @@ import {
   ClipboardCheck,
   Download,
   FileSpreadsheet,
+  LifeBuoy,
   Lock,
+  MessageCircle,
+  Moon,
   PenLine,
   Percent,
   PackageSearch,
@@ -31,7 +34,7 @@ import {
   PLAN_YEARLY_PRICE_CENTS,
   PLAN_YEARLY_SAVINGS_CENTS,
 } from "@/lib/plan/pricing";
-import { supportWhatsAppUrl } from "@/lib/brand";
+import { SUPPORT_WHATSAPP_LABEL, supportWhatsAppUrl } from "@/lib/brand";
 import { ClinicJourney } from "@/components/marketing/ClinicJourney";
 import { HojeScreen } from "@/components/marketing/JourneyScreens";
 
@@ -165,6 +168,24 @@ const DATA_CARDS = [
   },
 ];
 
+const SUPPORT_CARDS = [
+  {
+    icon: LifeBuoy,
+    title: "Ajuda dentro do sistema",
+    text: "Um botão de Ajuda no topo de toda tela abre um painel com o passo a passo de cada parte do sistema, buscável por assunto ou por dúvida escrita com as suas palavras. O painel fica aberto do lado enquanto você mexe, então dá para ler e fazer ao mesmo tempo.",
+  },
+  {
+    icon: MessageCircle,
+    title: "WhatsApp de quem fez o sistema",
+    text: "O número do suporte fica no menu lateral, em toda tela. Do outro lado está a Orbyniq, que desenvolve o EstéticaOS, e não um formulário de chamado.",
+  },
+  {
+    icon: Moon,
+    title: "Claro ou escuro, como você preferir",
+    text: "Um clique no topo troca entre o tema claro e o escuro. A escolha fica salva no seu navegador, útil para quem atende à noite ou em sala de luz baixa.",
+  },
+];
+
 const STEPS = [
   {
     title: "Crie a conta da clínica",
@@ -218,6 +239,10 @@ export const FAQ = [
     question: "Como ficam os dados das minhas pacientes?",
     answer:
       "Cada clínica só enxerga os próprios dados, e esse isolamento é regra no banco, não filtro de tela. As fotos de prontuário ficam em armazenamento privado, liberado só para quem tem permissão na sua clínica.",
+  },
+  {
+    question: "E se eu travar em alguma tela?",
+    answer: `O sistema tem um botão de Ajuda no topo de toda tela, com o passo a passo de cada parte, buscável por assunto. E o WhatsApp do suporte, ${SUPPORT_WHATSAPP_LABEL}, fica no menu lateral: do outro lado está a Orbyniq, que desenvolve o EstéticaOS.`,
   },
 ];
 
@@ -560,6 +585,45 @@ export function Landing() {
                 </div>
               ))}
             </div>
+          </div>
+        </section>
+
+        {/* ============================================================
+            Apoio. Três coisas que existem no sistema e que ninguém
+            descobre pela lista de recursos: a ajuda embutida, o WhatsApp
+            de quem desenvolveu e o tema escuro.
+
+            Nada aqui promete tempo de resposta nem atendimento em
+            horário nenhum: o que se afirma é que o canal existe. */}
+        <section className="px-4 py-20 md:px-6">
+          <div className="mx-auto max-w-6xl">
+            <Eyebrow>Apoio</Eyebrow>
+            <SectionTitle>Você não precisa descobrir sozinha</SectionTitle>
+
+            <div className="mt-12 grid gap-x-10 gap-y-9 md:grid-cols-3">
+              {SUPPORT_CARDS.map((card) => (
+                <div key={card.title}>
+                  <card.icon className="size-5 text-primary" aria-hidden />
+                  <h3 className="mt-3 font-sans font-semibold">{card.title}</h3>
+                  <p className="mt-1.5 text-base text-muted-foreground sm:text-sm">{card.text}</p>
+                </div>
+              ))}
+            </div>
+
+            <p className="mt-9 text-base text-muted-foreground sm:text-sm">
+              O WhatsApp do suporte é{" "}
+              <a
+                href={supportWhatsAppUrl(
+                  "Olá! Vi o EstéticaOS no site e queria tirar uma dúvida.",
+                )}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="font-medium text-foreground underline underline-offset-4 hover:text-primary"
+              >
+                {SUPPORT_WHATSAPP_LABEL}
+              </a>
+              , o mesmo que fica dentro do painel.
+            </p>
           </div>
         </section>
 

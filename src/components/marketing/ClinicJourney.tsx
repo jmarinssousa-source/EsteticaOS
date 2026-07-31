@@ -1,6 +1,7 @@
 "use client";
 
 import { useCallback, useEffect, useId, useRef, useState } from "react";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { cn } from "@/lib/utils";
 import {
   AgendaScreen,
@@ -81,14 +82,50 @@ const STEPS = [
 
 const ROTATION_MS = 5000;
 
+/** Seta de navegar o palco, colada na borda esquerda ou direita. */
+function JourneyArrow({
+  side,
+  label,
+  controls,
+  onClick,
+}: {
+  side: "left" | "right";
+  label: string;
+  controls: string;
+  onClick: () => void;
+}) {
+  const Icon = side === "left" ? ChevronLeft : ChevronRight;
+  return (
+    <button
+      type="button"
+      onClick={onClick}
+      aria-label={label}
+      aria-controls={controls}
+      className={cn(
+        "absolute top-1/2 z-10 flex size-11 -translate-y-1/2 items-center justify-center rounded-full",
+        "border border-border bg-background/90 text-foreground shadow-sm backdrop-blur-sm",
+        "transition-colors hover:bg-accent focus-visible:ring-3 focus-visible:ring-ring/50 focus-visible:outline-none",
+        side === "left" ? "left-1 sm:-left-5" : "right-1 sm:-right-5",
+      )}
+    >
+      <Icon className="size-5" aria-hidden />
+    </button>
+  );
+}
+
 export function ClinicJourney({ className }: { className?: string }) {
   const [active, setActive] = useState(0);
   const [paused, setPaused] = useState(false);
+  // Quem tomou o controle fica com ele: depois do primeiro clique numa
+  // seta ou numa etapa, o rodízio não volta a rodar. Continuar trocando
+  // sozinho seria arrancar da mão de quem parou justamente para olhar
+  // uma tela com calma.
+  const [tookOver, setTookOver] = useState(false);
   const baseId = useId();
   const tabsRef = useRef<(HTMLButtonElement | null)[]>([]);
 
   useEffect(() => {
-    if (paused) return;
+    if (paused || tookOver) return;
     // A preferência do sistema é lida aqui, e não no CSS, porque o que
     // precisa parar é o temporizador — não adianta só esconder a
     // transição se a tela continua trocando sozinha.
@@ -99,12 +136,29 @@ export function ClinicJourney({ className }: { className?: string }) {
       setActive((current) => (current + 1) % STEPS.length);
     }, ROTATION_MS);
     return () => window.clearInterval(timer);
-  }, [paused]);
+  }, [paused, tookOver]);
 
-  const focusTab = useCallback((index: number) => {
+  const select = useCallback((index: number) => {
+    setTookOver(true);
     setActive(index);
-    tabsRef.current[index]?.focus();
   }, []);
+
+  const focusTab = useCallback(
+    (index: number) => {
+      select(index);
+      tabsRef.current[index]?.focus();
+    },
+    [select],
+  );
+
+  /** Anda `delta` etapas, dando a volta nas pontas. */
+  const move = useCallback(
+    (delta: number) => {
+      setTookOver(true);
+      setActive((current) => (current + delta + STEPS.length) % STEPS.length);
+    },
+    [],
+  );
 
   function onKeyDown(event: React.KeyboardEvent) {
     const last = STEPS.length - 1;
@@ -117,6 +171,7 @@ export function ClinicJourney({ className }: { className?: string }) {
   }
 
   const step = STEPS[active];
+  const panelId = `${baseId}-panel-${step.id}`;
 
   return (
     <div
@@ -133,11 +188,11 @@ export function ClinicJourney({ className }: { className?: string }) {
 
           A legenda mora dentro do painel, junto da tela que ela explica,
           e troca junto com ela. */}
-      <div className="flex min-h-[25rem] flex-col rounded-2xl border border-border bg-background p-4 sm:min-h-[27rem] sm:p-5">
+      <div className="relative flex min-h-[25rem] flex-col rounded-2xl border border-border bg-background p-4 sm:min-h-[27rem] sm:p-5">
         <div
           key={step.id}
           role="tabpanel"
-          id={`${baseId}-panel-${step.id}`}
+          id={panelId}
           aria-labelledby={`${baseId}-tab-${step.id}`}
           className="flex flex-1 flex-col gap-4 motion-safe:animate-in motion-safe:fade-in motion-safe:duration-500"
         >
@@ -147,6 +202,23 @@ export function ClinicJourney({ className }: { className?: string }) {
             <span className="text-muted-foreground">{step.detail}</span>
           </p>
         </div>
+
+        {/* Setas de quem quer olhar com calma. Ficam sobre o palco, nas
+            bordas, e mexem no mesmo estado da trilha de baixo: avançar
+            aqui acende a próxima etapa lá. O fundo é opaco o bastante
+            para a seta não sumir sobre a tela clara do sistema. */}
+        <JourneyArrow
+          side="left"
+          controls={panelId}
+          label={`Etapa anterior: ${STEPS[(active - 1 + STEPS.length) % STEPS.length].label}`}
+          onClick={() => move(-1)}
+        />
+        <JourneyArrow
+          side="right"
+          controls={panelId}
+          label={`Próxima etapa: ${STEPS[(active + 1) % STEPS.length].label}`}
+          onClick={() => move(1)}
+        />
       </div>
 
       {/* A trilha. Na largura pequena vira grade de dois, porque seis
@@ -171,7 +243,7 @@ export function ClinicJourney({ className }: { className?: string }) {
               aria-selected={index === active}
               aria-controls={`${baseId}-panel-${item.id}`}
               tabIndex={index === active ? 0 : -1}
-              onClick={() => setActive(index)}
+              onClick={() => select(index)}
               className={cn(
                 "group relative min-h-11 border-t-2 pt-2.5 text-left text-sm transition-colors outline-none sm:flex-1 sm:pr-3",
                 "focus-visible:ring-3 focus-visible:ring-ring/50",
