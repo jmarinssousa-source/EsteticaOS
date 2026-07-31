@@ -1,0 +1,62 @@
+{
+  "secret": "SEU_SEGREDO",
+  "event": "purchase_approved",
+  "data": {
+    "id": "1f1c81d2-088a-412d-8bb7-3d5269d64f58",
+    "refId": "6HngVo6",
+    "sck": "CLINIC_ID_monthly",
+    "utm_source": "esteticaos",
+    "utm_medium": "app",
+    "utm_campaign": "monthly",
+    "utm_content": "CLINIC_ID",
+    "customer": {
+      "name": "Fulana de Teste",
+      "birthDate": null,
+      "email": "fulana@exemplo.com.br",
+      "phone": "5511999990000",
+      "docNumber": "00000000000"
+    },
+    "affiliate": "",
+    "offer": {
+      "id": "36h8hoh",
+      "name": "EstéticaOS Completo — Mensal",
+      "price": 217.0
+    },
+    "offer_type": "main",
+    "product": {
+      "name": "EstéticaOS Completo",
+      "id": "f947c21c-d8f0-41a1-a0a6-fede9f27b3b7",
+      "short_id": "36h8hoh",
+      "supportEmail": "contato@esteticaos.com",
+      "type": "subscription",
+      "invoiceDescription": ""
+    },
+    "parent_order": "",
+    "subscription": {
+      "id": "d464132a-fcfa-4693-a6aa-a99483f06740",
+      "status": "active",
+      "current_period": 1,
+      "recurrence_period": 30,
+      "quantity_recurrences": -1,
+      "trial_days": 0,
+      "max_retries": 3,
+      "amount": "217.00",
+      "retry_interval": 3,
+      "paid_payments_quantity": 1,
+      "paymentMethod": "credit_card",
+      "next_payment_date": "2026-08-30T14:43:39.724743-03:00",
+      "createdAt": "2026-07-31T14:41:42.247628-03:00",
+      "canceledAt": null
+    },
+    "subscription_period": 1,
+    "status": "paid",
+    "baseAmount": 217.0,
+    "amount": 217.0,
+    "fees": 12.9,
+    "paymentMethod": "credit_card",
+    "paymentMethodName": "Cartão de Crédito",
+    "installments": 1,
+    "paidAt": "2026-07-31T14:43:43.575271-03:00",
+    "createdAt": "2026-07-31T14:43:43.022292-03:00"
+  }
+}

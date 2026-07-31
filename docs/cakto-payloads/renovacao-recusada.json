@@ -1,0 +1,37 @@
+{
+  "secret": "SEU_SEGREDO",
+  "event": "subscription_renewal_refused",
+  "data": {
+    "id": "c7e91b02-4d18-4f6a-9c33-2b8e5a0d4f77",
+    "refId": "9KmTzQa",
+    "customer": {
+      "name": "Fulana de Teste",
+      "email": "fulana@exemplo.com.br",
+      "phone": "5511999990000",
+      "docNumber": "00000000000"
+    },
+    "offer": {
+      "id": "36h8hoh",
+      "name": "EstéticaOS Completo — Mensal",
+      "price": 217.0
+    },
+    "product": {
+      "name": "EstéticaOS Completo",
+      "id": "f947c21c-d8f0-41a1-a0a6-fede9f27b3b7",
+      "type": "subscription"
+    },
+    "subscription": {
+      "id": "d464132a-fcfa-4693-a6aa-a99483f06740",
+      "status": "active",
+      "current_period": 3,
+      "recurrence_period": 30,
+      "paid_payments_quantity": 2,
+      "next_payment_date": "2026-10-03T14:43:39.724743-03:00",
+      "canceledAt": null
+    },
+    "status": "refused",
+    "amount": 217.0,
+    "paymentMethod": "credit_card",
+    "reason": "Cartão recusado pelo emissor"
+  }
+}

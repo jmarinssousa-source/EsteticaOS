@@ -153,7 +153,7 @@ Estes já apareceram em versões anteriores da landing e foram removidos.
 | "Cadastro só com nome da clínica e e-mail" | **Falso.** Pede nome, clínica, e-mail, telefone, senha e confirmação de e-mail. |
 | "Pronto em 2 / 10 / 5 minutos" | **Não medido.** Nunca cronometrado. Não prometer tempo. |
 | "Cancele quando quiser" | **Sem fluxo.** Não existe cancelamento self-service no produto. O estado `canceled` existe no banco, mas quem cancela ainda é uma pessoa, na mão. |
-| "Pagamento automático", "cobrança recorrente já funcionando" | **Ainda não.** A UI de checkout existe e é honesta, mas nenhum provedor está ligado. Ver a tabela de pendências. |
+| "Pagamento automático", "cobrança recorrente já funcionando" | **Liberado com ressalva.** O provedor está ligado e a renovação é automática. Só afirmar isso enquanto as variáveis de checkout e o webhook estiverem configurados em produção. Ver a tabela de pendências. |
 | "Emitimos nota fiscal" | **Não existe.** Nenhuma emissão de NF no sistema. |
 | Citar o nome do provedor de pagamento na landing | **Proibido.** Detalhe de implementação, não argumento de venda. |
 | "Suporte sempre humano", "resposta em X horas" | **Decisão comercial não confirmada.** Pode-se oferecer o WhatsApp como canal, sem prometer prazo nem quem atende. |
@@ -162,15 +162,29 @@ Estes já apareceram em versões anteriores da landing e foram removidos.
 
 ### Pendências de cobrança, e o que já pode ser dito
 
-A tela de Plano mostra o preço, o estado da conta e os botões de Pix e
-cartão. O que ainda não existe é o provedor ligado do outro lado.
+O provedor está ligado. A tela de Plano mostra o preço, o estado da
+conta e um botão que leva ao checkout hospedado, onde a pessoa escolhe
+Pix ou cartão. Detalhes em `docs/cakto.md`.
 
 | Item | Estado | O que a interface faz hoje |
 |---|---|---|
-| Cartão recorrente | Estrutura pronta, chaves ausentes | `startCheckout` devolve `not_configured` e a tela avisa que a forma está sendo liberada |
-| Pix | Sem provedor escolhido | Mesmo comportamento. **Nunca gerar QR Code de exemplo** |
-| Webhook de confirmação | Não implementado | Nenhum caminho no código marca clínica como paga |
-| Ativação da assinatura | Manual | Só a service role escreve `plan_status`, no servidor |
+| Checkout mensal e anual | Ligado | `startCheckout(cycle)` devolve a URL do provedor com a clínica identificada |
+| Escolha de Pix ou cartão | Fora do sistema | Acontece na tela do provedor. **Nunca gerar QR Code aqui dentro** |
+| Webhook de confirmação | Ligado | `POST /api/webhooks/cakto`, com segredo conferido |
+| Ativação da assinatura | Automática pelo webhook | Só a service role escreve `plan_status`, no servidor |
+| Cancelamento pelo cliente | **Não existe** | Não dizer "cancele quando quiser" |
+| Nota fiscal | **Não existe** | — |
+
+Duas condições antes de anunciar cobrança automática em texto público:
+
+1. `CAKTO_CHECKOUT_MONTHLY_URL`, `CAKTO_CHECKOUT_YEARLY_URL` e
+   `CAKTO_WEBHOOK_SECRET` configuradas em produção, e o webhook criado
+   no painel do provedor.
+2. **Confirmar que a oferta de assinatura aceita Pix.** A landing diz
+   "Pelo Pix ou por cartão de crédito com renovação automática". Se a
+   oferta recorrente só aceitar cartão, essa frase vira claim falso e
+   precisa ser corrigida — quem sabe quais formas estão liberadas é o
+   provedor, não o código.
 
 Regra que não se negocia: **assinatura só vira `active` por confirmação
 do provedor**. Nenhum botão, nenhuma action e nenhuma tela pode marcar

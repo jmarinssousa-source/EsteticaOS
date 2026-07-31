@@ -1,0 +1,32 @@
+{
+  "secret": "SEU_SEGREDO",
+  "event": "pix_gerado",
+  "data": {
+    "id": "8d21fa04-77c9-4ab2-91be-5f3c2e1a0b66",
+    "refId": "TzLp4Wc",
+    "sck": "CLINIC_ID_monthly",
+    "customer": {
+      "name": "Fulana de Teste",
+      "email": "fulana@exemplo.com.br",
+      "phone": "5511999990000",
+      "docNumber": "00000000000"
+    },
+    "offer": {
+      "id": "36h8hoh",
+      "name": "EstéticaOS Completo — Mensal",
+      "price": 217.0
+    },
+    "product": {
+      "name": "EstéticaOS Completo",
+      "id": "f947c21c-d8f0-41a1-a0a6-fede9f27b3b7",
+      "type": "subscription"
+    },
+    "status": "waiting_payment",
+    "amount": 217.0,
+    "paymentMethod": "pix",
+    "pix": {
+      "qrCode": "00020101021226770014BR.GOV.BCB.PIX-EXEMPLO-NAO-PAGAVEL",
+      "expirationDate": "2026-07-31T18:00:00.000000-03:00"
+    }
+  }
+}
