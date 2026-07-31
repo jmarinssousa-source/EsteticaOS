@@ -1,0 +1,48 @@
+{
+  "secret": "SEU_SEGREDO",
+  "event": "subscription_created",
+  "data": {
+    "id": "5b0d4f9a-1c33-4a1e-9f22-7c2ab0c9d111",
+    "refId": "PEtfqq3",
+    "sck": "CLINIC_ID_yearly",
+    "utm_campaign": "yearly",
+    "utm_content": "CLINIC_ID",
+    "customer": {
+      "name": "Fulana de Teste",
+      "email": "fulana@exemplo.com.br",
+      "phone": "5511999990000",
+      "docNumber": "00000000000"
+    },
+    "offer": {
+      "id": "ww6fjqv",
+      "name": "EstéticaOS Completo — Anual",
+      "price": 1997.0
+    },
+    "product": {
+      "name": "EstéticaOS Completo",
+      "id": "f947c21c-d8f0-41a1-a0a6-fede9f27b3b7",
+      "type": "subscription"
+    },
+    "subscription": {
+      "id": "9f2ac7b1-6d54-4f80-9a3e-0b1c5d8e7a22",
+      "status": "active",
+      "current_period": 1,
+      "recurrence_period": 365,
+      "quantity_recurrences": -1,
+      "trial_days": 0,
+      "max_retries": 3,
+      "amount": "1997.00",
+      "paid_payments_quantity": 1,
+      "paymentMethod": "pix",
+      "next_payment_date": "2027-07-31T10:00:00.000000-03:00",
+      "createdAt": "2026-07-31T10:00:00.000000-03:00",
+      "canceledAt": null
+    },
+    "status": "paid",
+    "baseAmount": 1997.0,
+    "amount": 1997.0,
+    "paymentMethod": "pix",
+    "paymentMethodName": "Pix",
+    "paidAt": "2026-07-31T10:00:12.000000-03:00"
+  }
+}

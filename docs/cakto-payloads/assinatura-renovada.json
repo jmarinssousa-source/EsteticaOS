@@ -1,0 +1,47 @@
+{
+  "secret": "SEU_SEGREDO",
+  "event": "subscription_renewed",
+  "data": {
+    "id": "da74a88a-418a-4417-bf41-8a7c27ac008a",
+    "refId": "3xFSuNu",
+    "customer": {
+      "name": "Fulana de Teste",
+      "birthDate": null,
+      "email": "fulana@exemplo.com.br",
+      "phone": "5511999990000",
+      "docNumber": "00000000000"
+    },
+    "affiliate": "",
+    "offer": {
+      "id": "36h8hoh",
+      "name": "EstéticaOS Completo — Mensal",
+      "price": 217.0
+    },
+    "product": {
+      "name": "EstéticaOS Completo",
+      "id": "f947c21c-d8f0-41a1-a0a6-fede9f27b3b7",
+      "type": "subscription"
+    },
+    "subscription": {
+      "id": "d464132a-fcfa-4693-a6aa-a99483f06740",
+      "status": "active",
+      "current_period": 2,
+      "recurrence_period": 30,
+      "quantity_recurrences": -1,
+      "trial_days": 0,
+      "max_retries": 3,
+      "amount": "217.00",
+      "paid_payments_quantity": 2,
+      "next_payment_date": "2026-09-30T16:09:04.032882-03:00",
+      "canceledAt": null
+    },
+    "subscription_period": 2,
+    "status": "paid",
+    "baseAmount": 217.0,
+    "amount": 217.0,
+    "fees": 12.9,
+    "paymentMethod": "credit_card",
+    "paymentMethodName": "Cartão de Crédito",
+    "paidAt": "2026-08-30T15:07:38.683315-03:00"
+  }
+}

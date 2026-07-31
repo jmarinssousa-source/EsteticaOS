@@ -14,6 +14,11 @@ const PUBLIC_PATHS = [
   // login e queima o token do convite sem nunca usá-lo.
   "/auth/callback",
   "/auth/confirm",
+  // Webhook do provedor de pagamento. Quem bate aqui é servidor, nunca
+  // navegador: sem esta linha o proxy responderia um redirect para o
+  // login e a confirmação de pagamento morreria no caminho. A
+  // autorização é o segredo conferido dentro da própria rota.
+  "/api/webhooks",
   // Links que o paciente abre sem ter conta, autorizados só pela posse
   // do token na URL.
   "/anamnese",

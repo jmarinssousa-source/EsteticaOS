@@ -1,0 +1,35 @@
+{
+  "secret": "SEU_SEGREDO",
+  "event": "chargeback",
+  "data": {
+    "id": "1f1c81d2-088a-412d-8bb7-3d5269d64f58",
+    "refId": "6HngVo6",
+    "customer": {
+      "name": "Fulana de Teste",
+      "email": "fulana@exemplo.com.br",
+      "phone": "5511999990000",
+      "docNumber": "00000000000"
+    },
+    "offer": {
+      "id": "36h8hoh",
+      "name": "EstéticaOS Completo — Mensal",
+      "price": 217.0
+    },
+    "product": {
+      "name": "EstéticaOS Completo",
+      "id": "f947c21c-d8f0-41a1-a0a6-fede9f27b3b7",
+      "type": "subscription"
+    },
+    "subscription": {
+      "id": "d464132a-fcfa-4693-a6aa-a99483f06740",
+      "status": "canceled",
+      "current_period": 1,
+      "paid_payments_quantity": 1,
+      "next_payment_date": null,
+      "canceledAt": "2026-08-20T11:30:00.000000-03:00"
+    },
+    "status": "chargeback",
+    "amount": 217.0,
+    "paymentMethod": "credit_card"
+  }
+}

@@ -70,12 +70,25 @@ export const getClinicPlan = cache(async (): Promise<ClinicPlan> => {
   const supabase = await createClient();
   const { data, error } = await supabase
     .from("clinics")
+    .select(
+      "plan_status, trial_ends_at, never_expires, billing_cycle, subscription_ends_at",
+    )
+    .eq("id", member.clinicId)
+    .maybeSingle();
+
+  if (!error) return resolveClinicPlan(data);
+
+  // Banco sem as colunas de assinatura (migração 0018 não aplicada):
+  // tenta de novo só com o que existe desde o 0017, em vez de devolver
+  // "sem informação" e mandar a tela dizer coisa errada.
+  const { data: basic, error: basicError } = await supabase
+    .from("clinics")
     .select("plan_status, trial_ends_at, never_expires")
     .eq("id", member.clinicId)
     .maybeSingle();
 
-  if (error) return resolveClinicPlan(null);
-  return resolveClinicPlan(data);
+  if (basicError) return resolveClinicPlan(null);
+  return resolveClinicPlan(basic);
 });
 
 /**

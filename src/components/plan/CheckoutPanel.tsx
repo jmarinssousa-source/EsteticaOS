@@ -1,9 +1,8 @@
 "use client";
 
 import { useState, useTransition } from "react";
-import { CreditCard, Info, QrCode } from "lucide-react";
+import { ArrowRight, Info, Lock } from "lucide-react";
 import { startCheckout } from "@/actions/billing";
-import { PAYMENT_METHOD_LABELS, type PaymentMethod } from "@/lib/billing/methods";
 import {
   formatPrice,
   PLAN_MONTHLY_PRICE_CENTS,
@@ -16,16 +15,20 @@ import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
 
 /**
- * Escolha do ciclo e da forma de pagamento.
+ * Escolha do ciclo da assinatura.
  *
- * O anual vem pré-selecionado porque é a opção mais barata por mês, e é
- * a que a maioria das clínicas escolhe quando enxerga a diferença. O
+ * Só existe uma decisão para tomar aqui: pagar por mês ou pagar o ano de
+ * uma vez. Pix ou cartão é escolhido na tela de pagamento, do lado do
+ * provedor — e é assim que tem que ser, porque quem sabe quais formas
+ * estão liberadas é ele, não esta tela.
+ *
+ * O anual vem pré-selecionado porque é a opção mais barata por mês. O
  * mensal fica do lado, com o mesmo peso visual: nada de esconder a opção
  * mais cara de contratar.
  *
- * Enquanto o provedor de pagamento não estiver ligado, o botão não
- * finge. Ele diz o que está faltando, e a assinatura continua sendo
- * ativada só por confirmação de pagamento de verdade.
+ * Enquanto o provedor não estiver configurado, o botão não finge. Diz o
+ * que está faltando, e a assinatura continua sendo ativada só por
+ * confirmação de pagamento de verdade.
  */
 
 const CYCLES: {
@@ -54,13 +57,11 @@ export function CheckoutPanel() {
   const [cycle, setCycle] = useState<BillingCycle>("yearly");
   const [pending, startTransition] = useTransition();
   const [message, setMessage] = useState<string | null>(null);
-  const [method, setMethod] = useState<PaymentMethod | null>(null);
 
-  function onPay(chosen: PaymentMethod) {
-    setMethod(chosen);
+  function onPay() {
     setMessage(null);
     startTransition(async () => {
-      const result = await startCheckout(cycle, chosen);
+      const result = await startCheckout(cycle);
 
       if (result.status === "redirect") {
         // Navegação no cliente: o provedor devolve uma URL externa e é
@@ -71,7 +72,7 @@ export function CheckoutPanel() {
 
       setMessage(
         result.status === "not_configured"
-          ? `O pagamento por ${PAYMENT_METHOD_LABELS[result.method].toLowerCase()} ainda está sendo liberado. Enquanto isso, seus dados seguem guardados e a gente avisa assim que estiver no ar.`
+          ? "O pagamento ainda está sendo liberado. Enquanto isso, seus dados seguem guardados e a gente avisa assim que estiver no ar."
           : result.message,
       );
     });
@@ -117,24 +118,17 @@ export function CheckoutPanel() {
         </div>
       </fieldset>
 
-      <div className="flex flex-wrap gap-3">
-        <Button
-          className="h-11 px-5"
-          disabled={pending}
-          onClick={() => onPay("card")}
-        >
-          <CreditCard className="size-4" />
-          {pending && method === "card" ? "Abrindo..." : "Pagar com cartão"}
+      <div className="space-y-3">
+        <Button className="h-11 px-5" disabled={pending} onClick={onPay}>
+          {pending ? "Abrindo pagamento..." : "Ativar plano"}
+          <ArrowRight className="size-4" />
         </Button>
-        <Button
-          variant="outline"
-          className="h-11 px-5"
-          disabled={pending}
-          onClick={() => onPay("pix")}
-        >
-          <QrCode className="size-4" />
-          {pending && method === "pix" ? "Abrindo..." : "Pagar com Pix"}
-        </Button>
+
+        <p className="flex items-start gap-2 text-xs text-muted-foreground">
+          <Lock className="mt-0.5 size-3.5 shrink-0" aria-hidden />
+          Você escolhe Pix ou cartão na tela de pagamento. O acesso é liberado aqui assim que o
+          pagamento for confirmado — pode levar alguns instantes no Pix.
+        </p>
       </div>
 
       {message && (
