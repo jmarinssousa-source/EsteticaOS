@@ -25,14 +25,43 @@ const geistMono = Geist_Mono({
   subsets: ["latin"],
 });
 
+/** Uma frase só, repetida em todos os lugares que descrevem o produto
+ *  para fora: busca, Open Graph, Twitter e manifest do aplicativo.
+ *  Sem travessão, porque parte disto vai para prévia de link. */
+const SITE_DESCRIPTION =
+  "Agenda, prontuário, fotos de evolução, anamnese, CRM, financeiro e estoque num sistema só, feito para a rotina de clínicas de estética. Teste grátis por 7 dias, sem cartão.";
+
 export const metadata: Metadata = {
   // Base para as URLs absolutas do Open Graph — sem ela o WhatsApp não
   // consegue baixar a imagem de pré-visualização dos links enviados aos
   // pacientes.
   metadataBase: new URL(siteUrl()),
-  title: "EstéticaOS — Gestão completa para clínicas de estética",
-  description:
-    "Agenda, prontuário, financeiro e CRM de leads num só sistema, feito para o dia a dia de clínicas de estética.",
+  // Sem `template`: as telas do painel já trazem o nome do sistema no
+  // próprio título, e o modelo duplicaria a marca em cada aba.
+  title: "Sistema para clínicas de estética | EstéticaOS",
+  description: SITE_DESCRIPTION,
+  applicationName: "EstéticaOS",
+  keywords: [
+    "sistema para clínica de estética",
+    "software para clínica de estética",
+    "gestão de clínica de estética",
+    "prontuário eletrônico estética",
+    "agenda para clínica de estética",
+  ],
+  alternates: { canonical: "/" },
+  openGraph: {
+    type: "website",
+    locale: "pt_BR",
+    url: "/",
+    siteName: "EstéticaOS",
+    title: "Sistema para clínicas de estética | EstéticaOS",
+    description: SITE_DESCRIPTION,
+  },
+  twitter: {
+    card: "summary_large_image",
+    title: "Sistema para clínicas de estética | EstéticaOS",
+    description: SITE_DESCRIPTION,
+  },
   manifest: "/manifest.webmanifest",
   appleWebApp: {
     capable: true,

@@ -7,7 +7,7 @@ import { ImageResponse } from "next/og";
  *
  * O desenho acompanha src/app/icon.svg e src/components/brand/Logo.tsx.
  */
-export const alt = "EstéticaOS — gestão para clínicas de estética";
+export const alt = "EstéticaOS, sistema para clínicas de estética";
 export const size = { width: 1200, height: 630 };
 export const contentType = "image/png";
 
@@ -50,10 +50,21 @@ export default function OpengraphImage() {
         <div style={{ display: "flex", fontSize: 84, fontWeight: 700, letterSpacing: -2 }}>
           EstéticaOS
         </div>
-        <div style={{ display: "flex", fontSize: 34, opacity: 0.85 }}>
-          Gestão completa para clínicas de estética
+        <div style={{ display: "flex", fontSize: 34, opacity: 0.88 }}>
+          Sistema para clínicas de estética
         </div>
-        <div style={{ display: "flex", fontSize: 22, opacity: 0.7, marginTop: 16 }}>
+        <div
+          style={{
+            display: "flex",
+            fontSize: 24,
+            opacity: 0.72,
+            marginTop: 8,
+            textAlign: "center",
+          }}
+        >
+          Agenda, prontuário, financeiro e CRM no mesmo lugar
+        </div>
+        <div style={{ display: "flex", fontSize: 22, opacity: 0.6, marginTop: 16 }}>
           Uma solução Orbyniq
         </div>
       </div>
