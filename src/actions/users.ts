@@ -6,23 +6,40 @@ import { createClient } from "@/lib/supabase/server";
 import { resolveSiteUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentMember } from "@/lib/auth/session";
-import {
-  CLINIC_ROLES,
-  PERMISSION_KEYS,
-  type ClinicRole,
-  type Permissions,
-} from "@/lib/auth/permissions";
+import { CLINIC_ROLES, PERMISSION_KEYS, type Permissions } from "@/lib/auth/permissions";
 import type { ActionState } from "@/actions/auth";
 
-/** Convite com um extra: quando o e-mail não sai, devolve o link de
- *  acesso para o dono repassar por outro canal. */
-export type InviteState = ActionState & { inviteLink?: string };
+/**
+ * Convite com dois extras: o e-mail para onde ele foi, para a tela poder
+ * confirmar por escrito, e o link de acesso para quando o e-mail não sai
+ * e o dono precisa repassar por outro canal.
+ */
+export type InviteState = ActionState & {
+  inviteLink?: string;
+  invitedEmail?: string;
+  /**
+   * Como a pessoa vai conseguir entrar:
+   * - `email`: o convite saiu por e-mail.
+   * - `link`: o e-mail não saiu e sobrou o link para repassar.
+   * - `existing`: já tinha conta no EstéticaOS e entra com a senha dela.
+   *
+   * A tela precisa saber a diferença. Dizer "convite enviado" nos três
+   * casos é o tipo de mentira que só aparece dois dias depois, quando
+   * ninguém entrou e o e-mail nunca existiu.
+   */
+  outcome?: "email" | "link" | "existing";
+};
 import { PROFESSIONAL_COLOR_KEYS } from "@/lib/agenda/professional-colors";
 
-const ASSIGNABLE_ROLES = CLINIC_ROLES.filter((role) => role !== "owner") as Exclude<
-  ClinicRole,
-  "owner"
->[];
+/**
+ * Todos os perfis podem ser atribuídos, inclusive Dono/Admin.
+ *
+ * Clínica com dois sócios precisava escolher qual dos dois teria a conta
+ * de verdade; o outro ficava como Gerente e sem acesso a Configurações.
+ * A trava agora não é o perfil, é a quantidade: `blockIfLastOwner`
+ * impede que a clínica fique sem nenhum dono.
+ */
+const ASSIGNABLE_ROLES = CLINIC_ROLES;
 
 const createUserSchema = z.object({
   fullName: z.string().trim().min(2, "Informe o nome completo."),
@@ -42,6 +59,44 @@ async function requireOwner() {
   const member = await getCurrentMember();
   if (!member || member.role !== "owner") return null;
   return member;
+}
+
+/**
+ * Recusa a operação quando ela deixaria a clínica sem nenhum dono.
+ *
+ * Vale para rebaixar de perfil, desativar e remover. Sem dono ninguém
+ * mais consegue abrir Configurações, convidar gente ou ativar o plano:
+ * a clínica ficaria trancada por fora, e desfazer exigiria mexer no
+ * banco. Por isso a checagem é aqui no servidor, e não só escondendo o
+ * botão na tela.
+ *
+ * Devolve a mensagem de erro quando deve barrar, e `null` quando pode
+ * seguir.
+ */
+async function blockIfLastOwner(
+  clinicId: string,
+  targetUserId: string,
+  action: string,
+): Promise<string | null> {
+  const admin = createAdminClient();
+  const { data: target } = await admin
+    .from("clinic_members")
+    .select("role")
+    .eq("user_id", targetUserId)
+    .eq("clinic_id", clinicId)
+    .maybeSingle();
+
+  if (target?.role !== "owner") return null;
+
+  const { count } = await admin
+    .from("clinic_members")
+    .select("user_id", { count: "exact", head: true })
+    .eq("clinic_id", clinicId)
+    .eq("role", "owner")
+    .eq("status", "active");
+
+  if ((count ?? 0) > 1) return null;
+  return `Esta é a única conta de Dono/Admin da clínica. Promova outra pessoa a Dono/Admin antes de ${action}.`;
 }
 
 /** Procura uma conta pelo e-mail percorrendo as páginas do Auth. */
@@ -158,7 +213,12 @@ export async function createUser(
   }
 
   revalidatePath("/configuracoes/usuarios");
-  return info ? { success: true, info, inviteLink } : { success: true };
+  const outcome: InviteState["outcome"] = existingUser
+    ? "existing"
+    : inviteLink
+      ? "link"
+      : "email";
+  return { success: true, info, inviteLink, invitedEmail: email, outcome };
 }
 
 export async function updateMemberProfession(memberUserId: string, profession: string) {
@@ -185,13 +245,30 @@ export async function updateMemberRole(memberUserId: string, role: string) {
   const parsedRole = z.enum(ASSIGNABLE_ROLES).safeParse(role);
   if (!parsedRole.success) return { error: "Perfil inválido." };
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  // Mudar o próprio perfil é sempre perda de acesso, nunca ganho: quem
+  // já é dono só pode se rebaixar. Se for engano, não sobra caminho de
+  // volta pela tela. Quem quiser sair da função pede a outro dono.
+  if (memberUserId === owner.userId) {
+    return {
+      error:
+        "Você não pode mudar o próprio perfil. Peça a outra pessoa com perfil Dono/Admin.",
+    };
+  }
+
+  if (parsedRole.data !== "owner") {
+    const blocked = await blockIfLastOwner(owner.clinicId, memberUserId, "mudar este perfil");
+    if (blocked) return { error: blocked };
+  }
+
+  // Sem service role o update não alcança linha de dono: o RLS de
+  // `clinic_members` filtra em silêncio em vez de recusar, e a promoção
+  // parecia dar certo sem ter mudado nada.
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("clinic_members")
     .update({ role: parsedRole.data })
     .eq("user_id", memberUserId)
-    .eq("clinic_id", owner.clinicId)
-    .neq("role", "owner");
+    .eq("clinic_id", owner.clinicId);
 
   if (error) return { error: "Não foi possível atualizar o perfil." };
 
@@ -262,6 +339,9 @@ export async function deleteMember(memberUserId: string) {
     return { error: "Você não pode remover a própria conta da clínica." };
   }
 
+  const blocked = await blockIfLastOwner(owner.clinicId, memberUserId, "remover esta conta");
+  if (blocked) return { error: blocked };
+
   // `clinic_members` só tem policy de select e update no RLS: um delete pela
   // sessão do usuário não dá erro, ele simplesmente não apaga linha nenhuma
   // (o Postgres filtra as linhas em vez de recusar). Por isso a remoção usa a
@@ -273,7 +353,6 @@ export async function deleteMember(memberUserId: string) {
     .delete()
     .eq("user_id", memberUserId)
     .eq("clinic_id", owner.clinicId)
-    .neq("role", "owner")
     .select("user_id");
 
   if (error) {
@@ -300,13 +379,19 @@ export async function toggleMemberStatus(memberUserId: string, status: "active" 
     return { error: "Você não pode desativar sua própria conta." };
   }
 
-  const supabase = await createClient();
-  const { error } = await supabase
+  if (status === "inactive") {
+    const blocked = await blockIfLastOwner(owner.clinicId, memberUserId, "desativar esta conta");
+    if (blocked) return { error: blocked };
+  }
+
+  // Service role pelo mesmo motivo do delete: o RLS não alcança a linha
+  // de outro dono, e a operação sairia em silêncio.
+  const admin = createAdminClient();
+  const { error } = await admin
     .from("clinic_members")
     .update({ status })
     .eq("user_id", memberUserId)
-    .eq("clinic_id", owner.clinicId)
-    .neq("role", "owner");
+    .eq("clinic_id", owner.clinicId);
 
   if (error) return { error: "Não foi possível atualizar o status do usuário." };
 

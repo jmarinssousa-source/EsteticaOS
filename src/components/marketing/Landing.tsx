@@ -168,6 +168,25 @@ const DATA_CARDS = [
   },
 ];
 
+/**
+ * Onde um clique abre o WhatsApp com a mensagem pronta.
+ *
+ * Cada item aqui existe numa tela do sistema (ver os usos de
+ * `buildWhatsAppUrl`). Nada de integração com API oficial nem de envio
+ * automático: é link direto para a conversa, com o texto já escrito, e
+ * quem aperta enviar é a pessoa. Dito assim de propósito, para ninguém
+ * chegar esperando disparo em massa.
+ */
+const WHATSAPP_USES = [
+  { title: "Lead novo no CRM", text: "Abre a conversa já com o primeiro nome dele." },
+  { title: "Aniversariante do dia", text: "Mensagem de parabéns pronta, no texto que você escrever." },
+  { title: "Paciente sem voltar", text: "Convite de retorno pronto, também no seu texto." },
+  { title: "Anamnese", text: "Manda o link para ela responder no celular dela." },
+  { title: "Termo de consentimento", text: "Manda o link para ela ler e assinar com o dedo." },
+  { title: "Orçamento", text: "Envia o PDF do orçamento na conversa." },
+  { title: "Recibo", text: "Envia o recibo do pagamento na conversa." },
+];
+
 const SUPPORT_CARDS = [
   {
     icon: LifeBuoy,
@@ -239,6 +258,11 @@ export const FAQ = [
     question: "Como ficam os dados das minhas pacientes?",
     answer:
       "Cada clínica só enxerga os próprios dados, e esse isolamento é regra no banco, não filtro de tela. As fotos de prontuário ficam em armazenamento privado, liberado só para quem tem permissão na sua clínica.",
+  },
+  {
+    question: "O sistema manda mensagem sozinho para as minhas pacientes?",
+    answer:
+      "Não. Em sete lugares do sistema, um clique abre o WhatsApp com a mensagem já escrita: lead novo, aniversariante, paciente sem voltar, anamnese, termo, orçamento e recibo. Você lê, ajusta se quiser e aperta enviar, uma paciente por vez. Não existe disparo automático nem envio em massa.",
   },
   {
     question: "E se eu travar em alguma tela?",
@@ -589,13 +613,53 @@ export function Landing() {
         </section>
 
         {/* ============================================================
+            WhatsApp. O canal por onde a clínica de estética fala com a
+            paciente, então ele aparece em sete pontos do sistema com o
+            texto já escrito.
+
+            A frase de fechamento existe para não deixar dúvida sobre o
+            que isto é: link para a conversa, não disparo automático nem
+            integração com a API oficial. */}
+        {/* Sem faixa nem borda: a seção anterior é a de fundo cinza, e a
+            própria troca de fundo já separa as duas. */}
+        <section className="px-4 py-20 md:px-6">
+          <div className="mx-auto max-w-6xl">
+            <Eyebrow>WhatsApp</Eyebrow>
+            <SectionTitle>A conversa abre com a mensagem já escrita</SectionTitle>
+            <p className="mt-4 max-w-3xl text-muted-foreground">
+              Suas pacientes falam com você por WhatsApp, então o sistema não te obriga a copiar
+              telefone, abrir outro aplicativo, procurar a conversa e digitar tudo de novo. Em sete
+              lugares, um clique abre o chat certo com o texto pronto.
+            </p>
+
+            <ul className="mt-12 grid gap-x-10 gap-y-6 sm:grid-cols-2 lg:grid-cols-3">
+              {WHATSAPP_USES.map((use) => (
+                <li key={use.title} className="flex gap-3">
+                  <MessageCircle className="mt-0.5 size-4 shrink-0 text-primary" aria-hidden />
+                  <span>
+                    <span className="font-medium">{use.title}. </span>
+                    <span className="text-base text-muted-foreground sm:text-sm">{use.text}</span>
+                  </span>
+                </li>
+              ))}
+            </ul>
+
+            <p className="mt-9 max-w-3xl text-base text-muted-foreground sm:text-sm">
+              Em todos eles o WhatsApp abre com a mensagem escrita e você revisa antes de enviar.
+              Quem aperta enviar é você, uma paciente por vez. O sistema não dispara nada sozinho e
+              não manda mensagem em massa.
+            </p>
+          </div>
+        </section>
+
+        {/* ============================================================
             Apoio. Três coisas que existem no sistema e que ninguém
             descobre pela lista de recursos: a ajuda embutida, o WhatsApp
             de quem desenvolveu e o tema escuro.
 
             Nada aqui promete tempo de resposta nem atendimento em
             horário nenhum: o que se afirma é que o canal existe. */}
-        <section className="px-4 py-20 md:px-6">
+        <section className="border-t border-border/70 px-4 py-20 md:px-6">
           <div className="mx-auto max-w-6xl">
             <Eyebrow>Apoio</Eyebrow>
             <SectionTitle>Você não precisa descobrir sozinha</SectionTitle>
