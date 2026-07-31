@@ -1,5 +1,6 @@
 import Link from "next/link";
 import { createClient } from "@/lib/supabase/server";
+import { mustSetPassword } from "@/lib/auth/must-set-password";
 import { Button } from "@/components/ui/button";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -51,13 +52,19 @@ export default async function RedefinirSenhaPage() {
     );
   }
 
+  // Quem veio de convite ainda não tem senha nenhuma. Para essa pessoa
+  // esta tela não é opcional: sem senha ela entra hoje e não consegue
+  // voltar amanhã, quando a sessão do link expirar.
+  const primeiraSenha = mustSetPassword(user);
+
   return (
     <Card>
       <CardHeader>
-        <CardTitle>Defina sua senha</CardTitle>
+        <CardTitle>{primeiraSenha ? "Crie sua senha" : "Defina sua nova senha"}</CardTitle>
         <CardDescription>
-          Escolha uma senha com pelo menos 8 caracteres. Depois de salvar você entra direto no
-          sistema.
+          {primeiraSenha
+            ? "É com ela que você vai entrar daqui em diante. Escolha uma senha com pelo menos 8 caracteres."
+            : "Escolha uma senha com pelo menos 8 caracteres. Depois de salvar você entra direto no sistema."}
         </CardDescription>
       </CardHeader>
       <CardContent>

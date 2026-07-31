@@ -4,6 +4,7 @@ import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
 import { hasPermission, type ClinicRole, type Permissions, type PermissionKey } from "@/lib/auth/permissions";
 import { resolveClinicPlan, type ClinicPlan } from "@/lib/plan/trial";
+import { mustSetPassword } from "@/lib/auth/must-set-password";
 
 export type CurrentMember = {
   userId: string;
@@ -14,6 +15,8 @@ export type CurrentMember = {
   role: ClinicRole;
   permissions: Partial<Permissions>;
   memberStatus: "active" | "inactive";
+  /** Convite aceito e senha ainda não criada. Ver lib/auth/must-set-password. */
+  mustSetPassword: boolean;
 };
 
 /**
@@ -47,6 +50,7 @@ export const getCurrentMember = cache(
       role: member.role as ClinicRole,
       permissions: (member.permissions ?? {}) as Partial<Permissions>,
       memberStatus: member.status as "active" | "inactive",
+      mustSetPassword: mustSetPassword(user),
     };
   },
 );

@@ -7,6 +7,7 @@ import { resolveSiteUrl } from "@/lib/site-url";
 import { createAdminClient } from "@/lib/supabase/admin";
 import { getCurrentMember } from "@/lib/auth/session";
 import { CLINIC_ROLES, PERMISSION_KEYS, type Permissions } from "@/lib/auth/permissions";
+import { INVITE_METADATA } from "@/lib/auth/must-set-password";
 import type { ActionState } from "@/actions/auth";
 
 /**
@@ -153,6 +154,9 @@ export async function createUser(
   if (!userId) {
     const { data: invited, error: inviteError } = await admin.auth.admin.inviteUserByEmail(email, {
       redirectTo: `${siteUrl}/auth/callback?next=/redefinir-senha`,
+      // A obrigação de criar senha fica gravada na conta, não no link:
+      // o e-mail tem dois links e nem sempre eles levam ao mesmo lugar.
+      data: INVITE_METADATA,
     });
 
     if (invited?.user) {
@@ -165,7 +169,10 @@ export async function createUser(
       const { data: link, error: linkError } = await admin.auth.admin.generateLink({
         type: "invite",
         email,
-        options: { redirectTo: `${siteUrl}/auth/callback?next=/redefinir-senha` },
+        options: {
+          redirectTo: `${siteUrl}/auth/callback?next=/redefinir-senha`,
+          data: INVITE_METADATA,
+        },
       });
 
       if (linkError || !link.user) {
