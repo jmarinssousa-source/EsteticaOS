@@ -73,7 +73,13 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(`${origin}${jaEntrou}`);
     }
 
-    return NextResponse.redirect(`${origin}/login?error=link-invalido`);
+    // Sem sessão, mas ainda dá para dizer algo útil: quem veio de um
+    // link de cadastro já escolheu a senha no formulário. Para essa
+    // pessoa não há link nenhum a pedir — é só entrar. Se o e-mail
+    // continuar pendente, o login manda para a tela que reenvia.
+    const motivo = type === "signup" ? "cadastro-ja-confirmado" : "link-invalido";
+    console.info("[auth/confirm] redirecionou", JSON.stringify({ para: `/login?error=${motivo}` }));
+    return NextResponse.redirect(`${origin}/login?error=${motivo}`);
   }
 
   const destino = next ?? DESTINO_PADRAO[type] ?? "/hoje";
