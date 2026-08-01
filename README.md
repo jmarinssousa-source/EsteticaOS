@@ -15,7 +15,7 @@ Escopo implementado: cadastro de clínica com verificação de e-mail, login, re
 1. Crie um projeto em [supabase.com](https://supabase.com).
 2. Em **Project Settings > API**, copie a URL, a `anon key` e a `service_role key`.
 3. Copie `.env.local.example` para `.env.local` e preencha os três valores.
-4. Em **Authentication > URL Configuration**, adicione `http://localhost:3000/auth/callback` (e a URL de produção, quando houver) às Redirect URLs.
+4. Em **Authentication > URL Configuration**, adicione `http://localhost:3000/auth/callback?**` e `http://localhost:3000/auth/confirm?**` às Redirect URLs. Em produção, veja a seção de domínio próprio mais abaixo.
 5. Confirme que **Authentication > Providers > Email > Confirm email** está habilitado (obrigatório para o fluxo de verificação de e-mail).
 6. Rode, em ordem, o SQL de cada arquivo em `supabase/migrations/` (0001 até a última) no **SQL Editor** do Supabase — ou via Supabase CLI, se o projeto estiver linkado. A migração `0008_prontuario.sql` cria também o bucket de Storage `patient-media` (privado); confirme em **Storage** que ele existe após rodar essa migração.
 7. Instale as dependências e suba o servidor:
@@ -64,16 +64,31 @@ refazer o deploy.
    `NEXT_PUBLIC_SITE_URL=https://esteticaos.com`, sem barra no fim.
    Variável nova só vale em build novo: faça um **redeploy**.
 4. **Supabase > Authentication > URL Configuration**:
-   - **Site URL**: `https://esteticaos.com`
-   - **Redirect URLs**: acrescente `https://esteticaos.com/auth/callback`
-
-   Mantenha na lista a URL antiga da Vercel e a de `localhost`. Se
-   removê-las, os links de redefinição de senha já enviados param de
-   funcionar e o ambiente local deixa de autenticar.
+   - **Site URL**: `https://esteticaos.com` — este é o campo decisivo.
+     Nos templates de e-mail ele vira o `{{ .SiteURL }}` de todo link, e
+     é também para onde o Supabase joga quem tiver um destino recusado.
+   - **Redirect URLs**: `https://esteticaos.com/auth/callback?**` e
+     `https://esteticaos.com/auth/confirm?**`, mais as de `localhost`.
+     O `?**` é obrigatório: entrada sem curinga casa com a URL inteira,
+     query incluída.
 
 Sem o passo 4 o sintoma é traiçoeiro: cadastro e login seguem
 funcionando, mas todo e-mail de confirmação, convite e redefinição de
 senha leva o usuário para o endereço antigo.
+
+### O endereço antigo da Vercel
+
+`estetica-os-plum.vercel.app` **não é o endereço público do sistema** e
+não deve gerar link novo nenhum. Ele pode ficar nas Redirect URLs por
+algumas semanas, como compatibilidade para convites enviados antes da
+troca de domínio — nunca na *Site URL*.
+
+Como rede de segurança, o proxy devolve para `esteticaos.com` qualquer
+requisição que chegue por outro endereço, preservando caminho e query
+(`src/lib/canonical-host.ts`). Isso salva o link antigo, mas não
+substitui o ajuste no painel: o e-mail que a pessoa recebe continua
+mostrando o endereço errado. Deploys de *preview* são exceção e seguem
+navegáveis no endereço próprio.
 
 ## E-mails (SMTP)
 

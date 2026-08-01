@@ -1,5 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
+import { canonicalRedirect } from "@/lib/canonical-host";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -51,6 +52,22 @@ function isPublicPath(pathname: string) {
 export const PATHNAME_HEADER = "x-esteticaos-pathname";
 
 export default async function proxy(request: NextRequest) {
+  // Antes de qualquer outra coisa: garantir que estamos no domínio
+  // oficial. Vem primeiro porque o passo seguinte grava cookie de
+  // sessão, e cookie gravado no endereço errado é sessão que some
+  // quando a pessoa volta para o endereço certo.
+  //
+  // `/api` fica de fora: quem chama são servidores (o webhook de
+  // pagamento), que não têm cookie para perder e podem não seguir
+  // redirect.
+  if (!request.nextUrl.pathname.startsWith("/api/")) {
+    const oficial = canonicalRedirect(request.nextUrl, request.headers.get("host"));
+    // 307, não 308: redirect permanente fica gravado no navegador, e um
+    // NEXT_PUBLIC_SITE_URL digitado errado deixaria todo mundo preso
+    // fora do sistema até limpar o cache.
+    if (oficial) return NextResponse.redirect(oficial, 307);
+  }
+
   const requestHeaders = new Headers(request.headers);
   requestHeaders.set(PATHNAME_HEADER, request.nextUrl.pathname);
 
