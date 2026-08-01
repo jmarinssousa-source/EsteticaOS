@@ -25,6 +25,25 @@
  * a pessoa até define a senha, mas volta ao domínio oficial deslogada.
  */
 
+/**
+ * Marca de "já redirecionei esta pessoa uma vez".
+ *
+ * Existe por causa de um laço possível e caríssimo. A Vercel também sabe
+ * redirecionar domínio, no painel, antes da requisição chegar aqui. Se
+ * alguém configurar lá o caminho contrário — o domínio oficial apontando
+ * para o endereço interno da Vercel — os dois passam a empurrar a
+ * requisição um para o outro e o sistema inteiro sai do ar em laço de
+ * redirecionamento.
+ *
+ * O cookie corta isso no segundo salto: quem já foi redirecionado uma
+ * vez passa direto. O site fica no endereço errado, que é ruim, mas
+ * continua de pé — e o log conta o que aconteceu.
+ *
+ * Dura poucos segundos de propósito: é para atravessar um redirect, não
+ * para virar estado.
+ */
+export const CANONICAL_GUARD_COOKIE = "eos_canon";
+
 /** Endereços que nunca devem ser redirecionados para o domínio oficial. */
 function isLocalHost(host: string): boolean {
   const name = host.split(":")[0];

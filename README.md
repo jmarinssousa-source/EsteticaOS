@@ -76,6 +76,41 @@ Sem o passo 4 o sintoma é traiçoeiro: cadastro e login seguem
 funcionando, mas todo e-mail de confirmação, convite e redefinição de
 senha leva o usuário para o endereço antigo.
 
+### Diagnóstico rápido: qual domínio o sistema acha que é o dele
+
+Abra `https://esteticaos.com/robots.txt`. A última linha mostra o
+endereço que o sistema está usando para montar tudo:
+
+```
+Sitemap: https://esteticaos.com/sitemap.xml      ← certo
+Sitemap: https://estetica-os-plum.vercel.app/... ← NEXT_PUBLIC_SITE_URL não está definida
+```
+
+Se aparecer o endereço da Vercel, a variável não chegou ao build de
+produção — e aí nenhum link de e-mail vai sair certo, porque
+`src/lib/site-url.ts` cai no endereço interno da Vercel quando a
+variável falta. Defina a variável **para o ambiente Production** e faça
+um redeploy.
+
+Confira também o sentido do redirecionamento de domínio:
+
+```bash
+curl -sI https://esteticaos.com/ | grep -i location
+```
+
+Não deve devolver nada. Se devolver `location: https://estetica-os-plum.vercel.app/`,
+o domínio oficial está configurado na Vercel como *redirect* para o
+endereço interno — exatamente o contrário do que deveria. Em
+**Vercel > Settings > Domains**, `esteticaos.com` precisa ser o domínio
+de produção, e o `www` é que redireciona para ele.
+
+> **Arrume o sentido do redirecionamento antes de definir
+> `NEXT_PUBLIC_SITE_URL`.** Com os dois errados ao mesmo tempo, a Vercel
+> empurra para o endereço interno e o proxy empurra de volta, em laço. O
+> código corta o laço no segundo salto (ver `CANONICAL_GUARD_COOKIE`),
+> mas o sistema fica servindo no endereço errado até o painel ser
+> corrigido.
+
 ### O endereço antigo da Vercel
 
 `estetica-os-plum.vercel.app` **não é o endereço público do sistema** e

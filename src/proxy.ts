@@ -1,6 +1,6 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
-import { canonicalRedirect } from "@/lib/canonical-host";
+import { CANONICAL_GUARD_COOKIE, canonicalRedirect } from "@/lib/canonical-host";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -60,12 +60,32 @@ export default async function proxy(request: NextRequest) {
   // `/api` fica de fora: quem chama são servidores (o webhook de
   // pagamento), que não têm cookie para perder e podem não seguir
   // redirect.
-  if (!request.nextUrl.pathname.startsWith("/api/")) {
+  const jaRedirecionado = request.cookies.has(CANONICAL_GUARD_COOKIE);
+
+  if (!request.nextUrl.pathname.startsWith("/api/") && !jaRedirecionado) {
     const oficial = canonicalRedirect(request.nextUrl, request.headers.get("host"));
-    // 307, não 308: redirect permanente fica gravado no navegador, e um
-    // NEXT_PUBLIC_SITE_URL digitado errado deixaria todo mundo preso
-    // fora do sistema até limpar o cache.
-    if (oficial) return NextResponse.redirect(oficial, 307);
+    if (oficial) {
+      // 307, não 308: redirect permanente fica gravado no navegador, e
+      // um NEXT_PUBLIC_SITE_URL digitado errado deixaria todo mundo
+      // preso fora do sistema até limpar o cache.
+      const saida = NextResponse.redirect(oficial, 307);
+      // Ver CANONICAL_GUARD_COOKIE: corta o laço se a Vercel estiver
+      // redirecionando no sentido contrário, no painel.
+      saida.cookies.set(CANONICAL_GUARD_COOKIE, "1", {
+        path: "/",
+        maxAge: 10,
+        sameSite: "lax",
+      });
+      return saida;
+    }
+  } else if (jaRedirecionado && canonicalRedirect(request.nextUrl, request.headers.get("host"))) {
+    // Chegou aqui com a marca e ainda está no host errado: alguém está
+    // devolvendo a requisição. Quase sempre é um redirecionamento de
+    // domínio configurado no painel da Vercel no sentido contrário.
+    console.warn(
+      "[proxy] laço de domínio evitado — confira o redirecionamento de domínio na Vercel",
+      JSON.stringify({ host: request.headers.get("host"), oficial: process.env.NEXT_PUBLIC_SITE_URL }),
+    );
   }
 
   const requestHeaders = new Headers(request.headers);
