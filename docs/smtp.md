@@ -4,9 +4,44 @@ O EstéticaOS dispara três e-mails, todos pelo Supabase Auth:
 
 | Quando | Template no Supabase | Para onde o link leva |
 | --- | --- | --- |
-| Cadastro de uma clínica nova | Confirm signup | `/auth/callback?next=/hoje` |
-| "Esqueci minha senha" | Reset password | `/auth/callback?next=/redefinir-senha` |
-| Dono cadastra alguém da equipe | Invite user | `/auth/callback?next=/redefinir-senha` |
+| Cadastro de uma clínica nova | Confirm signup | `/auth/confirm?type=signup&next=/hoje` |
+| "Esqueci minha senha" | Reset password | `/auth/confirm?type=recovery&next=/redefinir-senha` |
+| Dono cadastra alguém da equipe | Invite user | `/auth/confirm?type=invite&next=/redefinir-senha` |
+
+## O domínio do link não sai do nosso código
+
+Vale entender isto antes de qualquer outra coisa, porque é a causa mais
+comum de link quebrado.
+
+**Quem escolhe o endereço do link é o Supabase, não o EstéticaOS.** Nos
+templates com `{{ .SiteURL }}`, o endereço vem do campo *Site URL* do
+projeto. Nos links que passam por `/auth/v1/verify`, vem do `redirect_to`
+conferido contra a lista de *Redirect URLs* — e quando não bate, o
+Supabase larga a pessoa na *Site URL* de novo.
+
+Ou seja: se a *Site URL* apontar para um endereço antigo, **todo convite
+sai apontando para lá**, por mais correto que esteja o repositório.
+Nenhum deploy conserta isso; é um campo no painel.
+
+O domínio oficial é **`https://esteticaos.com`**. Ele precisa estar, com
+esse texto exato e sem barra no fim, em três lugares:
+
+| Onde | Campo |
+| --- | --- |
+| Vercel > Settings > Environment Variables | `NEXT_PUBLIC_SITE_URL` |
+| Supabase > Authentication > URL Configuration | **Site URL** |
+| Supabase > Authentication > URL Configuration | primeira das **Redirect URLs** |
+
+Como rede de segurança, o proxy do sistema (`src/proxy.ts`, via
+`src/lib/canonical-host.ts`) devolve para o domínio oficial qualquer
+requisição que chegue por outro endereço, levando caminho e query
+intactos. Um link antigo, apontando para o domínio da Vercel, funciona
+assim mesmo. Isso existe para links que já foram enviados — **não é
+motivo para deixar a Site URL errada**, porque o e-mail que a pessoa
+recebe continua mostrando o endereço errado na barra de endereço.
+
+Deploys de *preview* ficam de fora dessa canonização: cada PR precisa
+continuar navegável no endereço próprio.
 
 Sem SMTP próprio, o Supabase manda por um servidor de cortesia com limite
 baixo (poucos e-mails por hora, contados no projeto inteiro) e sem
@@ -125,11 +160,23 @@ Deixe a lista assim, com o `?**` no fim de cada uma:
 
 ```
 https://esteticaos.com/auth/callback?**
+https://esteticaos.com/auth/confirm?**
 https://www.esteticaos.com/auth/callback?**
-https://estetica-os-plum.vercel.app/auth/callback?**
+http://localhost:3000/auth/callback?**
+http://localhost:3000/auth/confirm?**
 ```
 
 Pode manter também as versões sem curinga; elas não atrapalham.
+
+**Sobre `estetica-os-plum.vercel.app`:** o endereço interno da Vercel não
+é o domínio oficial e **não deve gerar link novo nenhum**. Se você
+mantiver `https://estetica-os-plum.vercel.app/auth/callback?**` na lista,
+que seja só como compatibilidade temporária, para não invalidar convites
+que já foram enviados antes da troca de domínio — e o proxy vai devolver
+essas pessoas para `esteticaos.com` de qualquer forma. Passadas algumas
+semanas, remova a linha. O que **não** pode acontecer é esse endereço
+aparecer na *Site URL*: ali ele volta a virar o domínio de todo e-mail
+novo.
 
 O código tem duas redes de segurança para o caso de esta lista sair do
 ar de novo, mas nenhuma substitui o ajuste acima:

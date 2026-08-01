@@ -5,7 +5,12 @@ import { LoginForm } from "@/components/auth/LoginForm";
 export const metadata = { title: "Entrar — EstéticaOS" };
 
 const ERROR_MESSAGES: Record<string, string> = {
-  "link-invalido": "Este link expirou ou já foi usado. Solicite um novo.",
+  // Quem cai aqui por um link quebrado muitas vezes é convidado que
+  // ainda não tem senha nenhuma. "Solicite um novo" não dizia a quem
+  // pedir, e a pessoa ficava tentando adivinhar uma senha que nunca
+  // existiu.
+  "link-invalido":
+    "Este link expirou ou já foi usado. Se você foi convidado e ainda não criou sua senha, peça um novo convite a quem administra a clínica. Se já tem conta, use \"Esqueceu a senha?\" abaixo.",
   "conta-desativada":
     "Seu acesso foi desativado. Fale com quem administra a clínica para reativá-lo.",
 };

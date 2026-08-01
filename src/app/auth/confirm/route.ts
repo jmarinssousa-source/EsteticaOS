@@ -57,6 +57,22 @@ export async function GET(request: NextRequest) {
 
   if (error) {
     console.error("[auth/confirm] verifyOtp falhou", JSON.stringify({ code: error.code, status: error.status }));
+
+    // Token de uso único: clicar no link de novo, ou voltar a página,
+    // derruba a segunda tentativa mesmo tendo dado tudo certo na
+    // primeira. Se a sessão já existe, o link cumpriu o papel dele —
+    // mandar para o login aqui seria pedir uma senha que a pessoa
+    // ainda nem criou.
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (user) {
+      const jaEntrou = next ?? DESTINO_PADRAO[type] ?? "/hoje";
+      console.info("[auth/confirm] token já usado, mas a sessão existe", JSON.stringify({ para: jaEntrou }));
+      return NextResponse.redirect(`${origin}${jaEntrou}`);
+    }
+
     return NextResponse.redirect(`${origin}/login?error=link-invalido`);
   }
 
