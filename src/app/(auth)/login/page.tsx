@@ -5,12 +5,17 @@ import { LoginForm } from "@/components/auth/LoginForm";
 export const metadata = { title: "Entrar — EstéticaOS" };
 
 const ERROR_MESSAGES: Record<string, string> = {
-  // Quem cai aqui por um link quebrado muitas vezes é convidado que
-  // ainda não tem senha nenhuma. "Solicite um novo" não dizia a quem
-  // pedir, e a pessoa ficava tentando adivinhar uma senha que nunca
-  // existiu.
+  // Três fluxos diferentes caem aqui: confirmação de cadastro, convite
+  // de equipe e recuperação de senha. Quem chega pelo cadastro já
+  // escolheu a senha no formulário, então falar em "criar senha" mandava
+  // essa pessoa procurar uma tela que não existe para ela. A mensagem
+  // cobre os três sem chutar em qual deles a pessoa está.
   "link-invalido":
-    "Este link expirou ou já foi usado. Se você foi convidado e ainda não criou sua senha, peça um novo convite a quem administra a clínica. Se já tem conta, use \"Esqueceu a senha?\" abaixo.",
+    "Este link expirou ou já foi usado. Se você criou uma clínica, tente entrar com o e-mail e a senha cadastrados. Se estava criando senha por convite ou recuperando o acesso, peça um novo link.",
+  // O `/auth/confirm` sabe quando o link era de confirmação de cadastro,
+  // e aí não há dúvida nenhuma a resolver: a senha existe, é só entrar.
+  "cadastro-ja-confirmado":
+    "Este link de confirmação expirou ou já foi usado. Entre com o e-mail e a senha que você cadastrou — se o e-mail ainda precisar ser confirmado, a gente reenvia o link na tela seguinte.",
   "conta-desativada":
     "Seu acesso foi desativado. Fale com quem administra a clínica para reativá-lo.",
 };
