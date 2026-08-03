@@ -32,6 +32,26 @@ Abra [http://localhost:3000](http://localhost:3000). O cadastro em `/cadastro` c
 - `npm run dev` — ambiente de desenvolvimento (Turbopack)
 - `npm run build` — build de produção
 - `npm run lint` — ESLint
+- `npm run typecheck` — TypeScript, sem gerar arquivo
+- `npm test` — testes de regressão de segurança (`tests/`)
+
+Os testes rodam no executor nativo do Node, sem framework e sem
+dependência a mais, e por isso pedem **Node 22.18 ou mais novo** — é a
+versão a partir da qual o Node lê TypeScript direto. A aplicação em si
+roda a partir da 20.9.
+
+Os quatro comandos rodam também na CI, a cada push e a cada pull request
+(`.github/workflows/ci.yml`).
+
+## Segurança
+
+O que o sistema já protege, o que ainda não protege e o que depende de
+configuração no painel do Supabase, da Vercel ou do DNS está em
+[`docs/seguranca.md`](docs/seguranca.md). Quem for mexer em
+autenticação, permissão ou banco começa por ali.
+
+Para relatar uma falha, veja [`SECURITY.md`](SECURITY.md) — não abra
+issue pública.
 
 ## Deploy (Vercel)
 

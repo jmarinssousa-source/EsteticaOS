@@ -1,0 +1,70 @@
+name: Alguma coisa não funciona
+description: Relatar um erro no sistema
+labels: ["erro"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Antes de tudo: **não cole aqui nome, CPF, telefone, foto nem nada
+        de paciente de verdade.** Issue é pública. Se precisar mostrar um
+        caso real, descreva sem os dados e mande o resto por e-mail.
+
+  - type: textarea
+    id: o-que-aconteceu
+    attributes:
+      label: O que aconteceu
+      description: Em uma ou duas frases, do jeito que você contaria para alguém.
+    validations:
+      required: true
+
+  - type: textarea
+    id: esperado
+    attributes:
+      label: O que você esperava que acontecesse
+    validations:
+      required: true
+
+  - type: textarea
+    id: passos
+    attributes:
+      label: Como repetir
+      placeholder: |
+        1. Entrei em Pacientes
+        2. Cliquei em...
+        3. Aí apareceu...
+    validations:
+      required: true
+
+  - type: input
+    id: onde
+    attributes:
+      label: Em que tela
+      placeholder: /pacientes/... , Agenda, Financeiro...
+
+  - type: dropdown
+    id: aparelho
+    attributes:
+      label: Onde você estava usando
+      options:
+        - Computador
+        - Celular
+        - Tablet
+    validations:
+      required: true
+
+  - type: input
+    id: navegador
+    attributes:
+      label: Navegador
+      placeholder: Chrome, Safari, Firefox...
+
+  - type: dropdown
+    id: gravidade
+    attributes:
+      label: Quanto isso atrapalha
+      options:
+        - Trava o trabalho — não dá para continuar
+        - Atrapalha, mas tem jeito de contornar
+        - Incomoda pouco
+    validations:
+      required: true

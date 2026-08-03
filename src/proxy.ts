@@ -1,6 +1,7 @@
 import { createServerClient } from "@supabase/ssr";
 import { NextResponse, type NextRequest } from "next/server";
 import { CANONICAL_GUARD_COOKIE, canonicalRedirect } from "@/lib/canonical-host";
+import { NONCE_HEADER, buildCsp, generateNonce } from "@/lib/security/csp";
 
 const PUBLIC_PATHS = [
   "/login",
@@ -52,6 +53,45 @@ function isPublicPath(pathname: string) {
 export const PATHNAME_HEADER = "x-esteticaos-pathname";
 
 export default async function proxy(request: NextRequest) {
+  // Nonce novo a cada requisição. É o que permite uma CSP sem
+  // `unsafe-inline` para script: os scripts do Next.js nascem carimbados
+  // com ele, e qualquer script injetado por outro caminho não tem como
+  // adivinhar o valor. Ver lib/security/csp.ts para o inventário do que a
+  // política libera e por quê.
+  const nonce = generateNonce();
+  const csp = buildCsp(
+    nonce,
+    process.env.NODE_ENV === "development",
+    request.headers.get("host"),
+  );
+
+  /**
+   * Carimba a política na resposta.
+   *
+   * Precisa ser chamado em toda saída, inclusive nos redirecionamentos:
+   * um `NextResponse` novo não herda cabeçalho de outro.
+   */
+  const comCsp = <T extends NextResponse>(resposta: T): T => {
+    resposta.headers.set("Content-Security-Policy", csp);
+    return resposta;
+  };
+
+  /**
+   * Cabeçalhos que seguem para a renderização.
+   *
+   * O `Content-Security-Policy` vai junto de propósito: é dele que o
+   * Next.js lê o nonce para aplicar nos próprios scripts. O `x-nonce`
+   * existe para o layout poder repassá-lo aos poucos scripts que o
+   * framework não gera sozinho (o tema e o JSON-LD da landing).
+   */
+  const cabecalhosDaRequisicao = () => {
+    const headers = new Headers(request.headers);
+    headers.set(PATHNAME_HEADER, request.nextUrl.pathname);
+    headers.set(NONCE_HEADER, nonce);
+    headers.set("Content-Security-Policy", csp);
+    return headers;
+  };
+
   // Antes de qualquer outra coisa: garantir que estamos no domínio
   // oficial. Vem primeiro porque o passo seguinte grava cookie de
   // sessão, e cookie gravado no endereço errado é sessão que some
@@ -68,7 +108,7 @@ export default async function proxy(request: NextRequest) {
       // 307, não 308: redirect permanente fica gravado no navegador, e
       // um NEXT_PUBLIC_SITE_URL digitado errado deixaria todo mundo
       // preso fora do sistema até limpar o cache.
-      const saida = NextResponse.redirect(oficial, 307);
+      const saida = comCsp(NextResponse.redirect(oficial, 307));
       // Ver CANONICAL_GUARD_COOKIE: corta o laço se a Vercel estiver
       // redirecionando no sentido contrário, no painel.
       saida.cookies.set(CANONICAL_GUARD_COOKIE, "1", {
@@ -88,10 +128,7 @@ export default async function proxy(request: NextRequest) {
     );
   }
 
-  const requestHeaders = new Headers(request.headers);
-  requestHeaders.set(PATHNAME_HEADER, request.nextUrl.pathname);
-
-  let response = NextResponse.next({ request: { headers: requestHeaders } });
+  let response = comCsp(NextResponse.next({ request: { headers: cabecalhosDaRequisicao() } }));
 
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
@@ -105,13 +142,12 @@ export default async function proxy(request: NextRequest) {
           for (const { name, value } of cookiesToSet) {
             request.cookies.set(name, value);
           }
-          // A resposta é refeita com os cookies novos, então o cabeçalho
-          // do caminho precisa ser carimbado de novo: sem isto, toda
-          // requisição que renova a sessão chegaria ao layout sem rota e
-          // o bloqueio de plano não saberia onde a pessoa está.
-          const refreshed = new Headers(request.headers);
-          refreshed.set(PATHNAME_HEADER, request.nextUrl.pathname);
-          response = NextResponse.next({ request: { headers: refreshed } });
+          // A resposta é refeita com os cookies novos, então os
+          // cabeçalhos precisam ser carimbados de novo: sem isto, toda
+          // requisição que renova a sessão chegaria ao layout sem rota
+          // (e o bloqueio de plano não saberia onde a pessoa está) e sem
+          // nonce (e a página voltaria sem script nenhum).
+          response = comCsp(NextResponse.next({ request: { headers: cabecalhosDaRequisicao() } }));
           for (const { name, value, options } of cookiesToSet) {
             response.cookies.set(name, value, options);
           }
@@ -132,11 +168,11 @@ export default async function proxy(request: NextRequest) {
   if (!user && !isPublicPath(pathname) && pathname !== "/") {
     const redirectUrl = new URL("/login", request.url);
     redirectUrl.searchParams.set("redirectTo", pathname);
-    return NextResponse.redirect(redirectUrl);
+    return comCsp(NextResponse.redirect(redirectUrl));
   }
 
   if (user && (pathname === "/login" || pathname === "/cadastro")) {
-    return NextResponse.redirect(new URL("/hoje", request.url));
+    return comCsp(NextResponse.redirect(new URL("/hoje", request.url)));
   }
 
   return response;

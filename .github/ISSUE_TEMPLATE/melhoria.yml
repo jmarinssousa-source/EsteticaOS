@@ -1,0 +1,45 @@
+name: Ideia ou melhoria
+description: Sugerir algo novo, ou uma mudança no que já existe
+labels: ["melhoria"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Sem dado de paciente de verdade aqui, por favor — issue é pública.
+
+  - type: textarea
+    id: problema
+    attributes:
+      label: Que problema isso resolve
+      description: >-
+        Comece pelo incômodo, não pela solução. "Toda segunda eu preciso
+        conferir uma a uma quais pacientes sumiram" diz mais do que
+        "queria um relatório de inatividade".
+    validations:
+      required: true
+
+  - type: textarea
+    id: hoje
+    attributes:
+      label: Como você resolve isso hoje
+      description: Mesmo que a resposta seja "no caderno" ou "não resolvo".
+    validations:
+      required: true
+
+  - type: textarea
+    id: ideia
+    attributes:
+      label: O que você imagina
+      description: Se já tiver uma ideia de como seria. Pode deixar em branco.
+
+  - type: dropdown
+    id: frequencia
+    attributes:
+      label: Com que frequência isso aparece
+      options:
+        - Todo dia
+        - Toda semana
+        - Todo mês
+        - De vez em quando
+    validations:
+      required: true

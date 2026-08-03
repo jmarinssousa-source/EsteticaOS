@@ -11,6 +11,12 @@
     "moduleResolution": "bundler",
     "resolveJsonModule": true,
     "isolatedModules": true,
+    // Os testes em `tests/` rodam no executor nativo do Node, que resolve
+    // o arquivo pelo caminho exato — e por isso importam com `.ts` no
+    // fim. Sem esta opção o `tsc` recusa essa forma de import. Só é
+    // permitida porque o projeto é `noEmit`: quem gera o pacote é o
+    // Next.js, e ele não vê esses arquivos.
+    "allowImportingTsExtensions": true,
     "jsx": "react-jsx",
     "incremental": true,
     "plugins": [

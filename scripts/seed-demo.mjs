@@ -1,14 +1,25 @@
 // Seed de dados de demonstração para a clínica do usuário indicado por
-// TARGET_EMAIL. Usa o service role (bypassa RLS), igual ao bootstrap de
-// signup/convites em src/actions/auth.ts e src/actions/users.ts.
+// SEED_TARGET_EMAIL. Usa o service role (bypassa RLS), igual ao bootstrap
+// de signup/convites em src/actions/auth.ts e src/actions/users.ts.
 //
-// Uso: node scripts/seed-demo.mjs
+// Uso:
+//   SEED_TARGET_EMAIL=voce@exemplo.com \
+//   SEED_DEMO_PASSWORD='<senha longa e aleatória>' \
+//   node scripts/seed-demo.mjs
+//
+// O e-mail e a senha vêm do ambiente, e não do código, por dois motivos:
+//
+// 1. Este repositório é público. Senha escrita aqui é senha publicada —
+//    e ela cria contas de verdade, com acesso de verdade, no mesmo
+//    projeto Supabase que atende a produção.
+// 2. O e-mail do dono é dado pessoal e não tem por que ficar versionado.
+//
+// As contas criadas aqui (*.demo@esteticaos.app) existem só para
+// demonstração. Não deixe nenhuma delas de pé num projeto que atenda
+// clínica real.
 
 import { readFileSync, existsSync } from "node:fs";
 import { createClient } from "@supabase/supabase-js";
-
-const TARGET_EMAIL = "jonatamarinssousa@gmail.com";
-const DEMO_PASSWORD = "Demo@12345";
 
 function loadEnvLocal() {
   const path = new URL("../.env.local", import.meta.url);
@@ -38,6 +49,26 @@ const SERVICE_ROLE_KEY = process.env.SUPABASE_SERVICE_ROLE_KEY;
 
 if (!SUPABASE_URL || !SERVICE_ROLE_KEY) {
   console.error("Faltam NEXT_PUBLIC_SUPABASE_URL / SUPABASE_SERVICE_ROLE_KEY em .env.local");
+  process.exit(1);
+}
+
+const TARGET_EMAIL = process.env.SEED_TARGET_EMAIL;
+const DEMO_PASSWORD = process.env.SEED_DEMO_PASSWORD;
+
+if (!TARGET_EMAIL) {
+  console.error(
+    "Falta SEED_TARGET_EMAIL: o e-mail do dono da clínica que vai receber os dados de demonstração.",
+  );
+  process.exit(1);
+}
+
+// 16 caracteres não é capricho: estas contas ficam de pé no projeto
+// depois que o seed termina, e o endereço delas (*.demo@esteticaos.app)
+// é previsível. Senha curta aqui é conta aberta para quem adivinhar.
+if (!DEMO_PASSWORD || DEMO_PASSWORD.length < 16) {
+  console.error(
+    "Falta SEED_DEMO_PASSWORD com pelo menos 16 caracteres — as contas de demonstração ficam acessíveis com ela.",
+  );
   process.exit(1);
 }
 
@@ -781,7 +812,11 @@ e completas.`;
   console.log("\nSeed concluído com sucesso.");
   console.log(`Clínica: ${clinicId}`);
   console.log(`Login owner: ${TARGET_EMAIL} (senha já existente)`);
-  console.log(`Login demo dos profissionais/equipe: senha "${DEMO_PASSWORD}" para todos os e-mails *.demo@esteticaos.app`);
+  // A senha não é reimpressa: quem rodou o script acabou de escolhê-la, e
+  // saída de terminal vira log, print e histórico de shell.
+  console.log(
+    "Login demo dos profissionais/equipe: os e-mails *.demo@esteticaos.app usam a senha passada em SEED_DEMO_PASSWORD.",
+  );
 }
 
 main().catch((err) => {

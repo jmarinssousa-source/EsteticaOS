@@ -1,0 +1,54 @@
+version: 2
+
+updates:
+  # ---------------------------------------------------------------------
+  # Dependências do npm
+  #
+  # As atualizações de segurança o GitHub abre sozinho, sem depender deste
+  # arquivo. O que está configurado aqui é o ritmo das atualizações
+  # normais — semanal, agrupado, e com as versões maiores de fora.
+  #
+  # Versão maior fica de fora de propósito: `next`, `react` e `zod` já
+  # quebraram compatibilidade entre versões maiores neste projeto, e uma
+  # PR automática que troca essas três de uma vez é uma PR que ninguém
+  # revisa direito. Quando for a hora, é decisão de quem mantém, com
+  # tempo para testar.
+  # ---------------------------------------------------------------------
+  - package-ecosystem: npm
+    directory: /
+    schedule:
+      interval: weekly
+      day: monday
+      time: "09:00"
+      timezone: America/Sao_Paulo
+    open-pull-requests-limit: 5
+    commit-message:
+      prefix: "deps"
+    groups:
+      # Um PR só para o que é de desenvolvimento: nada disso vai para o
+      # servidor, e revisar dez PRs de tipo e lint separadamente é trabalho
+      # sem retorno.
+      desenvolvimento:
+        dependency-type: development
+        update-types: [minor, patch]
+      # E um para o resto, que merece leitura.
+      producao:
+        dependency-type: production
+        update-types: [minor, patch]
+    ignore:
+      - dependency-name: "*"
+        update-types: [version-update:semver-major]
+
+  # ---------------------------------------------------------------------
+  # As próprias actions do GitHub
+  #
+  # Ficam fixadas por SHA no workflow. O Dependabot entende SHA fixado e
+  # abre PR trocando o SHA e o comentário de versão junto — que é
+  # exatamente o que se quer: fixação sem virar abandono.
+  # ---------------------------------------------------------------------
+  - package-ecosystem: github-actions
+    directory: /
+    schedule:
+      interval: monthly
+    commit-message:
+      prefix: "ci"
