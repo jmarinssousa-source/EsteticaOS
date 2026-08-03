@@ -52,11 +52,29 @@ export function parseCsv(text: string): string[][] {
   return rows.filter((r) => r.some((cell) => cell.trim() !== ""));
 }
 
+/**
+ * Neutraliza célula que a planilha leria como fórmula.
+ *
+ * Excel, Google Sheets e LibreOffice tratam qualquer célula começada por
+ * `=`, `+`, `-` ou `@` como fórmula — e algumas delas chamam programa
+ * externo. Como o conteúdo exportado é digitado pelas pessoas da clínica
+ * (nome do paciente, observação do prontuário, descrição de despesa),
+ * basta alguém escrever `=HYPERLINK(...)` num campo para que o arquivo
+ * baixado por outra pessoa vire ataque quando aberto.
+ *
+ * O aspas simples na frente é a solução padrão: a planilha passa a ler a
+ * célula como texto e não mostra o caractere extra.
+ */
+function neutralizeFormula(value: string): string {
+  return /^[=+\-@\t\r]/.test(value) ? `'${value}` : value;
+}
+
 function toCsvField(value: string) {
-  if (value.includes(",") || value.includes('"') || value.includes("\n")) {
-    return `"${value.replace(/"/g, '""')}"`;
+  const safe = neutralizeFormula(value);
+  if (safe.includes(",") || safe.includes('"') || safe.includes("\n") || safe !== value) {
+    return `"${safe.replace(/"/g, '""')}"`;
   }
-  return value;
+  return safe;
 }
 
 export function generateCsv(rows: string[][]): string {

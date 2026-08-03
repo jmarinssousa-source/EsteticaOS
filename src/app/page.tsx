@@ -1,5 +1,7 @@
+import { headers } from "next/headers";
 import { redirect } from "next/navigation";
 import { createClient } from "@/lib/supabase/server";
+import { NONCE_HEADER } from "@/lib/security/csp";
 import { Landing, FAQ } from "@/components/marketing/Landing";
 import { AuthHashCatcher } from "@/components/auth/AuthHashCatcher";
 import {
@@ -102,6 +104,9 @@ export default async function Home({
     <>
       <script
         type="application/ld+json"
+        // O nonce da requisição: a CSP barra qualquer bloco `<script>`
+        // sem ele, inclusive os que só carregam dados como este.
+        nonce={(await headers()).get(NONCE_HEADER) ?? undefined}
         // `<` vira escape unicode para nenhuma string do conteúdo poder
         // fechar a tag e virar injeção.
         dangerouslySetInnerHTML={{

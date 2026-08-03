@@ -6,6 +6,7 @@ import { createClient } from "@/lib/supabase/server";
 import { requirePermission } from "@/lib/auth/session";
 import { patientRecordSchema, photoUploadSchema } from "@/lib/validations/prontuario";
 import { PATIENT_MEDIA_BUCKET } from "@/lib/prontuario/constants";
+import { checkPhotoFile, parseMapImageDataUrl } from "@/lib/prontuario/upload";
 import type { ActionState } from "@/actions/auth";
 
 type ActionResult = { error?: string } | { success: true };
@@ -14,9 +15,28 @@ function revalidatePatient(patientId: string) {
   revalidatePath(`/pacientes/${patientId}`);
 }
 
-function dataUrlToBuffer(dataUrl: string) {
-  const base64 = dataUrl.split(",")[1] ?? "";
-  return Buffer.from(base64, "base64");
+/**
+ * O paciente existe e é desta clínica?
+ *
+ * O `patientId` vem do cliente. As policies do banco conferem o
+ * `clinic_id` que **nós** gravamos, não o paciente apontado — sem esta
+ * checagem dava para criar um registro desta clínica pendurado no
+ * paciente de outra, e o histórico de duas clínicas passava a se
+ * misturar em silêncio.
+ */
+async function patientBelongsToClinic(
+  supabase: Awaited<ReturnType<typeof createClient>>,
+  patientId: string,
+  clinicId: string,
+): Promise<boolean> {
+  const { data } = await supabase
+    .from("patients")
+    .select("id")
+    .eq("id", patientId)
+    .eq("clinic_id", clinicId)
+    .maybeSingle();
+
+  return Boolean(data);
 }
 
 export async function createPatientRecord(
@@ -41,14 +61,22 @@ export async function createPatientRecord(
   if (!parsed.success) return { error: parsed.error.issues[0]?.message ?? "Dados inválidos." };
 
   const supabase = await createClient();
+
+  if (!(await patientBelongsToClinic(supabase, patientId, member.clinicId))) {
+    return { error: "Paciente não encontrado." };
+  }
+
   const recordId = randomUUID();
   let mapImagePath: string | null = null;
 
   if (input.mapImageDataUrl && parsed.data.mapType) {
+    const mapImage = parseMapImageDataUrl(input.mapImageDataUrl);
+    if (!mapImage) return { error: "Não foi possível ler a marcação do mapa." };
+
     mapImagePath = `${member.clinicId}/${patientId}/records/${recordId}.png`;
     const { error: uploadError } = await supabase.storage
       .from(PATIENT_MEDIA_BUCKET)
-      .upload(mapImagePath, dataUrlToBuffer(input.mapImageDataUrl), { contentType: "image/png" });
+      .upload(mapImagePath, mapImage, { contentType: "image/png" });
 
     if (uploadError) return { error: "Não foi possível salvar a marcação do mapa." };
   }
@@ -118,16 +146,30 @@ export async function uploadPatientPhotos(
   if (!parsed.success) return { fieldErrors: parsed.error.flatten().fieldErrors };
   if (files.length === 0) return { error: "Selecione ao menos uma foto." };
 
+  // Formato e tamanho conferidos antes de qualquer envio: melhor recusar
+  // o lote inteiro do que subir metade e parar no meio. Ver
+  // lib/prontuario/upload.ts para o motivo de a lista ser fechada.
+  const checked = files.map((file) => ({ file, check: checkPhotoFile(file) }));
+  const rejected = checked.find(({ check }) => !check.ok);
+  if (rejected && !rejected.check.ok) return { error: rejected.check.error };
+
   const supabase = await createClient();
 
-  for (const file of files) {
+  if (!(await patientBelongsToClinic(supabase, patientId, member.clinicId))) {
+    return { error: "Paciente não encontrado." };
+  }
+
+  for (const { file, check } of checked) {
+    if (!check.ok) continue;
+
     const photoId = randomUUID();
-    const extension = file.name.split(".").pop() || "jpg";
-    const path = `${member.clinicId}/${patientId}/photos/${photoId}.${extension}`;
+    // Extensão e tipo saem da lista, nunca do nome nem do `file.type`
+    // que o navegador declarou.
+    const path = `${member.clinicId}/${patientId}/photos/${photoId}.${check.extension}`;
 
     const { error: uploadError } = await supabase.storage
       .from(PATIENT_MEDIA_BUCKET)
-      .upload(path, file, { contentType: file.type || "image/jpeg" });
+      .upload(path, file, { contentType: check.mimeType });
 
     if (uploadError) return { error: "Não foi possível enviar uma das fotos. Tente novamente." };
 

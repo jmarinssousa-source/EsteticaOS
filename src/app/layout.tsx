@@ -1,10 +1,12 @@
 import type { Metadata, Viewport } from "next";
+import { headers } from "next/headers";
 import { Plus_Jakarta_Sans, Fraunces, Geist_Mono } from "next/font/google";
 import { ThemeProvider } from "next-themes";
 import "./globals.css";
 import { Toaster } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { siteUrl } from "@/lib/site-url";
+import { NONCE_HEADER } from "@/lib/security/csp";
 // O convite para instalar o app mora no layout do painel, não aqui: na
 // página de vendas ele cobria o botão principal para quem ainda nem tem
 // conta — só faz sentido oferecer o atalho a quem já usa o sistema.
@@ -80,11 +82,17 @@ export const viewport: Viewport = {
   ],
 };
 
-export default function RootLayout({
+export default async function RootLayout({
   children,
 }: Readonly<{
   children: React.ReactNode;
 }>) {
+  // O Next.js carimba sozinho o nonce nos scripts que ele mesmo gera. O
+  // do tema não é dele: o `next-themes` injeta um script inline para
+  // aplicar claro/escuro antes da primeira pintura, e sem o nonce a CSP
+  // o barraria — a tela abriria piscando no tema errado.
+  const nonce = (await headers()).get(NONCE_HEADER) ?? undefined;
+
   return (
     <html
       lang="pt-BR"
@@ -92,7 +100,13 @@ export default function RootLayout({
       className={`${fontSans.variable} ${fontHeading.variable} ${geistMono.variable} h-full antialiased`}
     >
       <body className="min-h-full flex flex-col">
-        <ThemeProvider attribute="class" defaultTheme="system" enableSystem disableTransitionOnChange>
+        <ThemeProvider
+          attribute="class"
+          defaultTheme="system"
+          enableSystem
+          disableTransitionOnChange
+          nonce={nonce}
+        >
           {/* Na raiz para as legendas de ícone funcionarem em qualquer
               tela — inclusive login e página inicial, que ficam fora do
               layout do painel. */}

@@ -1,0 +1,102 @@
+name: CI
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+# Sem isto, todo push numa PR deixa a execução anterior rodando até o fim
+# — gastando minuto de runner para conferir código que já mudou.
+concurrency:
+  group: ci-${{ github.ref }}
+  cancel-in-progress: true
+
+# Menor privilégio: a CI só precisa ler o código. Sem esta linha o
+# GITHUB_TOKEN entra com permissão de escrita no repositório, e qualquer
+# dependência comprometida durante o `npm ci` herdaria isso.
+permissions:
+  contents: read
+
+jobs:
+  verificar:
+    name: Lint, tipos, testes e build
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+
+    steps:
+      # Actions fixadas por SHA, não por tag: tag é ponteiro e pode ser
+      # movida por quem controla o repositório da action. O comentário ao
+      # lado diz qual versão o SHA representa.
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          # 22 e não 20: o executor de testes do Node só lê TypeScript
+          # direto a partir da 22.18, e é assim que os testes rodam aqui —
+          # sem framework e sem dependência a mais.
+          node-version: "22.18"
+          cache: npm
+
+      # `npm ci` e não `npm install`: instala exatamente o que está no
+      # lockfile e falha se ele estiver fora de sincronia com o
+      # package.json, em vez de "consertar" sozinho.
+      - name: Instalar dependências
+        run: npm ci --ignore-scripts
+
+      - name: Lint
+        run: npm run lint
+
+      - name: Tipos
+        run: npm run typecheck
+
+      - name: Testes
+        run: npm test
+
+      - name: Build de produção
+        run: npm run build
+        env:
+          # Valores de fachada: o build não fala com o Supabase, mas
+          # `new URL()` em metadataBase precisa de um endereço válido.
+          # Nenhum segredo de verdade entra na CI — não há segredo de
+          # verdade que o build precise.
+          NEXT_PUBLIC_SUPABASE_URL: https://exemplo.supabase.co
+          NEXT_PUBLIC_SUPABASE_ANON_KEY: chave-de-fachada-para-o-build
+          NEXT_PUBLIC_SITE_URL: https://exemplo.invalid
+
+  auditoria:
+    name: Auditoria de dependências
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: read
+
+    steps:
+      - uses: actions/checkout@d23441a48e516b6c34aea4fa41551a30e30af803 # v6
+        with:
+          persist-credentials: false
+
+      - uses: actions/setup-node@249970729cb0ef3589644e2896645e5dc5ba9c38 # v6
+        with:
+          node-version: "22.18"
+          cache: npm
+
+      - run: npm ci --ignore-scripts
+
+      # Trava a PR: vulnerabilidade crítica em dependência de produção
+      # não entra, ponto.
+      - name: npm audit — crítico bloqueia
+        run: npm audit --omit=dev --audit-level=critical
+
+      # Informativo, não bloqueia — e o motivo está registrado, não é
+      # desleixo. Hoje o `npm audit` acusa `postcss` e `sharp` em nível
+      # alto; as duas chegam de dentro do próprio `next` e só saem com
+      # `next@16.3.0`, que é subida de versão menor e pede teste (ver
+      # AGENTS.md: esta versão do Next tem mudanças incompatíveis).
+      # Bloquear a CI por isso deixaria toda PR vermelha sem que ninguém
+      # pudesse resolver dentro da PR. O acompanhamento está em
+      # docs/seguranca.md, item 3.6.
+      - name: npm audit — alto, informativo
+        continue-on-error: true
+        run: npm audit --omit=dev --audit-level=high

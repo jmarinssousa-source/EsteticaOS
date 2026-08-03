@@ -1,0 +1,8 @@
+blank_issues_enabled: false
+
+contact_links:
+  - name: Falha de segurança
+    url: https://github.com/jmarinssousa-source/EsteticaOS/security/policy
+    about: >-
+      Não abra issue. Issue é pública, e relato público antes da correção
+      vira instrução de ataque. Siga a política de segurança.
