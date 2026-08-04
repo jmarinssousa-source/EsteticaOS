@@ -4,7 +4,14 @@ import { revalidatePath } from "next/cache";
 import { createClient } from "@/lib/supabase/server";
 import { getCurrentMember, requirePermission } from "@/lib/auth/session";
 import { leadSchema, stageNameSchema, interactionSchema } from "@/lib/validations/crm";
-import { DEFAULT_STAGES, type LeadStatus, type StageRole } from "@/lib/crm/constants";
+import { DEFAULT_STAGES, type StageRole } from "@/lib/crm/constants";
+import {
+  moveLeadToRole as aplicarPorPapel,
+  moveLeadToStage as aplicarPorColuna,
+  type CrmStore,
+  type LeadRow,
+  type TransitionResult,
+} from "@/lib/crm/transition";
 import type { ActionState } from "@/actions/auth";
 
 type ActionResult = { error?: string } | { success: true };
@@ -247,6 +254,118 @@ export async function updateLead(
 }
 
 /**
+ * Acesso ao banco para a transição de lead, preso a uma clínica.
+ *
+ * Cada consulta filtra por `clinic_id` além do RLS. É cinto e
+ * suspensório de propósito: o RLS filtra em silêncio (devolve zero
+ * linhas em vez de recusar), então um erro aqui viraria "não encontrado"
+ * em vez de vazamento — mas o filtro explícito torna a intenção legível
+ * para quem for mexer depois.
+ */
+function crmStore(clinicId: string, supabase: Awaited<ReturnType<typeof createClient>>): CrmStore {
+  return {
+    async findLead(leadId) {
+      const { data } = await supabase
+        .from("leads")
+        .select("id, status, stage_id, patient_id, name, phone, email, origin, notes")
+        .eq("id", leadId)
+        .eq("clinic_id", clinicId)
+        .maybeSingle();
+      return (data as LeadRow | null) ?? null;
+    },
+
+    async findStage(stageId) {
+      const { data } = await supabase
+        .from("crm_stages")
+        .select("id, role")
+        .eq("id", stageId)
+        .eq("clinic_id", clinicId)
+        .maybeSingle();
+      return data ? { id: data.id, role: data.role as StageRole | null } : null;
+    },
+
+    async findStageByRole(role) {
+      // `position` para desempatar: se a clínica acabar com duas colunas
+      // do mesmo papel, a escolhida é sempre a mesma — a primeira do
+      // funil —, e não a que o banco devolver primeiro naquele dia.
+      const { data } = await supabase
+        .from("crm_stages")
+        .select("id, role")
+        .eq("clinic_id", clinicId)
+        .eq("role", role)
+        .order("position", { ascending: true })
+        .limit(1)
+        .maybeSingle();
+      return data ? { id: data.id, role: data.role as StageRole | null } : null;
+    },
+
+    async findPatientByLead(leadId) {
+      const { data } = await supabase
+        .from("patients")
+        .select("id")
+        .eq("lead_id", leadId)
+        .eq("clinic_id", clinicId)
+        .maybeSingle();
+      return data?.id ?? null;
+    },
+
+    async createPatient(lead) {
+      const { data, error } = await supabase
+        .from("patients")
+        .insert({
+          clinic_id: clinicId,
+          lead_id: lead.id,
+          name: lead.name,
+          phone: lead.phone,
+          email: lead.email,
+          origin: lead.origin,
+          notes: lead.notes,
+        })
+        .select("id")
+        .single();
+
+      // 23505 é a violação do índice único de `patients(lead_id)`
+      // (migração 0021): outra requisição criou o paciente entre a nossa
+      // busca e a nossa inserção. Não é erro — é a corrida sendo perdida.
+      // Quem ganhou já criou o cadastro certo; basta usá-lo.
+      if (error?.code === "23505") {
+        const { data: existente } = await supabase
+          .from("patients")
+          .select("id")
+          .eq("lead_id", lead.id)
+          .eq("clinic_id", clinicId)
+          .maybeSingle();
+        return existente?.id ?? null;
+      }
+
+      if (error) {
+        console.error("createPatient (conversão de lead) falhou:", error.message);
+        return null;
+      }
+      return data?.id ?? null;
+    },
+
+    async saveLead(leadId, patch) {
+      const { error } = await supabase
+        .from("leads")
+        .update(patch)
+        .eq("id", leadId)
+        .eq("clinic_id", clinicId);
+
+      if (error) console.error("saveLead falhou:", error.message);
+      return !error;
+    },
+  };
+}
+
+/** Traduz o resultado da transição para o formato que as telas esperam. */
+function toActionResult(resultado: TransitionResult): ActionResult {
+  if (!resultado.ok) return { error: resultado.error };
+  revalidateCrm();
+  return { success: true };
+}
+
+/**
  * Move o card e aplica o papel da coluna de destino, para o quadro e os
  * números do sistema contarem a mesma história:
  *   - coluna "perdido" → marca o lead como perdido
@@ -254,50 +373,15 @@ export async function updateLead(
  *   - coluna comum     → reabre um lead que estava perdido
  * Conversão não se desfaz sozinha: o paciente já existe, então tirar o
  * card da coluna de ganho não apaga o cadastro.
+ *
+ * A regra em si mora em `lib/crm/transition.ts`, compartilhada com os
+ * botões do card.
  */
 export async function moveLeadToStage(leadId: string, stageId: string): Promise<ActionResult> {
   const member = await requirePermission("crm_edit");
   const supabase = await createClient();
 
-  const [{ data: stage }, { data: lead }] = await Promise.all([
-    supabase
-      .from("crm_stages")
-      .select("role")
-      .eq("id", stageId)
-      .eq("clinic_id", member.clinicId)
-      .maybeSingle(),
-    supabase
-      .from("leads")
-      .select("status")
-      .eq("id", leadId)
-      .eq("clinic_id", member.clinicId)
-      .maybeSingle(),
-  ]);
-
-  if (!stage || !lead) return { error: "Lead ou coluna não encontrada." };
-
-  const role = stage.role as StageRole | null;
-  let status = lead.status as LeadStatus;
-  if (role === "lost") status = "lost";
-  else if (role === null && status === "lost") status = "open";
-
-  const { error } = await supabase
-    .from("leads")
-    .update({ stage_id: stageId, last_moved_at: new Date().toISOString(), status })
-    .eq("id", leadId)
-    .eq("clinic_id", member.clinicId);
-
-  if (error) return { error: "Não foi possível mover o lead." };
-
-  if (role === "won" && lead.status !== "converted") {
-    const converted = await convertLeadToPatient(leadId);
-    if ("error" in converted && converted.error) {
-      return { error: `Lead movido, mas ${converted.error.toLowerCase()}` };
-    }
-  }
-
-  revalidateCrm();
-  return { success: true };
+  return toActionResult(await aplicarPorColuna(crmStore(member.clinicId, supabase), leadId, stageId));
 }
 
 export async function addLeadInteraction(leadId: string, note: string): Promise<ActionResult> {
@@ -349,58 +433,41 @@ export async function getLeadInteractions(leadId: string): Promise<LeadInteracti
   return data ?? [];
 }
 
+/**
+ * Botão "Marcar como perdido".
+ *
+ * Antes só escrevia `status = 'lost'`: o card ficava com a etiqueta de
+ * perdido parado na coluna onde estava, e o contador de "lead parado"
+ * não zerava. Agora faz o mesmo que arrastar para a coluna de papel
+ * `lost` — porque é literalmente o mesmo caminho.
+ */
 export async function markLeadLost(leadId: string): Promise<ActionResult> {
   const member = await requirePermission("crm_edit");
   const supabase = await createClient();
-  const { error } = await supabase
-    .from("leads")
-    .update({ status: "lost" })
-    .eq("id", leadId)
-    .eq("clinic_id", member.clinicId);
 
-  if (error) return { error: "Não foi possível marcar o lead como perdido." };
-  revalidateCrm();
-  return { success: true };
+  return toActionResult(await aplicarPorPapel(crmStore(member.clinicId, supabase), leadId, "lost"));
 }
 
+/**
+ * Botão "Converter em paciente".
+ *
+ * Duas coisas mudaram aqui, além de o lead passar a ir para a coluna de
+ * fechamento:
+ *
+ * 1. A permissão. Isto exigia só sessão (`getCurrentMember`), enquanto
+ *    todo o resto do CRM exige `crm_edit` — ou seja, quem só tinha
+ *    permissão de *ver* o CRM conseguia criar paciente. O perfil
+ *    Recepção tem as duas, então na prática ninguém tropeçava nisso; um
+ *    perfil com `crm_view` e sem `crm_edit`, sim.
+ * 2. Converter de novo deixou de ser erro. Antes respondia "este lead já
+ *    foi convertido"; agora a segunda chamada só garante que o card está
+ *    na coluna certa, sem criar um segundo cadastro. É o que faz repetir
+ *    a operação consertar uma tentativa que falhou no meio, em vez de
+ *    travar.
+ */
 export async function convertLeadToPatient(leadId: string): Promise<ActionResult> {
-  const member = await getCurrentMember();
-  if (!member) return { error: "Sessão expirada." };
-
+  const member = await requirePermission("crm_edit");
   const supabase = await createClient();
-  const { data: lead } = await supabase
-    .from("leads")
-    .select("id, clinic_id, name, phone, email, origin, notes, status")
-    .eq("id", leadId)
-    .eq("clinic_id", member.clinicId)
-    .maybeSingle();
 
-  if (!lead) return { error: "Lead não encontrado." };
-  if (lead.status === "converted") return { error: "Este lead já foi convertido em paciente." };
-
-  const { data: patient, error: patientError } = await supabase
-    .from("patients")
-    .insert({
-      clinic_id: member.clinicId,
-      lead_id: lead.id,
-      name: lead.name,
-      phone: lead.phone,
-      email: lead.email,
-      origin: lead.origin,
-      notes: lead.notes,
-    })
-    .select("id")
-    .single();
-
-  if (patientError || !patient) return { error: "Não foi possível criar o paciente." };
-
-  const { error: leadError } = await supabase
-    .from("leads")
-    .update({ status: "converted", patient_id: patient.id })
-    .eq("id", lead.id);
-
-  if (leadError) return { error: "Paciente criado, mas não foi possível atualizar o lead." };
-
-  revalidateCrm();
-  return { success: true };
+  return toActionResult(await aplicarPorPapel(crmStore(member.clinicId, supabase), leadId, "won"));
 }

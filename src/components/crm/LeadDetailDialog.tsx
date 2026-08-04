@@ -104,6 +104,10 @@ export function LeadDetailDialog({
 
   const isOpenLead = lead.status === "open";
   const assignee = members.find((m) => m.user_id === lead.assigned_to);
+  // A coluna de fechamento existe? Sem ela o botão não teria para onde
+  // mandar o lead, e é melhor não oferecer do que oferecer e falhar.
+  const wonStage = stages.find((s) => s.role === "won");
+  const lostStage = stages.find((s) => s.role === "lost");
 
   function handleSave() {
     startTransition(async () => {
@@ -127,6 +131,17 @@ export function LeadDetailDialog({
     moveTo(stageId);
   }
 
+  /**
+   * Escolher a coluna de fechamento no seletor e clicar em "Converter em
+   * paciente" acabam no mesmo lugar, porque são a mesma coisa dita de
+   * dois jeitos. Quem decide qual coluna é a de fechamento é o servidor,
+   * pelo papel dela — a tela só diz a intenção.
+   */
+  function confirmarConversao() {
+    setPendingStage(null);
+    convertNow();
+  }
+
   function moveTo(stageId: string) {
     startTransition(async () => {
       const result = await moveLeadToStage(lead.id, stageId);
@@ -134,12 +149,24 @@ export function LeadDetailDialog({
     });
   }
 
+  /**
+   * O botão passa pela mesma confirmação do arrastar.
+   *
+   * Antes convertia no clique, sem perguntar — e converter cria um
+   * cadastro de paciente de verdade. Quem clicasse por engano só
+   * descobria depois, com o paciente já na lista.
+   */
   function handleConvert() {
+    if (!wonStage) return;
+    setPendingStage(wonStage);
+  }
+
+  function convertNow() {
     startTransition(async () => {
       const result = await convertLeadToPatient(lead.id);
       if ("error" in result) toast.error(result.error);
       else {
-        toast.success("Lead convertido em paciente.");
+        toast.success(`${lead.name} agora é paciente da clínica.`);
         onOpenChange(false);
       }
     });
@@ -149,7 +176,7 @@ export function LeadDetailDialog({
     startTransition(async () => {
       const result = await markLeadLost(lead.id);
       if ("error" in result) toast.error(result.error);
-      else toast.success("Lead marcado como perdido.");
+      else toast.success(`${lead.name} foi para a coluna de perdidos.`);
     });
   }
 
@@ -266,7 +293,11 @@ export function LeadDetailDialog({
                 items={stages.map((stage) => ({ value: stage.id, label: stage.name }))}
                 value={lead.stage_id}
                 onValueChange={handleMoveStage}
-                disabled={!canEdit || !isOpenLead}
+                // Só a permissão manda. Antes um lead perdido ficava
+                // travado aqui, embora arrastar o mesmo card de volta
+                // para uma coluna comum o reabrisse sem reclamar — as
+                // duas formas de mover precisam permitir a mesma coisa.
+                disabled={!canEdit}
               >
                 <SelectTrigger className="w-full">
                   <SelectValue />
@@ -371,12 +402,19 @@ export function LeadDetailDialog({
                 </Button>
                 {isOpenLead && (
                   <>
-                    <Button size="sm" variant="outline" onClick={handleConvert} disabled={isPending}>
-                      Converter em paciente
-                    </Button>
-                    <Button size="sm" variant="outline" onClick={handleMarkLost} disabled={isPending}>
-                      Marcar como perdido
-                    </Button>
+                    {/* Botão escondido quando não há coluna com o papel:
+                        oferecer uma ação que só pode terminar em recado de
+                        erro é pior do que não oferecer. */}
+                    {wonStage && (
+                      <Button size="sm" variant="outline" onClick={handleConvert} disabled={isPending}>
+                        Converter em paciente
+                      </Button>
+                    )}
+                    {lostStage && (
+                      <Button size="sm" variant="outline" onClick={handleMarkLost} disabled={isPending}>
+                        Marcar como perdido
+                      </Button>
+                    )}
                   </>
                 )}
               </div>
@@ -398,15 +436,7 @@ export function LeadDetailDialog({
           </AlertDialogHeader>
           <AlertDialogFooter>
             <AlertDialogCancel>Cancelar</AlertDialogCancel>
-            <AlertDialogAction
-              onClick={() => {
-                const stageId = pendingStage?.id;
-                setPendingStage(null);
-                if (stageId) moveTo(stageId);
-              }}
-            >
-              Converter
-            </AlertDialogAction>
+            <AlertDialogAction onClick={confirmarConversao}>Converter</AlertDialogAction>
           </AlertDialogFooter>
         </AlertDialogContent>
       </AlertDialog>
