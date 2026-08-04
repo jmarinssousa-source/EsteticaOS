@@ -278,7 +278,12 @@ export default async function HojePage({
 
         {canViewCrm && (
           <>
-            <StatCard title="Leads pendentes" value={String(openLeads.length)} icon={Kanban} href="/crm" />
+            {/* "Em andamento", não "pendentes": a conta é a mesma de
+                sempre (leads com status `open`), mas "pendente" soava
+                como "atrasado" e ficava ao lado de "Leads parados", que
+                é o card dos atrasados de verdade. Duas palavras para a
+                mesma ideia, uma delas errada. */}
+            <StatCard title="Leads em andamento" value={String(openLeads.length)} icon={Kanban} href="/crm" />
             <StatCard
               title="Leads parados"
               value={String(staleLeads.length)}
